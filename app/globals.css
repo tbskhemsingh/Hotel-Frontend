@@ -1,0 +1,10 @@
+.country-hero {
+    background: #ffffff;
+}
+
+.country-hero-image {
+    max-width: 420px;
+    width: 100%;
+    height: auto;
+    border-radius: 18px;
+}

@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import HeroSection from './HeroSection';
+import HeroSection from '../../utils/components/herosection/HeroSection';
 import FindingBestHotelSection from './FindingBestHotelSection';
 import WeekendGetawayHotelSection from './WeekendGetawayHotelSection';
 

@@ -1,3 +1,8 @@
+
+
+'use client';
+import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 export default function Header() {
@@ -7,7 +12,7 @@ export default function Header() {
                 <div className="row">
                     <div className="col-6 col-md-3 d-flex justify-content-between justify-content-md-start">
                         <a href="index.html" className="my-auto">
-                            <img src="image/logo.webp" alt="" />
+                            <Image src="/image/logo.webp" alt="" width={160} height={40} priority />
                         </a>
                     </div>
                     <div className="col-6 col-md-9 d-flex">
@@ -110,6 +115,38 @@ export default function Header() {
                                     <div>
                                         <ul className="list-unstyled main-menu">
                                             <li>
+                                                <Link href="/hotel-list">Find Hotel Deals</Link>
+                                            </li>
+
+                                            <li>
+                                                <Link href="/country" className="d-flex align-items-center">
+                                                    All Countries
+                                                </Link>
+                                            </li>
+
+                                            <li>
+                                                <a href="#">Help</a>
+                                            </li>
+
+                                            <li>
+                                                <a href="#">My Hotel</a>
+                                            </li>
+
+                                            <li>
+                                                <Link href="/">Home</Link>
+                                            </li>
+
+                                            <li>
+                                                <a href="#">Popular Destinations</a>
+                                            </li>
+
+                                            <li>
+                                                <a href="#">Blogs</a>
+                                            </li>
+                                        </ul>
+
+                                        {/* <ul className="list-unstyled main-menu">
+                                            <li>
                                                 <a href="hotel-list.html">Find Hotel Deals</a>
                                             </li>
                                             <li>
@@ -127,7 +164,7 @@ export default function Header() {
                                             <li>
                                                 <a href="#">Blogs</a>
                                             </li>
-                                        </ul>
+                                        </ul> */}
                                     </div>
 
                                     <div>

@@ -184,8 +184,8 @@ function HeroSection() {
                                             </div>
                                             <div>
                                                 <div className="slider-track"></div>
-                                                <input type="range" min="0" max="100" value="30" id="slider-1" onInput="slideOne()" />
-                                                <input type="range" min="0" max="100" value="70" id="slider-2" onInput="slideTwo()" />
+                                                {/* <input type="range" min="0" max="100" value="30" id="slider-1" onInput="slideOne()" />
+                                                <input type="range" min="0" max="100" value="70" id="slider-2" onInput="slideTwo()" /> */}
                                             </div>
                                         </div>
                                     </div>
