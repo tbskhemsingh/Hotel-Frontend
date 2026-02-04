@@ -1,81 +1,130 @@
+
+// 'use client';
+
+// import { useState } from 'react';
+// import Link from 'next/link';
+
+// export default function CountryDropdownClient({ countries }) {
+//     const [open, setOpen] = useState(true);
+
+//     return (
+//         <div className="mb-4">
+//             {/* Header */}
+//             <button
+//                 onClick={() => setOpen(!open)}
+//                 aria-expanded={open}
+//                 aria-controls="country-dropdown-body"
+//                 style={{
+//                     background: '#f5f6f7',
+//                     padding: '14px 18px',
+//                     borderRadius: '11px',
+//                     cursor: 'pointer',
+//                     display: 'flex',
+//                     justifyContent: 'space-between',
+//                     alignItems: 'center',
+//                     fontWeight: 600,
+//                     fontSize: '16px',
+//                     border: 'none',
+//                     width: '100%',
+//                     textAlign: 'left'
+//                 }}
+//             >
+//                 <span className="fs-4 fw-semibold">All Countries</span>
+//                 <span>{open ? '▴' : '▾'}</span>
+//             </button>
+
+//             {/* Body */}
+//             {open && (
+//                 <div
+//                     style={{
+//                         padding: '20px',
+//                         border: '1px solid #eee',
+//                         borderTop: 'none'
+//                     }}
+//                 >
+//                     <div className="row">
+//                         {countries.map((country) => (
+//                             <div key={country.countryID} className="col-6 col-md-4 col-lg-3 mb-2 ">
+//                                 <Link
+//                                     href={{
+//                                         pathname: `/country/${country.urlName}`
+//                                     }}
+//                                     style={{
+//                                         textDecoration: 'none',
+//                                         color: '#000'
+//                                     }}
+//                                 >
+//                                     • {country.name}
+//                                 </Link>
+//                             </div>
+//                         ))}
+//                     </div>
+//                 </div>
+//             )}
+//         </div>
+//     );
+// }
+
+
 'use client';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
 import Link from 'next/link';
 
-export default function CountryDropdownClient() {
-    const [open, setOpen] = useState(true);
-    const [countries, setCountries] = useState([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchCountries = async () => {
-            try {
-                setLoading(true);
-                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/country/list`);
-                setCountries(res.data.data);
-            } catch (err) {
-                console.error('Failed to load countries', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCountries();
-    }, []);
-
+export default function CountryDropdownBootstrap({ countries }) {
     return (
-        <div className="mb-4">
-            {/* Header */}
-            <div
-                onClick={() => setOpen(!open)}
-                style={{
-                    background: '#f5f6f7',
-                    padding: '14px 18px',
-                    borderRadius: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    fontWeight: 600,
-                    fontSize: '16px'
-                }}
-            >
-                <span className="fs-4 fw-semibold">All Countries</span>
-                <span>{open ? '▴' : '▾'}</span>
-            </div>
+        <div className="accordion mb-4" id="countryAccordion">
+            <div className="accordion-item border-0">
+                <h2 className="accordion-header" id="headingCountries">
+                    <button
+                        className="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseCountries"
+                        aria-expanded="true"
+                        aria-controls="collapseCountries"
+                        style={{
+                            background: '#f5f6f7',
+                            borderRadius: '11px',
+                            fontWeight: 600,
+                            fontSize: '16px'
+                        }}
+                    >
+                        <span className="fs-4 fw-semibold">All Countries</span>
+                    </button>
+                </h2>
 
-            {/* Body */}
-            {open && (
                 <div
-                    style={{
-                        padding: '20px',
-                        border: '1px solid #eee',
-                        borderTop: 'none'
-                    }}
+                    id="collapseCountries"
+                    className="accordion-collapse collapse show"
+                    aria-labelledby="headingCountries"
+                    data-bs-parent="#countryAccordion"
                 >
-                    {loading ? (
-                        <p>Loading countries...</p>
-                    ) : (
+                    <div
+                        className="accordion-body"
+                        style={{
+                            padding: '20px',
+                            border: '1px solid #eee',
+                            borderTop: 'none'
+                        }}
+                    >
                         <div className="row">
                             {countries.map((country) => (
-                                <div key={country.countryID} className="col-6 col-md-4 col-lg-3 mb-2 ">
+                                <div
+                                    key={country.countryID}
+                                    className="col-6 col-md-4 col-lg-3 mb-2"
+                                >
                                     <Link
                                         href={`/country/${country.urlName}`}
-                                        style={{
-                                            textDecoration: 'none',
-                                            color: '#000'
-                                        }}
+                                        className="text-decoration-none text-dark fw-semibold"
                                     >
                                         • {country.name}
                                     </Link>
                                 </div>
                             ))}
                         </div>
-                    )}
+                    </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

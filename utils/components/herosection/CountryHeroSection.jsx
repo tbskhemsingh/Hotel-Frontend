@@ -1,9 +1,8 @@
 'use client';
 
-function CountryHeroSection({ countryName, destinationsCount, description, heroImage }) {
+function CountryHeroSection({}) {
     return (
         <section className="container-fluid p-0">
-            {/* <div className="country-hero py-5 px-2 px-md-4 px-lg-5"> */}
             <div
                 className="country-hero"
                 style={{
@@ -11,9 +10,9 @@ function CountryHeroSection({ countryName, destinationsCount, description, heroI
                     padding: '20px 0'
                 }}
             >
-                <div className="container p-4 hero-form">
+                <div className="container p-2">
                     <form action="#">
-                        <div className="row align-items-end" style={{ gap: '12px 0' }}>
+                        <div className="row align-items-end" style={{ gap: '11px 0' }}>
                             <div className="col-12 col-md-6 col-lg-3 mb-3 mb-lg-0">
                                 <label htmlFor="cityzip" className="form-label custom-form-label text-white">
                                     Destination or Hotel Name
@@ -355,29 +354,28 @@ function CountryHeroSection({ countryName, destinationsCount, description, heroI
                         </div>
                     </form>
                 </div>
-                <div className="container">
-                    <div className="row align-items-center">
-                        {/* <div className="col-md-7">
-                            <p className="breadcrumb-text">
-                                All Countries · <strong>{countryName}</strong>
-                            </p>
+            </div>
+            {/* <div className="container">
+                <div className="row align-items-center">
+                    <div className="col-md-7">
+                        <p className="breadcrumb-text">
+                            All Countries · <strong>{countryName}</strong>
+                        </p>
 
-                            <h1 className="country-hero-title">Hotel Accommodation in {countryName}</h1>
+                        <h1 className="country-hero-title">Hotel Accommodation in {countryName}</h1>
 
-                            <p className="country-hero-subtitle">
-                                Hotel accommodation at over <strong>{destinationsCount}</strong> destinations across {countryName}.
-                            </p>
+                        <p className="country-hero-subtitle">
+                            Hotel accommodation at over <strong>{destinationsCount}</strong> destinations across {countryName}.
+                        </p>
 
-                            <p className="country-hero-description">{description}</p>
-                        </div> */}
+                        <p className="country-hero-description">{description}</p>
+                    </div>
 
-                        {/* RIGHT IMAGE */}
-                        {/* <div className="col-md-5 text-center">
-                            <img src={heroImage} alt={countryName} className="country-hero-image" />
-                        </div> */}
+                    <div className="col-md-5 text-center">
+                        <img src={heroImage} alt={countryName} className="country-hero-image" />
                     </div>
                 </div>
-            </div>
+            </div> */}
         </section>
     );
 }
