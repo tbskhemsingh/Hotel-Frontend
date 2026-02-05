@@ -1,6 +1,53 @@
-import React from 'react';
+"use client";
+import React, { useState, useEffect, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import { addMonths, format } from 'date-fns';
+import "react-datepicker/dist/react-datepicker.css";
+import "./DatePicker.css";
+import { LuCalendarRange } from "react-icons/lu";
 
 function HeroSection() {
+    const [checkInDate, setCheckInDate] = useState(new Date());
+    const [checkOutDate, setCheckOutDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [tempCheckInDate, setTempCheckInDate] = useState(new Date());
+    const [tempCheckOutDate, setTempCheckOutDate] = useState(new Date());
+
+    const datePickerRef = useRef(null);
+
+    // Handle click outside to close
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (datePickerRef.current &&
+                !datePickerRef.current.contains(event.target) &&
+                !event.target.closest('.react-datepicker') &&
+                !event.target.closest('.date-range-picker-popup')) {
+                setShowDatePicker(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleDateChange = (dates) => {
+        const [start, end] = dates;
+        setTempCheckInDate(start);
+        setTempCheckOutDate(end);
+    };
+
+    // Format date for display
+    const formatDate = (date) => {
+        if (!date) return '';
+        return format(date, 'MM/dd/yyyy');
+    };
+
+    // Handle opening the date picker
+    const handleOpenDatePicker = () => {
+        setTempCheckInDate(checkInDate);
+        setTempCheckOutDate(checkOutDate);
+        setShowDatePicker(true);
+    };
+
     return (
         <section className="container-fluid">
             <div className="hero py-5 px-2 px-md-4 px-lg-5 d-flex flex-column justify-content-between">
@@ -72,15 +119,120 @@ function HeroSection() {
                                     />
                                 </div>
                             </div>
-                            <div className="col-12 col-md-6 col-lg-3 mb-3 mb-lg-0">
+                            <div className="col-12 col-md-6 col-lg-3 mb-3 mb-lg-0" ref={datePickerRef}>
                                 <label htmlFor="daterange" className="form-label custom-form-label text-white">
                                     Check-In and Check-Out
                                 </label>
-                                <div className="input-group custom-input-group-textbox">
-                                    <label htmlFor="daterange" className="datepicker-icon">
-                                        <i className="fa-thin fa-calendar-range"></i>
-                                    </label>
-                                    <input type="text" id="daterange" className="form-control custom-textbox-padding" />
+                                <div className="date-picker-wrapper">
+                                    <div className="main-date-picker">
+                                        <div className="date-range-input-content">
+                                            <div className="date-range-labels">
+                                                <div className="check-in-out-label">
+                                                    <span className="date-text">
+                                                        {checkInDate ? formatDate(checkInDate) : ''} -  {checkOutDate ? formatDate(checkOutDate) : ''}
+                                                    </span>
+                                                </div>
+                                                <span className="date-range-icon" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleOpenDatePicker();
+                                                }}
+                                                >
+                                                    <LuCalendarRange />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Date Range Picker Popup */}
+                                    {showDatePicker && (
+                                        <div className="date-range-picker-popup">
+                                            <div className="calendar-container">
+                                                <DatePicker
+                                                    selected={tempCheckInDate}
+                                                    onChange={handleDateChange}
+                                                    startDate={tempCheckInDate}
+                                                    endDate={tempCheckOutDate}
+                                                    selectsRange
+                                                    inline
+                                                    monthsShown={2}
+                                                    minDate={new Date()}
+                                                    dateFormat="MM/dd/yyyy"
+                                                    showPopperArrow={false}
+                                                    calendarClassName="custom-date-range-calendar"
+                                                    renderCustomHeader={({
+                                                        date,
+                                                        decreaseMonth,
+                                                        increaseMonth,
+                                                        prevMonthButtonDisabled,
+                                                        nextMonthButtonDisabled,
+                                                        customHeaderCount
+                                                    }) => {
+                                                        let displayDate = date;
+                                                        if (customHeaderCount === 1) {
+                                                            displayDate = addMonths(date, 1);
+                                                        }
+
+                                                        return (
+                                                            <div className="custom-header-wrapper">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={decreaseMonth}
+                                                                    disabled={prevMonthButtonDisabled}
+                                                                    className="nav-button prev-month"
+                                                                >
+                                                                    ‹
+                                                                </button>
+                                                                <div className="month-year-display">
+                                                                    {format(displayDate, 'MMM yyyy')}
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={increaseMonth}
+                                                                    disabled={nextMonthButtonDisabled}
+                                                                    className="nav-button next-month"
+                                                                >
+                                                                    ›
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* Footer with Cancel/Apply buttons */}
+                                            <div className="date-picker-footer">
+                                                <div className="selected-range-footer"></div>
+                                                <div className="footer-buttons">
+                                                    {tempCheckInDate && tempCheckOutDate
+                                                        ? `${formatDate(tempCheckInDate)} - ${formatDate(tempCheckOutDate)}`
+                                                        : `${formatDate(new Date())} - ${formatDate(new Date())}`
+                                                    }
+                                                    <button
+                                                        type="button"
+                                                        className="cancel-button"
+                                                        onClick={() => {
+                                                            setTempCheckInDate(checkInDate);
+                                                            setTempCheckOutDate(checkOutDate);
+                                                            setShowDatePicker(false);
+                                                        }}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="apply-button"
+                                                        onClick={() => {
+                                                            setCheckInDate(tempCheckInDate);
+                                                            setCheckOutDate(tempCheckOutDate);
+                                                            setShowDatePicker(false);
+                                                        }}
+                                                    >
+                                                        Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="col-12 col-md-6 col-lg-2 mb-3 mb-lg-0">
