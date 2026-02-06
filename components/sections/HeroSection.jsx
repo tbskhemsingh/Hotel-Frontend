@@ -70,6 +70,7 @@ export default function HeroSection() {
         min: 100,
         max: 600
     });
+    const searchRef = useRef(null);
 
     const MIN_PRICE = 0;
     const MAX_PRICE = 1000;
@@ -147,6 +148,16 @@ export default function HeroSection() {
         setIsSliding(null);
         setPriceRange({ ...priceRange });
     };
+    useEffect(() => {
+        function handleSearchOutsideClick(event) {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShow(false); // close search dropdown
+            }
+        }
+
+        document.addEventListener('mousedown', handleSearchOutsideClick);
+        return () => document.removeEventListener('mousedown', handleSearchOutsideClick);
+    }, []);
 
     useEffect(() => {
         function handleDatePickerOutsideClick(event) {
@@ -268,7 +279,7 @@ export default function HeroSection() {
                 <div className="container p-4 hero-form">
                     <form action="#" onSubmit={handleSearchSubmit}>
                         <div className="row">
-                            <div className="col-10 col-md-4 col-lg-2 mb-3 mb-lg-0 position-relative">
+                            <div className="col-10 col-md-4 col-lg-2 mb-3 mb-lg-0 position-relative" ref={searchRef}>
                                 <label className="form-label custom-form-label text-white">Destination or Hotel Name</label>
 
                                 <div className="input-group custom-input-group-textbox">
@@ -283,6 +294,7 @@ export default function HeroSection() {
                                         value={query}
                                         onChange={(e) => setQuery(e.target.value)}
                                         onFocus={() => results.length && setShow(true)}
+
                                     />
                                 </div>
 

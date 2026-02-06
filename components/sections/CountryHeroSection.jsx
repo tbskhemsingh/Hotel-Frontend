@@ -64,6 +64,7 @@ function CountryHeroSection({}) {
     const [isSliding, setIsSliding] = useState(null);
 
     const datePickerRef = useRef(null);
+    const searchRef = useRef(null);
 
     const handleDateChange = (dates) => {
         const [start, end] = dates;
@@ -163,7 +164,16 @@ function CountryHeroSection({}) {
             document.removeEventListener('mouseup', handleMouseUp);
         };
     }, [isSliding, priceRange]);
+    useEffect(() => {
+        function handleSearchOutsideClick(event) {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShow(false); // close search dropdown
+            }
+        }
 
+        document.addEventListener('mousedown', handleSearchOutsideClick);
+        return () => document.removeEventListener('mousedown', handleSearchOutsideClick);
+    }, []);
     return (
         <section className="container-fluid p-0">
             <div
@@ -176,7 +186,7 @@ function CountryHeroSection({}) {
                 <div className="container p-2">
                     <form action="#">
                         <div className="row align-items-end" style={{ gap: '11px 0' }}>
-                            <div className="col-10 col-md-4 col-lg-2 mb-3 mb-lg-0 position-relative">
+                            <div className="col-10 col-md-4 col-lg-2 mb-3 mb-lg-0 position-relative" ref={searchRef}>
                                 <label className="form-label custom-form-label text-white">Destination or Hotel Name</label>
 
                                 <div className="input-group custom-input-group-textbox">
