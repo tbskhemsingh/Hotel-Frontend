@@ -28,6 +28,7 @@ export default function HeroSection() {
     const datePickerRef = useRef(null);
     const debounceRef = useRef(null);
     const router = useRouter();
+
     // Handle click outside to close
     useEffect(() => {
         function handleClickOutside(event) {
@@ -44,6 +45,11 @@ export default function HeroSection() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
     useEffect(() => {
+        if (isSelectingRef.current) {
+            isSelectingRef.current = false;
+            return;
+        }
+
         if (query.length < 2) {
             setResults([]);
             setShow(false);
@@ -56,6 +62,7 @@ export default function HeroSection() {
             try {
                 setLoading(true);
                 const data = await globalSearchapi(query);
+                console.log(data);
                 setResults(data || []);
                 setShow(true);
             } catch (e) {
@@ -64,7 +71,10 @@ export default function HeroSection() {
                 setLoading(false);
             }
         }, 300);
+
+        return () => clearTimeout(debounceRef.current);
     }, [query]);
+
     const [showFilters, setShowFilters] = useState(false);
     const [priceRange, setPriceRange] = useState({
         min: 100,
@@ -81,6 +91,7 @@ export default function HeroSection() {
 
     const filterRef = useRef(null);
     const [selectedLocation, setSelectedLocation] = useState(null);
+    const isSelectingRef = useRef(false);
 
     const handleDateChange = (dates) => {
         const [start, end] = dates;
@@ -124,6 +135,7 @@ export default function HeroSection() {
     };
 
     const handleSelect = (item) => {
+        isSelectingRef.current = true;
         setSelectedLocation(item);
         setQuery(item.displayText);
         setShow(false);
@@ -298,9 +310,10 @@ export default function HeroSection() {
                                         className="form-control"
                                         placeholder="Type city/ZipCode"
                                         value={query}
-                                        onChange={(e) => setQuery(e.target.value)}
-                                        onFocus={() => results.length && setShow(true)}
-
+                                        onChange={(e) => {
+                                            isSelectingRef.current = false;
+                                            setQuery(e.target.value);
+                                        }}
                                     />
                                 </div>
 
@@ -410,7 +423,6 @@ export default function HeroSection() {
                                                     }}
                                                 />
                                             </div>
-
                                         </div>
                                     )}
                                 </div>
