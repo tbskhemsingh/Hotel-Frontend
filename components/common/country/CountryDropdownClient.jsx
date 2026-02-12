@@ -46,12 +46,14 @@ export default function CountryDropdownBootstrap({ countries }) {
                                         <Link
                                             href={`/${country.urlName}`}
                                             className="text-decoration-none text-dark fw-semibold"
-                                            prefetch={false}
+                                            prefetch={false} 
                                         >
                                             • {country.name}
                                         </Link>
                                     ) : (
-                                        <span className="text-decoration-none text-dark fw-semibold">• {country.name}</span>
+                                        <span className="text-decoration-none text-dark fw-semibold">
+                                            • {country.name}
+                                        </span>
                                     )}
                                 </div>
                             ))}
