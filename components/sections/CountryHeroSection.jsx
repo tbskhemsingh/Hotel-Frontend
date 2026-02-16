@@ -10,7 +10,7 @@ import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { useRouter } from 'next/navigation';
 import { globalSearchapi } from '@/lib/api/globalsearchapi';
 
-function CountryHeroSection({ }) {
+function CountryHeroSection({}) {
     const [checkInDate, setCheckInDate] = useState(new Date());
     const [checkOutDate, setCheckOutDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -28,8 +28,14 @@ function CountryHeroSection({ }) {
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(false);
     const debounceRef = useRef(null);
+    const isSelectingRef = useRef(false);
 
     useEffect(() => {
+        if (isSelectingRef.current) {
+            isSelectingRef.current = false;
+            return;
+        }
+
         if (query.length < 2) {
             setResults([]);
             setShow(false);
@@ -42,6 +48,7 @@ function CountryHeroSection({ }) {
             try {
                 setLoading(true);
                 const data = await globalSearchapi(query);
+                console.log(data);
                 setResults(data || []);
                 setShow(true);
             } catch (e) {
@@ -50,6 +57,8 @@ function CountryHeroSection({ }) {
                 setLoading(false);
             }
         }, 300);
+
+        return () => clearTimeout(debounceRef.current);
     }, [query]);
     const [priceRange, setPriceRange] = useState({
         min: 100,
@@ -66,6 +75,12 @@ function CountryHeroSection({ }) {
     const datePickerRef = useRef(null);
     const searchRef = useRef(null);
 
+    const handleSelect = (item) => {
+        isSelectingRef.current = true;
+        // setSelectedLocation(item);
+        setQuery(item.displayText);
+        setShow(false);
+    };
     const handleDateChange = (dates) => {
         const [start, end] = dates;
         setTempCheckInDate(start);
@@ -197,7 +212,7 @@ function CountryHeroSection({ }) {
 
                                 <div className="input-group custom-input-group-textbox">
                                     <span className="input-group-text bg-white">
-                                        <i className="fa-regular fa-magnifying-glass"></i>
+                                        <i className="fa-solid fa-magnifying-glass"></i>
                                     </span>
 
                                     <input
@@ -205,8 +220,10 @@ function CountryHeroSection({ }) {
                                         className="form-control"
                                         placeholder="Type city/ZipCode"
                                         value={query}
-                                        onChange={(e) => setQuery(e.target.value)}
-                                        onFocus={() => results.length && setShow(true)}
+                                        onChange={(e) => {
+                                            isSelectingRef.current = false;
+                                            setQuery(e.target.value);
+                                        }}
                                     />
                                 </div>
 
@@ -233,25 +250,6 @@ function CountryHeroSection({ }) {
                                     </div>
                                 )}
                             </div>
-                            {/* <div className="col-10 col-md-4 col-lg-2 mb-3 mb-lg-0">
-                                <label htmlFor="cityzip" className="form-label custom-form-label text-white">
-                                    Destination or Hotel Name
-                                </label>
-                                <div className="input-group custom-input-group-textbox">
-                                    <span className="input-group-text bg-white" id="basic-addon1">
-                                        <i className="fa-sharp fa-light fa-magnifying-glass"></i>
-                                    </span>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="cityzip"
-                                        placeholder="Type city/ZipCode"
-                                        aria-label="Destination or Hotel Name"
-                                        aria-describedby="basic-addon1"
-                                        style={{ height: 52, borderRadius: 6 }}
-                                    />
-                                </div>
-                            </div> */}
                             <div className="col-12 col-md-6 col-lg-3 mb-3 mb-lg-0" ref={datePickerRef}>
                                 <label htmlFor="daterange" className="form-label custom-form-label text-white">
                                     Check-In and Check-Out
@@ -492,16 +490,11 @@ function CountryHeroSection({ }) {
                             </div>
                             {childrenCount > 0 && (
                                 <div className="col-12 mb-3 mb-lg-0">
-                                    <label className="form-label custom-form-label text-white">
-                                        Age
-                                    </label>
+                                    <label className="form-label custom-form-label text-white">Age</label>
 
                                     <div className="row g-2">
                                         {childrenAges.map((age, index) => (
-                                            <div
-                                                key={index}
-                                                className="col-4 col-md-2 col-lg-1"
-                                            >
+                                            <div key={index} className="col-4 col-md-2 col-lg-1">
                                                 <select
                                                     className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
                                                     value={age}

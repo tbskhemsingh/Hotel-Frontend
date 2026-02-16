@@ -3,6 +3,7 @@ import CountryDropdownSection from '@/components/common/country/CountryDropdownS
 import CountryIntro from '@/components/common/country/CountryInfo';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import { formatCountryName } from '@/lib/utils';
+import CountryHotelCarousel from '@/components/common/country/CountryHotelCarousel';
 
 export default async function CountryPage({ params }) {
     const { country } = await params;
@@ -51,6 +52,7 @@ export default async function CountryPage({ params }) {
                     data={data}
                 />
             </section>
+            <CountryHotelCarousel hotels={data.featuredHotels} />
         </>
     );
 }

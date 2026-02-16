@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@/public/assets/css/style.css';
 import '@/public/assets/css/media.css';
 import Script from 'next/script';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export const metadata = {
     title: 'Hotel.com.au',

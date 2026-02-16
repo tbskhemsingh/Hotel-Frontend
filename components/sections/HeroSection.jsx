@@ -302,7 +302,7 @@ export default function HeroSection() {
 
                                 <div className="input-group custom-input-group-textbox">
                                     <span className="input-group-text bg-white">
-                                        <i className="fa-regular fa-magnifying-glass"></i>
+                                        <i className="fa-solid fa-magnifying-glass"></i>
                                     </span>
 
                                     <input
