@@ -5,7 +5,7 @@ import { addMonths, format } from 'date-fns';
 import 'react-datepicker/dist/react-datepicker.css';
 import { LuCalendarRange } from 'react-icons/lu';
 import '../../public/assets/css/DatePicker.css';
-import { globalSearchapi } from '@/lib/api/globalsearchapi';
+import { globalSearchapi } from '@/lib/api/public/globalsearchapi';
 import { useRouter } from 'next/navigation';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
 

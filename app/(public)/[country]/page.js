@@ -1,4 +1,4 @@
-import { getCountryByUrlName } from '@/lib/api/countryapi';
+import { getCountryByUrlName } from '@/lib/api/public/countryapi';
 import CountryDropdownSection from '@/components/common/country/CountryDropdownSection';
 import CountryIntro from '@/components/common/country/CountryInfo';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';

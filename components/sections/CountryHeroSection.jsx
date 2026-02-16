@@ -8,7 +8,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import '../../public/assets/css/DatePicker.css';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { useRouter } from 'next/navigation';
-import { globalSearchapi } from '@/lib/api/globalsearchapi';
+import { globalSearchapi } from '@/lib/api/public/globalsearchapi';
 
 function CountryHeroSection({}) {
     const [checkInDate, setCheckInDate] = useState(new Date());
