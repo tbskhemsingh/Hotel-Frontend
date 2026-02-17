@@ -39,8 +39,10 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <body>
+                {/* <ReduxProvider> */}
                 {children}
                 <Script src="/bootstrap.bundle.min.js" strategy="afterInteractive" />
+                {/* </ReduxProvider> */}
             </body>
         </html>
     );
