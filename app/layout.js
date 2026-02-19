@@ -33,16 +33,14 @@ export default function RootLayout({ children }) {
     const router = useRouter();
 
     useEffect(() => {
-        router.replace('/entry');
+        window.location.origin.includes('admin') && router.replace('/entry');
     }, []);
 
     return (
         <html lang="en">
             <body>
-                {/* <ReduxProvider> */}
                 {children}
                 <Script src="/bootstrap.bundle.min.js" strategy="afterInteractive" />
-                {/* </ReduxProvider> */}
             </body>
         </html>
     );

@@ -1416,3 +1416,11 @@ a.text-sky-blue:hover {
     background-color: #243e54;
     color: #fff !important;
 }
+
+.navbar-toggler {
+  border-color: rgba(255,255,255,0.5);
+}
+
+.navbar-toggler-icon {
+  filter: invert(1);
+}

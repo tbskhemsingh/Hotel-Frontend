@@ -11,34 +11,12 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const router = useRouter();
 
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-
-    //     try {
-    //         const data = await adminLoginApi(username, password);
-
-    //         const roleName = data.roles[0].roleName;
-
-    //         localStorage.setItem('adminToken', data.token);
-    //         localStorage.setItem('adminRole', roleName);
-
-    //         if (roleName === 'User') {
-    //             router.replace('/home');
-    //         } else if (['Admin', 'Editor', 'Viewer'].includes(roleName)) {
-    //             router.replace('/dashboard');
-    //         } else {
-    //             router.replace('/auth/login');
-    //         }
-    //     } catch (error) {
-    //         alert(error.message);
-    //     }
-    // };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
             const response = await adminLoginApi(username, password);
+            console.log(response);
             const token = response.token;
             const roleName = response.user.roleName;
 

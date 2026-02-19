@@ -7,7 +7,7 @@ export default function CollectionsPage() {
     return (
         <div className="container-fluid py-4">
             <CollectionList />
-            <CollectionEditor />
+            {/* <CollectionEditor /> */}
             <RedirectManager />
         </div>
         // <div className="container-fluid py-4">
