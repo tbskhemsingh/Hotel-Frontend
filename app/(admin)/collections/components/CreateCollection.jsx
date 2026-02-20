@@ -25,14 +25,13 @@ export default function CreateCollection() {
     const [excludeOptions, setExcludeOptions] = useState([]);
     const [showPinnedDropdown, setShowPinnedDropdown] = useState(false);
     const [showExcludeDropdown, setShowExcludeDropdown] = useState(false);
-
+    const [selectedExcludeHotel, setSelectedExcludeHotel] = useState(null);
     const pinnedRef = useRef(null);
     const excludeRef = useRef(null);
     const [formData, setFormData] = useState({
         name: '',
         slug: '',
         geoNodeId: '',
-        parentCollectionId: '',
         type: '',
         status: 'Draft',
         expiryDate: '',
@@ -71,6 +70,15 @@ export default function CreateCollection() {
     }, []);
 
     const handleSubmit = async (publishType = 'Draft') => {
+        let updatedRules = [...rules];
+
+        if (ruleField && ruleValue) {
+            updatedRules.push({
+                Field: ruleField,
+                Operator: ruleOperator,
+                Value: ruleValue
+            });
+        }
         const collectionObject = {
             GeoNodeId: Number(formData.geoNodeId),
             ParentCollectionId: formData.parentCollectionId ? Number(formData.parentCollectionId) : null,
@@ -88,8 +96,7 @@ export default function CreateCollection() {
             collectionId: null,
             collectionJson: JSON.stringify(collectionObject),
 
-            rulesJson: JSON.stringify(rules),
-
+            rulesJson: JSON.stringify(updatedRules),
             pinnedJson: JSON.stringify(
                 pinnedHotels.map((h, i) => ({
                     HotelId: Number(h.id),
@@ -109,7 +116,7 @@ export default function CreateCollection() {
         };
 
         await upsertCollection(payload);
-        router.push('/admin/collections');
+        router.push('/collections');
     };
 
     const moveHotel = (index, direction) => {
@@ -251,9 +258,8 @@ export default function CreateCollection() {
 
             const res = await getHotelsByCity(payload);
 
-            // ✅ LIMIT RESULTS (Prevents UI lag if API returns 500+ hotels)
             const results = res?.data?.slice(0, 50) || [];
-
+            console.log(results);
             if (type === 'pinned') {
                 setPinnedOptions(results);
                 setShowPinnedDropdown(true);
@@ -275,19 +281,29 @@ export default function CreateCollection() {
             setLoadingHotels(false);
         }
     };
-
     const addExcludedHotel = () => {
-        if (!excludeSearch || !excludeReason) return;
+        if (!selectedExcludeHotel || !excludeReason.trim()) {
+            alert('Please select hotel and enter reason');
+            return;
+        }
 
-        setExcludedHotels([
-            ...excludedHotels,
+        const alreadyExists = excludedHotels.some((h) => h.id === selectedExcludeHotel.id);
+
+        if (alreadyExists) {
+            alert('Hotel already excluded');
+            return;
+        }
+
+        setExcludedHotels((prev) => [
+            ...prev,
             {
-                id: Date.now(),
-                name: excludeSearch,
+                id: selectedExcludeHotel.id, // ✅ REAL HOTEL ID
+                name: selectedExcludeHotel.name,
                 reason: excludeReason
             }
         ]);
 
+        setSelectedExcludeHotel(null);
         setExcludeSearch('');
         setExcludeReason('');
     };
@@ -546,6 +562,13 @@ export default function CreateCollection() {
                                             value={excludeSearch}
                                             onChange={(e) => setExcludeSearch(e.target.value)}
                                         />
+                                        <input
+                                            type="text"
+                                            className="form-control mt-2"
+                                            placeholder="Reason for exclusion"
+                                            value={excludeReason}
+                                            onChange={(e) => setExcludeReason(e.target.value)}
+                                        />
 
                                         {/* {excludeOptions.length > 0 && ( */}
                                         {showExcludeDropdown && excludeOptions.length > 0 && (
@@ -559,21 +582,36 @@ export default function CreateCollection() {
                                                         className="p-2"
                                                         style={{ cursor: 'pointer' }}
                                                         onClick={() => {
-                                                            if (!excludeReason) return;
-
-                                                            setExcludedHotels([
-                                                                ...excludedHotels,
-                                                                {
-                                                                    id: hotel.id,
-                                                                    name: hotel.name,
-                                                                    reason: excludeReason
-                                                                }
-                                                            ]);
-
-                                                            setExcludeSearch('');
-                                                            setExcludeOptions([]);
+                                                            setSelectedExcludeHotel(hotel);
+                                                            setExcludeSearch(hotel.name);
                                                             setShowExcludeDropdown(false);
                                                         }}
+                                                        // onClick={() => {
+                                                        //     if (!excludeReason.trim()) {
+                                                        //         alert('Please enter exclusion reason');
+                                                        //         return;
+                                                        //     }
+
+                                                        //     const alreadyExists = excludedHotels.some((h) => h.id === hotel.id);
+                                                        //     if (alreadyExists) {
+                                                        //         alert('Hotel already excluded');
+                                                        //         return;
+                                                        //     }
+
+                                                        //     setExcludedHotels((prev) => [
+                                                        //         ...prev,
+                                                        //         {
+                                                        //             id: hotel.id,
+                                                        //             name: hotel.name,
+                                                        //             reason: excludeReason
+                                                        //         }
+                                                        //     ]);
+
+                                                        //     setExcludeSearch('');
+                                                        //     setExcludeReason('');
+                                                        //     setExcludeOptions([]);
+                                                        //     setShowExcludeDropdown(false);
+                                                        // }}
                                                     >
                                                         {hotel.name}
                                                     </div>
