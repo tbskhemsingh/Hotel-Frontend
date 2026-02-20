@@ -9,7 +9,7 @@ export default function BasicsTab({ formData, setFormData, geoNodes, cities, sel
             <div className="row">
                 {/* Collection Name */}
                 <div className="col-12 col-lg-6 mb-3">
-                    <label className="form-label">Collection Name *</label>
+                    <label className="form-label">Collection Name </label>
                     <input
                         type="text"
                         className="form-control"
@@ -23,7 +23,7 @@ export default function BasicsTab({ formData, setFormData, geoNodes, cities, sel
 
                 {/* Slug */}
                 <div className="col-12 col-lg-6 mb-3">
-                    <label className="form-label">Slug *</label>
+                    <label className="form-label">Slug </label>
                     <input
                         type="text"
                         className="form-control"
@@ -35,46 +35,10 @@ export default function BasicsTab({ formData, setFormData, geoNodes, cities, sel
                     />
                 </div>
 
-                {/* <div className="col-12 col-lg-6 mb-3">
-                    <label className="form-label">GeoNode *</label>
-                    <select className="form-select" name="geoNodeId" value={formData.geoNodeId} onChange={handleChange} required>
-                        <option value="">Select GeoNode</option>
-                        {geoNodes.map((node) => (
-                            <option key={node.countryID} value={node.countryID}>
-                                {node.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="col-12 col-lg-6 mb-3">
-                    <label className="form-label">City</label>
-                    <select
-                        className="form-select"
-                        value={selectedCity}
-                        onChange={(e) => setSelectedCity(e.target.value)}
-                        disabled={!formData.geoNodeId}
-                    >
-                        <option value="">Select City</option>
-
-                        {cities.length === 0 && formData.geoNodeId && (
-                            <option value="" disabled>
-                                No cities found
-                            </option>
-                        )}
-
-                        {cities.map((city) => (
-                            <option key={city.cityID} value={city.cityID}>
-                                {city.name}
-                            </option>
-                        ))}
-                    </select>
-                </div> */}
-
                 {/* Template */}
                 <div className="col-12 col-lg-6 mb-3">
-                    <label className="form-label">Template *</label>
-                    <select className="form-select" name="type" value={formData.type} onChange={handleChange} required>
+                    <label className="form-label">Template </label>
+                    <select className="form-select" name="template" value={formData.template} onChange={handleChange} required>
                         <option value="">Select Template</option>
                         <option value="Family">Family</option>
                         <option value="Luxury">Luxury</option>
@@ -152,7 +116,7 @@ export default function BasicsTab({ formData, setFormData, geoNodes, cities, sel
 
             {/* Next Button */}
             <div className="d-flex justify-content-end">
-                <button className="btn btn-primary px-4" onClick={onNext} type="button">
+                <button className="theme-button-orange rounded-2" onClick={onNext} type="button">
                     Next
                 </button>
             </div>

@@ -107,7 +107,7 @@ export default function RulesTab({
 
                         {/* Add Button */}
                         <div className="col-12 col-md-2 d-grid">
-                            <button type="button" className="btn btn-primary" onClick={addRule}>
+                            <button type="button" className="theme-button-orange rounded-2" onClick={addRule}>
                                 + Add
                             </button>
                         </div>
@@ -147,7 +147,7 @@ export default function RulesTab({
                     Back
                 </button>
 
-                <button type="button" className="btn btn-primary" onClick={onNext}>
+                <button type="button" className="theme-button-orange rounded-2" onClick={onNext}>
                     Next
                 </button>
             </div>

@@ -16,7 +16,6 @@ export default function PreviewTab({ formData, rules, pinnedHotels, excludedHote
 
     return (
         <>
-            <h5 className="mb-4">Preview Collection</h5>
 
             {/* ================= BASIC INFO ================= */}
             <div className="border rounded p-3 mb-4">
@@ -99,7 +98,7 @@ export default function PreviewTab({ formData, rules, pinnedHotels, excludedHote
                     Back
                 </button>
 
-                <button type="button" className="btn btn-success" onClick={handlePublish} disabled={isSubmitting}>
+                <button type="button" className="theme-button-orange rounded-2" onClick={handlePublish} disabled={isSubmitting}>
                     {isSubmitting ? 'Publishing...' : 'Publish'}
                 </button>
             </div>

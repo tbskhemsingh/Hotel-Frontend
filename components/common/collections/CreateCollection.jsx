@@ -52,7 +52,8 @@ export default function CreateCollection() {
         maxHotels: '',
         changedBy: 'Admin',
         isDebug: false,
-        defaultSort: 'StarRating DESC'
+        defaultSort: 'StarRating DESC',
+        template: ''
     });
 
     // ---------------- TAB NAVIGATION ----------------
@@ -195,10 +196,14 @@ export default function CreateCollection() {
             GeoNodeId: Number(formData.geoNodeId),
             Name: formData.name,
             Slug: formData.slug,
-            Template: formData.mode.toLowerCase(),
+            Type: formData.mode.toLowerCase(),
+            Template: formData.template || null,
             Status: publishType.toLowerCase(),
             ExpiryDate: formData.expiryDate || null,
-            MaxHotels: Number(formData.maxHotels)
+            PublishDate: publishType === 'Published' ? new Date().toISOString() : null,
+
+            MaxHotels: Number(formData.maxHotels),
+            DefaultSort: 'StarRating DESC'
         };
 
         const payload = {
@@ -248,7 +253,7 @@ export default function CreateCollection() {
                 })}
             </ul>
             <div className="card-header">
-                <h5>Create Collection</h5>
+                <h5>Collections</h5>
             </div>
 
             <div className="card-body">

@@ -1424,3 +1424,11 @@ a.text-sky-blue:hover {
 .navbar-toggler-icon {
   filter: invert(1);
 }
+
+.nav-tabs .nav-link {
+  color: #0d6efd !important;
+}
+
+.nav-tabs .nav-link.active {
+  color: #f0831e !important;
+}
