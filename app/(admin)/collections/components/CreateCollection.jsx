@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { upsertCollection } from '@/lib/api/admin/collectionapi';
+import { getCitiesByCountryOrRegion, getGeoNodes, getHotelsByCity, upsertCollection } from '@/lib/api/admin/collectionapi';
 import { RULE_FIELDS, RULE_OPERATORS, RULE_VALUE_OPTIONS } from '@/lib/constants/ruleConfig';
 
 export default function CreateCollection() {
@@ -17,7 +17,17 @@ export default function CreateCollection() {
     const [excludeReason, setExcludeReason] = useState('');
     const [excludedHotels, setExcludedHotels] = useState([]);
     const [activeTab, setActiveTab] = useState('Basics');
+    const [selectedCity, setSelectedCity] = useState('');
+    const [geoNodes, setGeoNodes] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [loadingHotels, setLoadingHotels] = useState(false);
+    const [pinnedOptions, setPinnedOptions] = useState([]);
+    const [excludeOptions, setExcludeOptions] = useState([]);
+    const [showPinnedDropdown, setShowPinnedDropdown] = useState(false);
+    const [showExcludeDropdown, setShowExcludeDropdown] = useState(false);
 
+    const pinnedRef = useRef(null);
+    const excludeRef = useRef(null);
     const [formData, setFormData] = useState({
         name: '',
         slug: '',
@@ -45,56 +55,20 @@ export default function CreateCollection() {
             [name]: value
         });
     };
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (pinnedRef.current && !pinnedRef.current.contains(event.target)) {
+                setShowPinnedDropdown(false);
+            }
 
-    // const handleSubmit = async (publishType = 'Draft') => {
-    //     const payload = {
-    //         collectionId: null,
-    //         collectionJson: JSON.stringify({
-    //             Name: formData.name,
-    //             Slug: formData.slug,
-    //             GeoNodeId: formData.geoNodeId,
-    //             ParentCollectionId: formData.parentCollectionId || null,
-    //             Type: formData.type,
-    //             Status: publishType,
-    //             ExpiryDate: formData.expiryDate || null,
-    //             // Mode: formData.mode,
-    //             MaxHotels: formData.maxHotels,
-    //             DefaultSort: 'StarRating DESC'
-    //         }),
-    //         rulesJson: JSON.stringify(rules),
+            if (excludeRef.current && !excludeRef.current.contains(event.target)) {
+                setShowExcludeDropdown(false);
+            }
+        };
 
-    //         // rulesJson: JSON.stringify([
-    //         //     { field: 'Geo', value: formData.geoRule },
-    //         //     { field: 'Tag', value: formData.tagRule },
-    //         //     { field: 'Rating', value: formData.ratingRule }
-    //         // ]),
-    //         // pinnedJson: JSON.stringify(formData.pinnedHotels),
-    //         pinnedJson: JSON.stringify(
-    //             pinnedHotels.map((h, i) => ({
-    //                 HotelId: h.id,
-    //                 Position: i + 1
-    //             }))
-    //         ),
-
-    //         // excludeJson: JSON.stringify({
-    //         //     chain: formData.excludedChain,
-    //         //     hotels: formData.excludedHotels
-    //         // }),
-
-    //         excludeJson: JSON.stringify(
-    //             excludedHotels.map((h) => ({
-    //                 HotelId: h.id,
-    //                 Reason: h.reason
-    //             }))
-    //         ),
-
-    //         changedBy: formData.changedBy,
-    //         isDebug: formData.isDebug
-    //     };
-
-    //     await upsertCollection(payload);
-    //     router.push('/admin/collections');
-    // };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSubmit = async (publishType = 'Draft') => {
         const collectionObject = {
@@ -138,13 +112,6 @@ export default function CreateCollection() {
         router.push('/admin/collections');
     };
 
-    const addPinnedHotel = () => {
-        if (!hotelSearch) return;
-
-        setPinnedHotels([...pinnedHotels, { id: Date.now(), name: hotelSearch }]);
-
-        setHotelSearch('');
-    };
     const moveHotel = (index, direction) => {
         const updated = [...pinnedHotels];
         const target = index + direction;
@@ -175,6 +142,140 @@ export default function CreateCollection() {
         setRules(rules.filter((_, i) => i !== index));
     };
 
+    useEffect(() => {
+        loadGeoNodes();
+    }, []);
+
+    const loadGeoNodes = async () => {
+        try {
+            const res = await getGeoNodes();
+            setGeoNodes(res?.data?.countries || []);
+        } catch (err) {
+            console.error('GeoNode load error', err);
+        }
+    };
+
+    useEffect(() => {
+        if (formData.geoNodeId) {
+            loadCities(formData.geoNodeId);
+        } else {
+            setCities([]);
+            setSelectedCity('');
+        }
+    }, [formData.geoNodeId]);
+
+    const loadCities = async (countryId) => {
+        try {
+            const res = await getCitiesByCountryOrRegion({
+                countryId
+            });
+
+            setCities(res?.data || []);
+        } catch (err) {
+            if (err?.status === 404) {
+                setCities([]);
+            } else {
+                console.error('City load error', err);
+            }
+        }
+    };
+
+    useEffect(() => {
+        const delay = setTimeout(() => {
+            if (hotelSearch.length >= 2) {
+                loadHotels(hotelSearch, 'pinned');
+                setShowPinnedDropdown(true);
+            } else {
+                setPinnedOptions([]);
+                setShowPinnedDropdown(false);
+            }
+
+            if (excludeSearch.length >= 2) {
+                loadHotels(excludeSearch, 'exclude');
+                setShowExcludeDropdown(true);
+            } else {
+                setExcludeOptions([]);
+                setShowExcludeDropdown(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(delay);
+    }, [hotelSearch, excludeSearch, selectedCity]);
+
+    // const loadHotels = async (search, type) => {
+    //     try {
+    //         setLoadingHotels(true);
+
+    //         const payload = {
+    //             search
+    //         };
+
+    //         // Only add cityId if selected
+    //         if (selectedCity) {
+    //             payload.cityId = selectedCity;
+    //         }
+
+    //         const res = await getHotelsByCity(payload);
+    //         const results = res?.data?.slice(0, 50) || [];
+
+    //         if (type === 'pinned') {
+    //             setPinnedOptions(results || []);
+    //         } else {
+    //             setExcludeOptions(results || []);
+    //         }
+    //     } catch (err) {
+    //         console.error('Hotel load error', err);
+
+    //         if (type === 'pinned') {
+    //             setPinnedOptions([]);
+    //         } else {
+    //             setExcludeOptions([]);
+    //         }
+    //     } finally {
+    //         setLoadingHotels(false);
+    //     }
+    // };
+
+    const loadHotels = async (search, type) => {
+        try {
+            setLoadingHotels(true);
+
+            const payload = {
+                search
+            };
+
+            // Add cityId only if selected
+            if (selectedCity) {
+                payload.cityId = selectedCity;
+            }
+
+            const res = await getHotelsByCity(payload);
+
+            // ✅ LIMIT RESULTS (Prevents UI lag if API returns 500+ hotels)
+            const results = res?.data?.slice(0, 50) || [];
+
+            if (type === 'pinned') {
+                setPinnedOptions(results);
+                setShowPinnedDropdown(true);
+            } else if (type === 'exclude') {
+                setExcludeOptions(results);
+                setShowExcludeDropdown(true);
+            }
+        } catch (err) {
+            console.error('Hotel load error', err);
+
+            if (type === 'pinned') {
+                setPinnedOptions([]);
+                setShowPinnedDropdown(false);
+            } else if (type === 'exclude') {
+                setExcludeOptions([]);
+                setShowExcludeDropdown(false);
+            }
+        } finally {
+            setLoadingHotels(false);
+        }
+    };
+
     const addExcludedHotel = () => {
         if (!excludeSearch || !excludeReason) return;
 
@@ -191,6 +292,13 @@ export default function CreateCollection() {
         setExcludeReason('');
     };
 
+    const addPinnedHotel = () => {
+        if (!hotelSearch) return;
+
+        setPinnedHotels([...pinnedHotels, { id: Date.now(), name: hotelSearch }]);
+
+        setHotelSearch('');
+    };
     return (
         <div className="card shadow-sm">
             <div className="card-header">
@@ -198,24 +306,6 @@ export default function CreateCollection() {
             </div>
 
             <div className="card-body">
-                {/* Tabs */}
-                {/* <ul className="nav nav-tabs mb-4">
-                    <li className="nav-item">
-                        <button className="nav-link active">Basics</button>
-                    </li>
-                    <li className="nav-item">
-                        <button className="nav-link">Content</button>
-                    </li>
-                    <li className="nav-item">
-                        <button className="nav-link">Rules</button>
-                    </li>
-                    <li className="nav-item">
-                        <button className="nav-link">Curation</button>
-                    </li>
-                    <li className="nav-item">
-                        <button className="nav-link">Preview</button>
-                    </li>
-                </ul> */}
                 <ul className="nav nav-tabs mb-4">
                     {['Basics', 'Content', 'Rules', 'Curation', 'Preview'].map((tab) => (
                         <li className="nav-item" key={tab}>
@@ -236,35 +326,65 @@ export default function CreateCollection() {
                         <div className="row">
                             <div className="col-12 col-lg-6 mb-3">
                                 <label className="form-label">Collection Name</label>
-                                <input type="text" className="form-control" name="name" value={formData.name} onChange={handleChange} />
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    placeholder="Collection Name"
+                                />
                             </div>
 
                             <div className="col-12 col-lg-6 mb-3">
                                 <label className="form-label">Slug</label>
-                                <input type="text" className="form-control" name="slug" value={formData.slug} onChange={handleChange} />
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    name="slug"
+                                    value={formData.slug}
+                                    onChange={handleChange}
+                                    placeholder="Collection slug"
+                                />
                             </div>
 
+                            {/* GeoNode */}
                             <div className="col-12 col-lg-6 mb-3">
                                 <label className="form-label">GeoNode</label>
                                 <select className="form-select" name="geoNodeId" value={formData.geoNodeId} onChange={handleChange}>
                                     <option value="">Select GeoNode</option>
-                                    <option value="1">Sydney</option>
-                                    <option value="2">Melbourne</option>
+                                    {geoNodes.map((node) => (
+                                        <option key={node.countryID} value={node.countryID}>
+                                            {node.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
-                            {/* <div className="col-12 col-lg-6 mb-3">
-                        <label className="form-label">Parent Collection</label>
-                        <select
-                            className="form-select"
-                            name="parentCollectionId"
-                            value={formData.parentCollectionId}
-                            onChange={handleChange}
-                        >
-                            <option value="">Select Parent</option>
-                            <option value="10">Melbourne Hotels</option>
-                        </select>
-                    </div> */}
+                            {/* City */}
+                            <div className="col-12 col-lg-6 mb-3">
+                                <label className="form-label">City</label>
+                                <select
+                                    className="form-select"
+                                    value={selectedCity}
+                                    onChange={(e) => setSelectedCity(e.target.value)}
+                                    disabled={!formData.geoNodeId}
+                                >
+                                    <option value="">Select City</option>
+
+                                    {cities.length === 0 && formData.geoNodeId && (
+                                        <option value="" disabled>
+                                            No cities found
+                                        </option>
+                                    )}
+
+                                    {cities.map((city) => (
+                                        <option key={city.cityID} value={city.cityID}>
+                                            {city.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
                             <div className="col-12 col-lg-6 mb-3">
                                 <label className="form-label">Template</label>
@@ -382,8 +502,8 @@ export default function CreateCollection() {
 
                                         {/* <div className="col-12 col-lg-2 "> */}
                                         <div className="col-12 col-md-2">
-                                            <button className="btn btn-dark w-100" onClick={addRule}>
-                                                + Add Rule
+                                            <button className="theme-button-orange rounded-1 w-100" onClick={addRule}>
+                                                + Add
                                             </button>
                                         </div>
                                     </div>
@@ -413,80 +533,58 @@ export default function CreateCollection() {
                                 </div>
                             </div>
 
-                            {/* ================= EXCLUSIONS ================= */}
-
-                            {/* <div className="col-md-3">
-                        <h6>Excluded Hotels</h6>
-
-                        <div className="border p-3 rounded">
-                            <input
-                                type="text"
-                                className="form-control mb-2"
-                                placeholder="Search Hotel"
-                                value={excludeSearch}
-                                onChange={(e) => setExcludeSearch(e.target.value)}
-                            />
-
-                            <select className="form-select mb-2" value={excludeReason} onChange={(e) => setExcludeReason(e.target.value)}>
-                                <option value="">Select Reason</option>
-                                <option value="Low Quality">Low Quality</option>
-                                <option value="Closed">Closed</option>
-                                <option value="Duplicate">Duplicate</option>
-                            </select>
-
-                            <button className="btn btn-dark mb-3 w-100" onClick={addExcludedHotel}>
-                                Exclude
-                            </button>
-
-                            {excludedHotels.map((hotel, index) => (
-                                <div key={hotel.id} className="d-flex justify-content-between border-bottom py-2">
-                                    <div>
-                                        {hotel.name} — Reason: {hotel.reason}
-                                    </div>
-                                    <button
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={() => setExcludedHotels(excludedHotels.filter((_, i) => i !== index))}
-                                    >
-                                        ❌
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div> */}
                             {/* <div className="col-12 col-lg-3"> */}
                             <div className="col-12 col-md-6 col-xl-3">
                                 <h6>Excluded Hotels</h6>
 
                                 <div className="border p-3 rounded-2">
-                                    <div className="row g-2">
-                                        <div className="col-12">
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                placeholder="Search Hotel"
-                                                value={excludeSearch}
-                                                onChange={(e) => setExcludeSearch(e.target.value)}
-                                            />
-                                        </div>
+                                    <div className="position-relative" ref={excludeRef}>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder="Search Hotel"
+                                            value={excludeSearch}
+                                            onChange={(e) => setExcludeSearch(e.target.value)}
+                                        />
 
-                                        <div className="col-12">
-                                            <select
-                                                className="form-select"
-                                                value={excludeReason}
-                                                onChange={(e) => setExcludeReason(e.target.value)}
+                                        {/* {excludeOptions.length > 0 && ( */}
+                                        {showExcludeDropdown && excludeOptions.length > 0 && (
+                                            <div
+                                                className="position-absolute bg-white border w-100 mt-1 rounded shadow-sm"
+                                                style={{ zIndex: 1000, maxHeight: '200px', overflowY: 'auto' }}
                                             >
-                                                <option value="">Select Reason</option>
-                                                <option value="Low Quality">Low Quality</option>
-                                                <option value="Closed">Closed</option>
-                                                <option value="Duplicate">Duplicate</option>
-                                            </select>
-                                        </div>
+                                                {excludeOptions.map((hotel) => (
+                                                    <div
+                                                        key={hotel.id}
+                                                        className="p-2"
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={() => {
+                                                            if (!excludeReason) return;
 
-                                        <div className="col-12">
-                                            <button className="btn btn-dark w-100" onClick={addExcludedHotel}>
-                                                Exclude
-                                            </button>
-                                        </div>
+                                                            setExcludedHotels([
+                                                                ...excludedHotels,
+                                                                {
+                                                                    id: hotel.id,
+                                                                    name: hotel.name,
+                                                                    reason: excludeReason
+                                                                }
+                                                            ]);
+
+                                                            setExcludeSearch('');
+                                                            setExcludeOptions([]);
+                                                            setShowExcludeDropdown(false);
+                                                        }}
+                                                    >
+                                                        {hotel.name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="col-12 ">
+                                        <button className="theme-button-orange rounded-1" onClick={addExcludedHotel}>
+                                            Exclude
+                                        </button>
                                     </div>
 
                                     {excludedHotels.map((hotel, index) => (
@@ -516,17 +614,39 @@ export default function CreateCollection() {
                                 <h6>Pinned Hotels</h6>
 
                                 <div className="border p-3 rounded-2">
-                                    <div className="d-flex mb-3">
+                                    <div className="position-relative w-100" ref={pinnedRef}>
                                         <input
                                             type="text"
-                                            className="form-control me-2"
+                                            className="form-control"
                                             placeholder="Search Hotel"
                                             value={hotelSearch}
                                             onChange={(e) => setHotelSearch(e.target.value)}
                                         />
-                                        <button className="btn btn-dark w-100" onClick={addPinnedHotel}>
-                                            Add
-                                        </button>
+
+                                        {/* {pinnedOptions.length > 0 && ( */}
+                                        {showPinnedDropdown && pinnedOptions.length > 0 && (
+                                            <div
+                                                className="position-absolute bg-white border w-100 mt-1 rounded shadow-sm"
+                                                style={{ zIndex: 1000, maxHeight: '200px', overflowY: 'auto' }}
+                                            >
+                                                {/* {hotelOptions.map((hotel) => ( */}
+                                                {pinnedOptions.map((hotel) => (
+                                                    <div
+                                                        key={hotel.id}
+                                                        className="p-2 hover-bg cursor-pointer"
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={() => {
+                                                            setPinnedHotels([...pinnedHotels, { id: hotel.id, name: hotel.name }]);
+                                                            setHotelSearch('');
+                                                            setPinnedOptions([]);
+                                                            setShowPinnedDropdown(false);
+                                                        }}
+                                                    >
+                                                        {hotel.name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {pinnedHotels.map((hotel, index) => (
@@ -559,6 +679,12 @@ export default function CreateCollection() {
                                             </div>
                                         </div>
                                     ))}
+
+                                    <div className="d-flex mb-3">
+                                        <button className="theme-button-orange rounded-1" onClick={addPinnedHotel}>
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -570,11 +696,11 @@ export default function CreateCollection() {
                                 Cancel
                             </button>
 
-                            <button className="btn btn-outline-dark" onClick={() => handleSubmit('Draft')} type="button">
+                            {/* <button className="btn btn-outline-dark" onClick={() => handleSubmit('Draft')} type="button">
                                 Save Draft
-                            </button>
+                            </button> */}
 
-                            <button className="btn btn-dark" onClick={() => handleSubmit('Published')} type="button">
+                            <button className=" theme-button-orange rounded-1" onClick={() => handleSubmit('Published')} type="button">
                                 Publish
                             </button>
                         </div>
