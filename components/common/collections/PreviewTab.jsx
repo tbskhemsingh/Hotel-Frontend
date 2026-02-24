@@ -5,10 +5,10 @@ import { useState } from 'react';
 export default function PreviewTab({ formData, rules, pinnedHotels, excludedHotels, onBack, onSubmit }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handlePublish = async () => {
+    const handleAction = async (action) => {
         try {
             setIsSubmitting(true);
-            await onSubmit();
+            await onSubmit(action);
         } finally {
             setIsSubmitting(false);
         }
@@ -16,7 +16,6 @@ export default function PreviewTab({ formData, rules, pinnedHotels, excludedHote
 
     return (
         <>
-
             {/* ================= BASIC INFO ================= */}
             <div className="border rounded p-3 mb-4">
                 <h6>Basic Information</h6>
@@ -98,9 +97,27 @@ export default function PreviewTab({ formData, rules, pinnedHotels, excludedHote
                     Back
                 </button>
 
-                <button type="button" className="theme-button-orange rounded-2" onClick={handlePublish} disabled={isSubmitting}>
+                {/* <button type="button" className="theme-button-orange rounded-2" onClick={handlePublish} disabled={isSubmitting}>
                     {isSubmitting ? 'Publishing...' : 'Publish'}
                 </button>
+                <button type="button" className="theme-button-orange rounded-2" onClick={handleDraft} disabled={isSubmitting}>
+                    {isSubmitting ? 'Drafting...' : 'Draft'}
+                </button> */}
+
+                <div className="d-flex gap-2">
+                    <button type="button" className="btn btn-outline-primary" onClick={() => handleAction('draft')} disabled={isSubmitting}>
+                        {isSubmitting ? 'Processing...' : 'Save as Draft'}
+                    </button>
+
+                    <button
+                        type="button"
+                        className="theme-button-orange rounded-2"
+                        onClick={() => handleAction('publish')}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Processing...' : 'Publish'}
+                    </button>
+                </div>
             </div>
         </>
     );

@@ -9,7 +9,8 @@ import {
     upsertCollection,
     saveContent,
     saveRule,
-    getRulesByCollectionId
+    getRulesByCollectionId,
+    updateCollectionStatus
 } from '@/lib/api/admin/collectionapi';
 
 import BasicsTab from './BasicsTab';
@@ -387,6 +388,29 @@ export default function CreateCollection() {
             goBack();
         }
     };
+
+    const handleStatusUpdate = async (action) => {
+        if (!collectionId) {
+            alert('Collection ID not found');
+            return;
+        }
+
+        try {
+            await updateCollectionStatus(collectionId, action);
+
+            alert(action === 'publish' ? 'Collection published successfully!' : 'Collection saved as draft!');
+
+            setFormData((prev) => ({
+                ...prev,
+                status: action === 'publish' ? 'Published' : 'Draft'
+            }));
+
+            router.push('/collections');
+        } catch (error) {
+            console.error('Status update failed:', error);
+            alert('Failed to update status');
+        }
+    };
     // ---------------- RENDER ----------------
     return (
         <div className="card shadow-sm">
@@ -549,7 +573,7 @@ export default function CreateCollection() {
                         pinnedHotels={pinnedHotels}
                         excludedHotels={excludedHotels}
                         onBack={goBack}
-                        onSubmit={() => handleSubmit('Published')}
+                        onSubmit={handleStatusUpdate}
                     />
                 )}
             </div>

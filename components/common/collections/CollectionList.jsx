@@ -121,8 +121,8 @@ export default function CollectionList({ initialCollections, initialGeoNodes }) 
                         >
                             <option value="">Select Region</option>
                             {regions.length === 0 && selectedGeoNode && <option disabled>No regions found</option>}
-                            {regions.map((r) => (
-                                <option key={r.regionID} value={r.regionID}>
+                            {regions.map((r, index) => (
+                                <option key={`${r.regionID || index}`} value={r.regionID}>
                                     {r.name}
                                 </option>
                             ))}
@@ -139,8 +139,8 @@ export default function CollectionList({ initialCollections, initialGeoNodes }) 
                         >
                             <option value="">Select City</option>
                             {cities.length === 0 && selectedGeoNode && <option disabled>No cities found</option>}
-                            {cities.map((c) => (
-                                <option key={c.cityID} value={c.cityID}>
+                            {cities.map((c, index) => (
+                                <option key={`${c.cityID || index}`} value={c.cityID}>
                                     {c.name}
                                 </option>
                             ))}
