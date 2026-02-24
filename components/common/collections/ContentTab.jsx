@@ -1,5 +1,6 @@
 'use client';
 
+import CKEditorField from '@/components/ui/CKEditorField';
 import { saveContent } from '@/lib/api/admin/collectionapi';
 
 export default function ContentTab({ collectionId, data, setData, onNext, onBack }) {
@@ -58,7 +59,7 @@ export default function ContentTab({ collectionId, data, setData, onNext, onBack
         <>
             <div className="row">
                 <div className="col-md-6 mb-3">
-                    <label className="form-label">Header</label>
+                    <label className="form-label">H1 Title</label>
                     <input
                         className="form-control"
                         // name="h1"
@@ -81,12 +82,28 @@ export default function ContentTab({ collectionId, data, setData, onNext, onBack
 
                 <div className="col-md-12 mb-3">
                     <label className="form-label">Intro Short Copy</label>
-                    <textarea className="form-control" name="introShortCopy" value={data.introShortCopy} onChange={handleChange} />
+                    <CKEditorField
+                        value={data.introShortCopy}
+                        onChange={(val) =>
+                            setData((prev) => ({
+                                ...prev,
+                                introShortCopy: val
+                            }))
+                        }
+                    />
                 </div>
 
                 <div className="col-md-12 mb-3">
                     <label className="form-label">Intro Long Copy</label>
-                    <textarea className="form-control" name="introLongCopy" rows={4} value={data.introLongCopy} onChange={handleChange} />
+                    <CKEditorField
+                        value={data.introLongCopy}
+                        onChange={(val) =>
+                            setData((prev) => ({
+                                ...prev,
+                                introLongCopy: val
+                            }))
+                        }
+                    />
                 </div>
 
                 <div className="col-md-6 mb-3">
@@ -182,38 +199,6 @@ export default function ContentTab({ collectionId, data, setData, onNext, onBack
                                 faqs: [...faqs, { question: '', answer: '' }]
                             });
                         }}
-                        // onClick={() => {
-                        //     const faqs = data.faqs || [];
-
-                        //     // If no FAQ exists, allow first one
-                        //     if (faqs.length === 0) {
-                        //         setData({
-                        //             ...data,
-                        //             faqs: [{ question: '', answer: '' }]
-                        //         });
-                        //         return;
-                        //     }
-
-                        //     const lastFaq = faqs[faqs.length - 1];
-
-                        //     // // Check if last FAQ is incomplete
-                        //     if (!lastFaq.question?.trim() || !lastFaq.answer?.trim()) {
-                        //         // alert('Please fill Question and Answer before adding another FAQ.');
-                        //         return;
-                        //     }
-
-                        //     // Add new FAQ
-                        //     setData({
-                        //         ...data,
-                        //         faqs: [...faqs, { question: '', answer: '' }]
-                        //     });
-                        // }}
-                        // onClick={() =>
-                        //     setData({
-                        //         ...data,
-                        //         faqs: [...data.faqs, { question: '', answer: '' }]
-                        //     })
-                        // }
                     >
                         + Add FAQ
                     </button>
@@ -227,13 +212,13 @@ export default function ContentTab({ collectionId, data, setData, onNext, onBack
 
                 <div>
                     <button
-                        className="btn btn-primary"
+                        className="theme-button-orange rounded-2"
                         onClick={async () => {
                             await handleSave();
                             onNext();
                         }}
                     >
-                        Save & Continue
+                        Next
                     </button>
                 </div>
             </div>

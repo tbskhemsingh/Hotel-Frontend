@@ -1,14 +1,46 @@
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-export default function BasicsTab({ formData, setFormData, onNext }) {
+export default function BasicsTab({ formData, setFormData, onNext, loading }) {
     const router = useRouter();
+    const handleCancel = () => {
+        router.push('/collections');
+    };
+
+    const generateSlug = (text) => {
+        return text
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '') // remove special chars
+            .replace(/\s+/g, '-') // replace spaces with -
+            .replace(/-+/g, '-'); // remove duplicate -
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+
+        // If user types collection name → auto update slug
+        if (name === 'name') {
+            setFormData((prev) => ({
+                ...prev,
+                name: value,
+                slug: generateSlug(value)
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
-    const handleCancel = () => {
-        router.push('/collections');
+
+    const handleNext = async () => {
+        try {
+            setLoading(true);
+            await onNext();
+        } finally {
+            setLoading(false);
+        }
     };
     return (
         <>
@@ -118,16 +150,31 @@ export default function BasicsTab({ formData, setFormData, onNext }) {
                 </div> */}
             </div>
 
-            <hr />
 
-            {/* Next Button */}
             <div className="d-flex justify-content-between">
                 <button className="btn btn-outline-secondary" onClick={handleCancel}>
                     Cancel
                 </button>
-                <button className="theme-button-orange rounded-2" onClick={onNext} type="button">
-                    Next
+
+                <button
+                    className="theme-button-orange rounded-2 d-flex align-items-center justify-content-center"
+                    onClick={onNext}
+                    type="button"
+                    disabled={loading}
+                    style={{ minWidth: '100px' }}
+                >
+                    {loading ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Loading...
+                        </>
+                    ) : (
+                        'Next'
+                    )}
                 </button>
+                {/* <button className="theme-button-orange rounded-2" onClick={onNext} type="button">
+                    Next
+                </button> */}
             </div>
         </>
     );

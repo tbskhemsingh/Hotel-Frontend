@@ -10,7 +10,8 @@ import {
     saveContent,
     saveRule,
     getRulesByCollectionId,
-    updateCollectionStatus
+    updateCollectionStatus,
+    saveCuration
 } from '@/lib/api/admin/collectionapi';
 
 import BasicsTab from './BasicsTab';
@@ -36,6 +37,7 @@ export default function CreateCollection() {
     const [selectedGeoNode, setSelectedGeoNode] = useState(null);
     const [selectedCityObj, setSelectedCityObj] = useState(null);
     const [collectionId, setCollectionId] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const [contentData, setContentData] = useState({
         header: '',
@@ -254,6 +256,7 @@ export default function CreateCollection() {
             alert('Please save Basics first');
             return;
         }
+        setLoading(true);
 
         const payload = {
             collectionId: collectionId,
@@ -274,10 +277,13 @@ export default function CreateCollection() {
         } catch (error) {
             console.error('Save failed:', error);
             alert('Failed to save content');
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSaveBasics = async () => {
+        setLoading(true);
         const collectionObject = {
             GeoNodeId: Number(formData.geoNodeId),
             Name: formData.name,
@@ -315,6 +321,8 @@ export default function CreateCollection() {
         } catch (error) {
             console.error('Save Basics failed:', error);
             alert('Failed to save Basics');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -328,6 +336,7 @@ export default function CreateCollection() {
             alert('Please add at least one rule');
             return;
         }
+        setLoading(true);
 
         try {
             await Promise.all(
@@ -348,6 +357,8 @@ export default function CreateCollection() {
         } catch (error) {
             console.error('Save rules failed:', error);
             alert('Failed to save rules');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -366,6 +377,7 @@ export default function CreateCollection() {
             goBack();
             return;
         }
+        setLoading(true);
 
         try {
             const res = await getRulesByCollectionId(collectionId);
@@ -386,6 +398,8 @@ export default function CreateCollection() {
         } catch (error) {
             console.error('Failed to fetch rules:', error);
             goBack();
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -409,6 +423,46 @@ export default function CreateCollection() {
         } catch (error) {
             console.error('Status update failed:', error);
             alert('Failed to update status');
+        }
+    };
+
+    const handleSaveCuration = async () => {
+        if (!collectionId) {
+            alert('Please save Basics first');
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // ✅ Build pinned structure EXACTLY as backend expects
+            const pinnedPayload = pinnedHotels.map((hotel, index) => ({
+                HotelID: hotel.id,
+                Position: index + 1,
+                PinType: 'FIXED' // default for manual pin
+            }));
+
+            // ✅ Build exclude structure EXACTLY as backend expects
+            const excludePayload = excludedHotels.map((hotel) => ({
+                HotelID: hotel.id,
+                ChainID: null, // as per backend contract
+                Reason: hotel.reason
+            }));
+
+            const payload = {
+                collectionId: collectionId,
+                pinnedJson: JSON.stringify(pinnedPayload),
+                excludeJson: JSON.stringify(excludePayload)
+            };
+
+            await saveCuration(payload);
+
+            goNext(); // move to Preview
+        } catch (error) {
+            console.error('Curation save failed:', error);
+            alert('Failed to save curation');
+        } finally {
+            setLoading(false);
         }
     };
     // ---------------- RENDER ----------------
@@ -448,7 +502,7 @@ export default function CreateCollection() {
                         setCollectionId={setCollectionId}
                         onNext={handleSaveBasics}
                         onBack={goBack}
-
+                        loading={loading}
                     />
                 )}
 
@@ -476,7 +530,6 @@ export default function CreateCollection() {
                         setFormData={setFormData}
                         addRule={addRule}
                         removeRule={removeRule}
-                        // onNext={goNext}
                         onNext={handleSaveRules}
                         onBack={handleRulesBack}
                     />
@@ -527,43 +580,10 @@ export default function CreateCollection() {
                         addPinnedHotel={addPinnedHotel}
                         addExcludedHotel={addExcludedHotel}
                         moveHotel={moveHotel}
-                        onNext={goNext}
+                        onNext={handleSaveCuration}
                         onBack={goBack}
                         setCityOptions={setCityOptions}
                     />
-                    // <CurationTab
-                    //     formData={formData}
-                    //     setFormData={setFormData}
-                    //     geoNodes={geoNodes}
-                    //     cities={cities}
-                    //     selectedCity={selectedCity}
-                    //     setSelectedCity={setSelectedCity}
-                    //     pinnedHotels={pinnedHotels}
-                    //     setPinnedHotels={setPinnedHotels}
-                    //     excludedHotels={excludedHotels}
-                    //     setExcludedHotels={setExcludedHotels}
-                    //     hotelSearch={hotelSearch}
-                    //     setHotelSearch={setHotelSearch}
-                    //     excludeSearch={excludeSearch}
-                    //     setExcludeSearch={setExcludeSearch}
-                    //     excludeReason={excludeReason}
-                    //     setExcludeReason={setExcludeReason}
-                    //     pinnedOptions={pinnedOptions}
-                    //     excludeOptions={excludeOptions}
-                    //     selectedPinnedHotel={selectedPinnedHotel}
-                    //     setSelectedPinnedHotel={setSelectedPinnedHotel}
-                    //     selectedExcludeHotel={selectedExcludeHotel}
-                    //     setSelectedExcludeHotel={setSelectedExcludeHotel}
-                    //     addPinnedHotel={addPinnedHotel}
-                    //     addExcludedHotel={addExcludedHotel}
-                    //     moveHotel={moveHotel}
-                    //     onNext={goNext}
-                    //     onBack={goBack}
-                    //     showPinnedDropdown={showPinnedDropdown}
-                    //     setShowPinnedDropdown={setShowPinnedDropdown}
-                    //     showExcludeDropdown={showExcludeDropdown}
-                    //     setShowExcludeDropdown={setShowExcludeDropdown}
-                    // />
                 )}
 
                 {activeTab === 'Preview' && (

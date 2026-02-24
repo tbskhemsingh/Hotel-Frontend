@@ -80,7 +80,7 @@ export default function CurationTab({
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Search GeoNode"
+                            placeholder="Search By Country"
                             value={geoSearch}
                             onChange={(e) => {
                                 setGeoSearch(e.target.value);
@@ -145,7 +145,7 @@ export default function CurationTab({
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Search City"
+                            placeholder="Search By City"
                             value={citySearch}
                             disabled={!selectedGeoNode}
                             onChange={(e) => {
@@ -195,8 +195,6 @@ export default function CurationTab({
                 </div>
             </div>
 
-            <hr />
-
             {/* ================= PINNED HOTELS ================= */}
             {/* {(formData.mode === 'Curated' || formData.mode === 'Hybrid') && (
             )} */}
@@ -245,7 +243,12 @@ export default function CurationTab({
                     </div>
 
                     {pinnedHotels.map((hotel, index) => (
-                        <div key={hotel.id} className="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div
+                            key={hotel.id}
+                            className={`d-flex justify-content-between align-items-center py-2 ${
+                                index !== pinnedHotels.length - 1 ? 'border-bottom' : ''
+                            }`}
+                        >
                             <div>
                                 {index + 1}. {hotel.name}
                             </div>
@@ -323,7 +326,13 @@ export default function CurationTab({
 
                     {/* Excluded List */}
                     {excludedHotels.map((hotel, index) => (
-                        <div key={hotel.id} className="d-flex justify-content-between align-items-center border-bottom py-2">
+                        // <div key={hotel.id} className="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div
+                            key={hotel.id}
+                            className={`d-flex justify-content-between align-items-center py-2 ${
+                                index !== excludedHotels.length - 1 ? 'border-bottom' : ''
+                            }`}
+                        >
                             <div>
                                 {hotel.name} — {hotel.reason}
                             </div>
@@ -339,8 +348,6 @@ export default function CurationTab({
             </div>
 
             {/* {formData.mode === 'Rule' && <div className="alert alert-info">Rule Based collections do not allow manual pinning.</div>} */}
-
-            <hr />
 
             {/* ================= NAVIGATION ================= */}
             <div className="d-flex justify-content-between">
