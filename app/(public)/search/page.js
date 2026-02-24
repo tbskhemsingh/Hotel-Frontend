@@ -22,7 +22,6 @@ export default function SearchPage() {
         }
     };
 
-    console.log('SEARCH PAGE DATA 👉', data);
 
     return (
         <div style={{ padding: 40 }}>

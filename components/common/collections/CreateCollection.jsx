@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCitiesByCountryOrRegion, getGeoNodes, getHotelsByCity, upsertCollection, saveContent } from '@/lib/api/admin/collectionapi';
+import {
+    getCitiesByCountryOrRegion,
+    getGeoNodes,
+    getHotelsByCity,
+    upsertCollection,
+    saveContent,
+    saveRule,
+    getRulesByCollectionId
+} from '@/lib/api/admin/collectionapi';
 
 import BasicsTab from './BasicsTab';
 import ContentTab from './ContentTab';
@@ -15,7 +23,17 @@ export default function CreateCollection() {
 
     const tabOrder = ['Basics', 'Content', 'Rules', 'Curation', 'Preview'];
     const [activeTab, setActiveTab] = useState('Basics');
+    const [geoSearch, setGeoSearch] = useState('');
+    const [citySearch, setCitySearch] = useState('');
 
+    const [geoOptions, setGeoOptions] = useState([]);
+    const [cityOptions, setCityOptions] = useState([]);
+
+    const [showGeoDropdown, setShowGeoDropdown] = useState(false);
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+    const [selectedGeoNode, setSelectedGeoNode] = useState(null);
+    const [selectedCityObj, setSelectedCityObj] = useState(null);
     const [collectionId, setCollectionId] = useState(null);
 
     const [contentData, setContentData] = useState({
@@ -66,6 +84,43 @@ export default function CreateCollection() {
         template: ''
     });
 
+    useEffect(() => {
+        const delay = setTimeout(() => {
+            if (geoSearch.length >= 2 && !selectedGeoNode) {
+                loadGeoNodesBySearch(geoSearch);
+            } else {
+                setShowGeoDropdown(false);
+            }
+
+            if (citySearch.length >= 2 && selectedGeoNode && !selectedCityObj) {
+                loadCitiesBySearch(citySearch);
+            } else {
+                setShowCityDropdown(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(delay);
+    }, [geoSearch, citySearch]);
+
+    const loadGeoNodesBySearch = async (search) => {
+        const res = await getGeoNodes({ search });
+
+        const results = res?.data?.countries || [];
+
+        setGeoOptions(results);
+        setShowGeoDropdown(true);
+    };
+
+    const loadCitiesBySearch = async (search) => {
+        const payload = {
+            search,
+            countryId: selectedGeoNode?.countryID
+        };
+
+        const res = await getCitiesByCountryOrRegion(payload);
+        setCityOptions(res?.data?.slice(0, 50) || []);
+        setShowCityDropdown(true);
+    };
     // ---------------- TAB NAV ----------------
     const goNext = () => {
         const i = tabOrder.indexOf(activeTab);
@@ -78,23 +133,23 @@ export default function CreateCollection() {
     };
 
     // ---------------- LOAD GEO ----------------
-    useEffect(() => {
-        loadGeoNodes();
-    }, []);
+    // useEffect(() => {
+    //     loadGeoNodes();
+    // }, []);
 
-    const loadGeoNodes = async () => {
-        const res = await getGeoNodes();
-        setGeoNodes(res?.data?.countries || []);
-    };
+    // const loadGeoNodes = async () => {
+    //     const res = await getGeoNodes();
+    //     setGeoNodes(res?.data?.countries || []);
+    // };
 
-    useEffect(() => {
-        if (formData.geoNodeId) loadCities(formData.geoNodeId);
-    }, [formData.geoNodeId]);
+    // useEffect(() => {
+    //     if (formData.geoNodeId) loadCities(formData.geoNodeId);
+    // }, [formData.geoNodeId]);
 
-    const loadCities = async (countryId) => {
-        const res = await getCitiesByCountryOrRegion({ countryId });
-        setCities(res?.data || []);
-    };
+    // const loadCities = async (countryId) => {
+    //     const res = await getCitiesByCountryOrRegion({ countryId });
+    //     setCities(res?.data || []);
+    // };
 
     // ---------------- HOTEL SEARCH ----------------
     useEffect(() => {
@@ -208,7 +263,7 @@ export default function CreateCollection() {
             introLongCopy: contentData.introLongCopy,
             heroImageUrl: contentData.heroImageUrl,
             badge: contentData.badge,
-            faQsJson: JSON.stringify(contentData.faqs), // match backend casing
+            faQsJson: JSON.stringify(contentData.faqs),
             userId: 1
         };
 
@@ -221,7 +276,6 @@ export default function CreateCollection() {
         }
     };
 
-    // ---------------- FINAL SUBMIT ----------------
     const handleSaveBasics = async () => {
         const collectionObject = {
             GeoNodeId: Number(formData.geoNodeId),
@@ -231,8 +285,8 @@ export default function CreateCollection() {
             Template: formData.template || null,
             Status: formData.status.toLowerCase(),
             ExpiryDate: formData.expiryDate || null,
-            MaxHotels: Number(formData.maxHotels),
-            DefaultSort: 'StarRating DESC'
+            MaxHotels: formData.maxHotels ? Number(formData.maxHotels) : null,
+            DefaultSort: formData.defaultSort || 'StarRating DESC'
         };
 
         const payload = {
@@ -251,14 +305,86 @@ export default function CreateCollection() {
             const newCollectionId = response?.data?.collectionId;
 
             if (newCollectionId) {
-                setCollectionId(newCollectionId); // 🔥 IMPORTANT
-                onNext();
+                setCollectionId(newCollectionId);
+                // alert('Basics saved successfully!');
+                goNext(); // ✅ move to Content tab
             } else {
-                alert('Failed to get collectionId');
+                alert('Failed to get collectionId from response');
             }
-        } catch (err) {
-            console.error(err);
-            alert('Save failed');
+        } catch (error) {
+            console.error('Save Basics failed:', error);
+            alert('Failed to save Basics');
+        }
+    };
+
+    const handleSaveRules = async () => {
+        if (!collectionId) {
+            alert('Please save Basics first');
+            return;
+        }
+
+        if (!rules.length) {
+            alert('Please add at least one rule');
+            return;
+        }
+
+        try {
+            await Promise.all(
+                rules.map((rule) =>
+                    saveRule({
+                        ruleID: 0,
+                        collectionID: collectionId,
+                        field: rule.Field,
+                        operator: rule.Operator,
+                        value: rule.Value,
+                        logicalGroup: 'AND'
+                    })
+                )
+            );
+
+            // alert('Rules saved successfully!');
+            goNext();
+        } catch (error) {
+            console.error('Save rules failed:', error);
+            alert('Failed to save rules');
+        }
+    };
+
+    useEffect(() => {
+        if (!selectedGeoNode) {
+            setSelectedCity(null);
+            setSelectedCityObj(null);
+            setCitySearch('');
+            setCityOptions([]);
+            setShowCityDropdown(false);
+        }
+    }, [selectedGeoNode]);
+
+    const handleRulesBack = async () => {
+        if (!collectionId) {
+            goBack();
+            return;
+        }
+
+        try {
+            const res = await getRulesByCollectionId(collectionId);
+
+            // adjust based on backend response
+            const fetchedRules = res?.data || [];
+
+            const formattedRules = fetchedRules.map((rule) => ({
+                Field: rule.field,
+                Operator: rule.operator,
+                Value: rule.value
+            }));
+
+            setRules(formattedRules);
+
+            // move to previous tab after fetching
+            setActiveTab('Content');
+        } catch (error) {
+            console.error('Failed to fetch rules:', error);
+            goBack();
         }
     };
     // ---------------- RENDER ----------------
@@ -286,89 +412,147 @@ export default function CreateCollection() {
             <div className="card-header">
                 <h5>Collections</h5>
             </div>
+            <div className="card-body">
+                {activeTab === 'Basics' && (
+                    <BasicsTab
+                        formData={formData}
+                        setFormData={setFormData}
+                        geoNodes={geoNodes}
+                        cities={cities}
+                        selectedCity={selectedCity}
+                        setSelectedCity={setSelectedCity}
+                        setCollectionId={setCollectionId}
+                        onNext={handleSaveBasics}
 
-            {activeTab === 'Basics' && (
-                <BasicsTab
-                    formData={formData}
-                    setFormData={setFormData}
-                    geoNodes={geoNodes}
-                    cities={cities}
-                    selectedCity={selectedCity}
-                    setSelectedCity={setSelectedCity}
-                    setCollectionId={setCollectionId}
-                    onNext={goNext}
-                />
-            )}
+                        // onNext={goNext}
+                    />
+                )}
 
-            {activeTab === 'Content' && (
-                <ContentTab data={contentData} setData={setContentData} onBack={goBack} onNext={handleSaveContent} />
-            )}
+                {activeTab === 'Content' && (
+                    <ContentTab
+                        data={contentData}
+                        setData={setContentData}
+                        onBack={goBack}
+                        onNext={handleSaveContent}
+                        collectionId={collectionId}
+                    />
+                )}
 
-            {activeTab === 'Rules' && (
-                <RulesTab
-                    rules={rules}
-                    setRules={setRules}
-                    ruleField={ruleField}
-                    setRuleField={setRuleField}
-                    ruleOperator={ruleOperator}
-                    setRuleOperator={setRuleOperator}
-                    ruleValue={ruleValue}
-                    setRuleValue={setRuleValue}
-                    formData={formData}
-                    setFormData={setFormData}
-                    addRule={addRule}
-                    removeRule={removeRule}
-                    onNext={goNext}
-                    onBack={goBack}
-                />
-            )}
+                {activeTab === 'Rules' && (
+                    <RulesTab
+                        rules={rules}
+                        setRules={setRules}
+                        ruleField={ruleField}
+                        setRuleField={setRuleField}
+                        ruleOperator={ruleOperator}
+                        setRuleOperator={setRuleOperator}
+                        ruleValue={ruleValue}
+                        setRuleValue={setRuleValue}
+                        formData={formData}
+                        setFormData={setFormData}
+                        addRule={addRule}
+                        removeRule={removeRule}
+                        // onNext={goNext}
+                        onNext={handleSaveRules}
+                        onBack={handleRulesBack}
+                    />
+                )}
 
-            {activeTab === 'Curation' && (
-                <CurationTab
-                    formData={formData}
-                    setFormData={setFormData}
-                    geoNodes={geoNodes}
-                    cities={cities}
-                    selectedCity={selectedCity}
-                    setSelectedCity={setSelectedCity}
-                    pinnedHotels={pinnedHotels}
-                    setPinnedHotels={setPinnedHotels}
-                    excludedHotels={excludedHotels}
-                    setExcludedHotels={setExcludedHotels}
-                    hotelSearch={hotelSearch}
-                    setHotelSearch={setHotelSearch}
-                    excludeSearch={excludeSearch}
-                    setExcludeSearch={setExcludeSearch}
-                    excludeReason={excludeReason}
-                    setExcludeReason={setExcludeReason}
-                    pinnedOptions={pinnedOptions}
-                    excludeOptions={excludeOptions}
-                    selectedPinnedHotel={selectedPinnedHotel}
-                    setSelectedPinnedHotel={setSelectedPinnedHotel}
-                    selectedExcludeHotel={selectedExcludeHotel}
-                    setSelectedExcludeHotel={setSelectedExcludeHotel}
-                    addPinnedHotel={addPinnedHotel}
-                    addExcludedHotel={addExcludedHotel}
-                    moveHotel={moveHotel}
-                    onNext={goNext}
-                    onBack={goBack}
-                    showPinnedDropdown={showPinnedDropdown}
-                    setShowPinnedDropdown={setShowPinnedDropdown}
-                    showExcludeDropdown={showExcludeDropdown}
-                    setShowExcludeDropdown={setShowExcludeDropdown}
-                />
-            )}
+                {activeTab === 'Curation' && (
+                    <CurationTab
+                        formData={formData}
+                        setFormData={setFormData}
+                        selectedCity={selectedCity}
+                        setSelectedCity={setSelectedCity}
+                        pinnedHotels={pinnedHotels}
+                        setPinnedHotels={setPinnedHotels}
+                        excludedHotels={excludedHotels}
+                        setExcludedHotels={setExcludedHotels}
+                        hotelSearch={hotelSearch}
+                        setHotelSearch={setHotelSearch}
+                        excludeSearch={excludeSearch}
+                        setExcludeSearch={setExcludeSearch}
+                        excludeReason={excludeReason}
+                        setExcludeReason={setExcludeReason}
+                        pinnedOptions={pinnedOptions}
+                        excludeOptions={excludeOptions}
+                        selectedPinnedHotel={selectedPinnedHotel}
+                        setSelectedPinnedHotel={setSelectedPinnedHotel}
+                        selectedExcludeHotel={selectedExcludeHotel}
+                        setSelectedExcludeHotel={setSelectedExcludeHotel}
+                        showPinnedDropdown={showPinnedDropdown}
+                        setShowPinnedDropdown={setShowPinnedDropdown}
+                        showExcludeDropdown={showExcludeDropdown}
+                        setShowExcludeDropdown={setShowExcludeDropdown}
+                        geoSearch={geoSearch}
+                        setGeoSearch={setGeoSearch}
+                        geoOptions={geoOptions}
+                        showGeoDropdown={showGeoDropdown}
+                        setShowGeoDropdown={setShowGeoDropdown}
+                        selectedGeoNode={selectedGeoNode}
+                        setSelectedGeoNode={setSelectedGeoNode}
+                        citySearch={citySearch}
+                        setCitySearch={setCitySearch}
+                        cityOptions={cityOptions}
+                        showCityDropdown={showCityDropdown}
+                        setShowCityDropdown={setShowCityDropdown}
+                        selectedCityObj={selectedCityObj}
+                        setSelectedCityObj={setSelectedCityObj}
+                        loadGeoNodesBySearch={loadGeoNodesBySearch}
+                        loadCitiesBySearch={loadCitiesBySearch}
+                        addPinnedHotel={addPinnedHotel}
+                        addExcludedHotel={addExcludedHotel}
+                        moveHotel={moveHotel}
+                        onNext={goNext}
+                        onBack={goBack}
+                        setCityOptions={setCityOptions}
+                    />
+                    // <CurationTab
+                    //     formData={formData}
+                    //     setFormData={setFormData}
+                    //     geoNodes={geoNodes}
+                    //     cities={cities}
+                    //     selectedCity={selectedCity}
+                    //     setSelectedCity={setSelectedCity}
+                    //     pinnedHotels={pinnedHotels}
+                    //     setPinnedHotels={setPinnedHotels}
+                    //     excludedHotels={excludedHotels}
+                    //     setExcludedHotels={setExcludedHotels}
+                    //     hotelSearch={hotelSearch}
+                    //     setHotelSearch={setHotelSearch}
+                    //     excludeSearch={excludeSearch}
+                    //     setExcludeSearch={setExcludeSearch}
+                    //     excludeReason={excludeReason}
+                    //     setExcludeReason={setExcludeReason}
+                    //     pinnedOptions={pinnedOptions}
+                    //     excludeOptions={excludeOptions}
+                    //     selectedPinnedHotel={selectedPinnedHotel}
+                    //     setSelectedPinnedHotel={setSelectedPinnedHotel}
+                    //     selectedExcludeHotel={selectedExcludeHotel}
+                    //     setSelectedExcludeHotel={setSelectedExcludeHotel}
+                    //     addPinnedHotel={addPinnedHotel}
+                    //     addExcludedHotel={addExcludedHotel}
+                    //     moveHotel={moveHotel}
+                    //     onNext={goNext}
+                    //     onBack={goBack}
+                    //     showPinnedDropdown={showPinnedDropdown}
+                    //     setShowPinnedDropdown={setShowPinnedDropdown}
+                    //     showExcludeDropdown={showExcludeDropdown}
+                    //     setShowExcludeDropdown={setShowExcludeDropdown}
+                    // />
+                )}
 
-            {activeTab === 'Preview' && (
-                <PreviewTab
-                    formData={formData}
-                    rules={rules}
-                    pinnedHotels={pinnedHotels}
-                    excludedHotels={excludedHotels}
-                    onBack={goBack}
-                    onSubmit={() => handleSubmit('Published')}
-                />
-            )}
+                {activeTab === 'Preview' && (
+                    <PreviewTab
+                        formData={formData}
+                        rules={rules}
+                        pinnedHotels={pinnedHotels}
+                        excludedHotels={excludedHotels}
+                        onBack={goBack}
+                        onSubmit={() => handleSubmit('Published')}
+                    />
+                )}
+            </div>
         </div>
     );
 }

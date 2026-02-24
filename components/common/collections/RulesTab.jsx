@@ -25,7 +25,7 @@ export default function RulesTab({
             [name]: value
         }));
     };
-
+   
     return (
         <>
             <div className="row">
@@ -34,13 +34,13 @@ export default function RulesTab({
                     <label className="form-label">Collection Mode </label>
                     <select className="form-select" name="mode" value={formData.mode} onChange={handleChange}>
                         <option value="Rule">Rule Based</option>
-                        <option value="Curated">Curated</option>
+                        {/* <option value="Curated">Curated</option> */}
                         <option value="Hybrid">Hybrid (Rules + Pinned)</option>
                     </select>
                 </div>
 
                 {/* ================= Max Hotels ================= */}
-                <div className="col-12 col-lg-6 mb-3">
+                {/* <div className="col-12 col-lg-6 mb-3">
                     <label className="form-label">Max Hotels</label>
                     <input
                         type="number"
@@ -51,7 +51,7 @@ export default function RulesTab({
                         onChange={handleChange}
                         placeholder="Enter max number of hotels"
                     />
-                </div>
+                </div> */}
             </div>
 
             {/* ================= RULE BUILDER ================= */}
@@ -135,11 +135,11 @@ export default function RulesTab({
             )}
 
             {/* ================= MODE INFO MESSAGE ================= */}
-            {formData.mode === 'Curated' && (
+            {/* {formData.mode === 'Curated' && (
                 <div className="alert alert-info">
                     In Curated mode, rules are disabled. You can pin hotels manually in the Curation tab.
                 </div>
-            )}
+            )} */}
 
             {/* ================= NAVIGATION ================= */}
             <div className="d-flex justify-content-between">
