@@ -1,9 +1,15 @@
-export default function BasicsTab({ formData, setFormData, geoNodes, cities, selectedCity, setSelectedCity, onNext }) {
+import { useRouter } from 'next/navigation';
+
+export default function BasicsTab({ formData, setFormData, onNext }) {
+    const router = useRouter();
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
-
+    const handleCancel = () => {
+        router.push('/collections');
+    };
     return (
         <>
             <div className="row">
@@ -115,7 +121,10 @@ export default function BasicsTab({ formData, setFormData, geoNodes, cities, sel
             <hr />
 
             {/* Next Button */}
-            <div className="d-flex justify-content-end">
+            <div className="d-flex justify-content-between">
+                <button className="btn btn-outline-secondary" onClick={handleCancel}>
+                    Cancel
+                </button>
                 <button className="theme-button-orange rounded-2" onClick={onNext} type="button">
                     Next
                 </button>

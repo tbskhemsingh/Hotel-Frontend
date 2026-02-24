@@ -447,8 +447,8 @@ export default function CreateCollection() {
                         setSelectedCity={setSelectedCity}
                         setCollectionId={setCollectionId}
                         onNext={handleSaveBasics}
+                        onBack={goBack}
 
-                        // onNext={goNext}
                     />
                 )}
 
