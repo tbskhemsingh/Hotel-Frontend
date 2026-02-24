@@ -96,7 +96,7 @@ export default function CurationTab({
                             >
                                 {geoOptions.map((node) => (
                                     <div
-                                        key={node.countryID}
+                                        key={node.countryId}
                                         className="p-2"
                                         style={{ cursor: 'pointer' }}
                                         onClick={() => {
@@ -105,7 +105,7 @@ export default function CurationTab({
 
                                             setFormData((prev) => ({
                                                 ...prev,
-                                                geoNodeId: node.countryID
+                                                geoNodeId: node.countryId
                                             }));
                                             setSelectedCity(null);
                                             setSelectedCityObj(null);
@@ -162,13 +162,13 @@ export default function CurationTab({
                             >
                                 {cityOptions.map((city) => (
                                     <div
-                                        key={city.cityID}
+                                        key={city.cityId}
                                         className="p-2"
                                         style={{ cursor: 'pointer' }}
                                         onClick={() => {
                                             setSelectedCityObj(city);
                                             setCitySearch(city.name);
-                                            setSelectedCity(city.cityID);
+                                            setSelectedCity(city.cityId);
                                             setShowCityDropdown(false);
                                         }}
                                     >

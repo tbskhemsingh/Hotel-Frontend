@@ -40,8 +40,9 @@ export default function CountryDropdownBootstrap({ countries }) {
                         }}
                     >
                         <div className="row">
-                            {countries.map((country) => (
-                                <div key={country.countryID} className="col-6 col-md-4 col-lg-3 mb-2">
+                            {countries.map((country, index) => (
+                                <div key={country.countryId ?? country.urlName ?? index}
+                                 className="col-6 col-md-4 col-lg-3 mb-2">
                                     {country.urlName ? (
                                         <Link
                                             href={`/${country.urlName}`}

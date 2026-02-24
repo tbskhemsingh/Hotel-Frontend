@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { fetchClient } from '@/lib/api/public/fetchClient';
 
 const ALPHABETS = ['Top Cities', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
 
@@ -9,23 +10,32 @@ export default function CityDropdown({ countryName, initialCities = [], parentId
     const [cities, setCities] = useState(initialCities);
     const [activeLetter, setActiveLetter] = useState('Top Cities');
     const [loading, setLoading] = useState(false);
+    const ITEM_TYPE = {
+        City: 0,
+        Region: 1,
+        HotelBrand: 2,
+        HotelType: 3
+    };
 
     const fetchCitiesByAlphabet = async (letter) => {
-        setActiveLetter(letter);
-        setLoading(true);
+        try {
+            setActiveLetter(letter);
+            setLoading(true);
 
-        const url =
-            letter === 'Top Cities'
-                ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/country/getByUrl/${countryName}`
-                : `${process.env.NEXT_PUBLIC_API_BASE_URL}/country/getByUrl/${countryName}?alphabet=${letter.toLowerCase()}`;
+            const endpoint =
+                letter === 'Top Cities' ? `/countries/${countryName}` : `/countries/${countryName}?alphabet=${letter.toLowerCase()}`;
 
-        const res = await fetch(url, { cache: 'no-store' });
-        const json = await res.json();
+            const json = await fetchClient(endpoint);
 
-        const cityData = json?.data?.countryData?.filter((item) => item.type === 'City') || [];
+            const cityData = json?.data?.countryData?.filter((item) => Number(item.type) === ITEM_TYPE.City) || [];
 
-        setCities(cityData);
-        setLoading(false);
+            setCities(cityData);
+        } catch (error) {
+            console.error('Failed to fetch cities:', error);
+            setCities([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
