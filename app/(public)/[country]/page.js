@@ -45,33 +45,7 @@ export default async function CountryPage({ params }) {
             count: item.hotelCount,
             href: item.urlName ? `/hoteltype/${item.urlName}` : null
         }));
-    // const regions = data.countryData
-    //     .filter((item) => item.type === 'Region')
-    //     .map((item) => ({
-    //         label: item.itemName,
-    //         href: item.urlName ? `/${countryName.toLocaleLowerCase()}/${item.urlName}` : null
-    //     }));
 
-    // const cities = data.countryData
-    //     .filter((item) => item.type === 'City')
-    //     .map((item) => ({
-    //         label: item.itemName,
-    //         href: item.urlName ? `/${item.urlName}` : null
-    //     }));
-    // const hotelBrands = data.hotelData
-    //     .filter((item) => item.type === 'HotelBrand')
-    //     .map((item) => ({
-    //         label: item.itemName,
-    //         count: item.hotelCount,
-    //         href: item.urlName ? `/${countryName}/${item.urlName}` : null
-    //     }));
-    // const hotelTypes = data?.hotelData
-    //     .filter((item) => item.type === 'HotelType')
-    //     .map((item) => ({
-    //         label: item.itemName,
-    //         count: item.hotelCount,
-    //         href: item.urlName ? `/hoteltype/${item.urlName}` : null
-    //     }));
     return (
         <>
             <CountryHeroSection />

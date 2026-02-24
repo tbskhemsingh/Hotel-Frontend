@@ -226,10 +226,6 @@ export default function ContentTab({ collectionId, data, setData, onNext, onBack
                 </button>
 
                 <div>
-                    <button className="btn btn-success me-2" onClick={handleSave}>
-                        Save Draft
-                    </button>
-
                     <button
                         className="btn btn-primary"
                         onClick={async () => {

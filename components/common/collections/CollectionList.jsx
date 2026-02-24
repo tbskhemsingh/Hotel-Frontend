@@ -42,7 +42,6 @@ export default function CollectionList({ initialCollections, initialGeoNodes }) 
         loadCollections();
     }, [statusFilter, selectedGeoNode, selectedRegion, selectedCity]);
 
-    // Region load
     useEffect(() => {
         if (!selectedGeoNode) {
             setRegions([]);
@@ -55,7 +54,6 @@ export default function CollectionList({ initialCollections, initialGeoNodes }) 
             .catch(() => setRegions([]));
     }, [selectedGeoNode]);
 
-    // City load
     useEffect(() => {
         if (!selectedGeoNode) {
             setCities([]);
