@@ -5,69 +5,110 @@ import { COLLECTION_STATUS_OPTIONS } from '@/lib/constants/ruleConfig';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function CollectionList({ initialCollections, initialGeoNodes }) {
+export default function CollectionList({ initialCollections, initialCountries }) {
+    const countries = initialCountries;
+
     const [collections, setCollections] = useState(initialCollections);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const router = useRouter();
     const [statusFilter, setStatusFilter] = useState('');
     const [cities, setCities] = useState([]);
-
-    const [selectedGeoNode, setSelectedGeoNode] = useState('');
+    const [selectedCountry, setSelectedCountry] = useState('');
     const [selectedCity, setSelectedCity] = useState('');
-    const [geoNodes, setGeoNodes] = useState(initialGeoNodes);
     const [regions, setRegions] = useState([]);
     const [selectedRegion, setSelectedRegion] = useState('');
+    const [countrySearch, setCountrySearch] = useState('');
+    const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+    const [regionSearch, setRegionSearch] = useState('');
+    const [showRegionDropdown, setShowRegionDropdown] = useState(false);
+    const [citySearch, setCitySearch] = useState('');
+    const [showCityDropdown, setShowCityDropdown] = useState(false);
 
     useEffect(() => {
         const loadCollections = async () => {
             try {
                 setLoading(true);
-                setError(null);
 
                 const res = await getCollectionList({
                     status: statusFilter,
-                    countryId: selectedGeoNode || null,
+                    countryId: selectedCountry || null,
                     regionId: selectedRegion || null,
                     cityId: selectedCity || null
                 });
                 setCollections(res?.data || []);
-            } catch {
-                setError('Something went wrong');
+            } catch (error) {
+                console.error('Error loading collections:', error);
             } finally {
                 setLoading(false);
             }
         };
 
         loadCollections();
-    }, [statusFilter, selectedGeoNode, selectedRegion, selectedCity]);
+    }, [statusFilter, selectedCountry, selectedRegion, selectedCity]);
 
     useEffect(() => {
-        if (!selectedGeoNode) {
+        if (!selectedCountry) {
             setRegions([]);
             setSelectedRegion('');
             return;
         }
 
-        getRegionsByCountry(selectedGeoNode)
+        getRegionsByCountry(selectedCountry)
             .then((res) => setRegions(res?.data || []))
             .catch(() => setRegions([]));
-    }, [selectedGeoNode]);
+    }, [selectedCountry]);
 
     useEffect(() => {
-        if (!selectedGeoNode) {
+        if (!selectedCountry) {
             setCities([]);
             setSelectedCity('');
             return;
         }
 
         getCitiesByCountryOrRegion({
-            countryId: selectedGeoNode,
+            countryId: selectedCountry,
             regionId: selectedRegion || null
         })
             .then((res) => setCities(res?.data || []))
             .catch(() => setCities([]));
-    }, [selectedGeoNode, selectedRegion]);
+    }, [selectedCountry, selectedRegion]);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.dropdown-wrapper')) {
+                setShowCountryDropdown(false);
+                setShowRegionDropdown(false);
+                setShowCityDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredCountries = countries.filter((c) =>
+        c.name.toLowerCase().includes(countrySearch.toLowerCase())
+    );
+
+    const selectedCountryObj = countries.find(
+        c => c.countryId === selectedCountry
+    );
+
+    const filteredRegions = regions.filter((r) =>
+        r.name.toLowerCase().includes(regionSearch.toLowerCase())
+    );
+
+    const selectedRegionObj = regions.find(
+        r => r.regionId === selectedRegion
+    );
+
+    const filteredCities = cities.filter((ct) =>
+        ct.name.toLowerCase().includes(citySearch.toLowerCase())
+    );
+
+    const selectedCityObj = cities.find(
+        ct => ct.cityId === selectedCity
+    );
 
     return (
         <div className="card shadow-sm mb-5">
@@ -92,57 +133,174 @@ export default function CollectionList({ initialCollections, initialGeoNodes }) 
                         </select>
                     </div>
 
-                    {/* GeoNode */}
-                    <div className="col-12 col-md-4 col-lg-3">
-                        <select className="form-select" value={selectedGeoNode} onChange={(e) => setSelectedGeoNode(e.target.value)}>
-                            <option value="">Select GeoNode</option>
-                            {geoNodes.map((node, index) => (
-                                <option key={`${node.countryId || index}`} value={node.countryId}>
-                                    {node.name}
-                                </option>
-                            ))}
-                            {/* {geoNodes.map((node) => (
-                                <option key={node.countryId} value={node.countryId}>
-                                    {node.name}
-                                </option>
-                            ))} */}
-                        </select>
+                    {/* Country */}
+                    <div className="col-12 col-md-4 col-lg-3 position-relative dropdown-wrapper">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Select Country"
+                            value={countrySearch}
+                            onFocus={() => {
+                                setShowCountryDropdown(true);
+
+                                // If user focuses after selection, allow editing
+                                if (selectedCountryObj) {
+                                    setCountrySearch(selectedCountryObj.name);
+                                }
+                            }}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setCountrySearch(value);
+                                setShowCountryDropdown(true);
+
+                                // If user edits input → clear selected country
+                                if (selectedCountry) {
+                                    setSelectedCountry('');
+                                    setSelectedRegion('');
+                                    setSelectedCity('');
+                                }
+                            }}
+                        />
+
+                        {showCountryDropdown && (
+                            <div
+                                className="border bg-white position-absolute w-100 mt-1"
+                                style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                            >
+                                {filteredCountries.length === 0 ? (
+                                    <div className="p-2 text-muted">No countries found</div>
+                                ) : (
+                                    filteredCountries.map((country) => (
+                                        <div
+                                            key={country.countryId}
+                                            className="p-2"
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => {
+                                                setSelectedCountry(country.countryId);
+                                                setCountrySearch(country.name);
+                                                setShowCountryDropdown(false);
+
+                                                setSelectedRegion('');
+                                                setRegionSearch('');
+
+                                                setSelectedCity('');
+                                                setCitySearch('');
+                                            }}
+                                        >
+                                            {country.name}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Region */}
-                    <div className="col-12 col-md-4 col-lg-3">
-                        <select
-                            className="form-select"
-                            value={selectedRegion}
-                            onChange={(e) => setSelectedRegion(e.target.value)}
-                            disabled={!selectedGeoNode}
-                        >
-                            <option value="">Select Region</option>
-                            {regions.length === 0 && selectedGeoNode && <option disabled>No regions found</option>}
-                            {regions.map((r, index) => (
-                                <option key={`${r.regionId || index}`} value={r.regionId}>
-                                    {r.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="col-12 col-md-4 col-lg-3 position-relative dropdown-wrapper">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Select Region"
+                            value={regionSearch}
+                            disabled={!selectedCountry}
+                            onFocus={() => {
+                                if (!selectedCountry) return;
+                                setShowRegionDropdown(true);
+                                if (selectedRegionObj) {
+                                    setRegionSearch(selectedRegionObj.name);
+                                }
+                            }}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setRegionSearch(value);
+                                setShowRegionDropdown(true);
+
+                                if (selectedRegion) {
+                                    setSelectedRegion('');
+                                    setSelectedCity('');
+                                }
+                            }}
+                        />
+
+                        {showRegionDropdown && selectedCountry && (
+                            <div
+                                className="border bg-white position-absolute w-100 mt-1"
+                                style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                            >
+                                {filteredRegions.length === 0 ? (
+                                    <div className="p-2 text-muted">No regions found</div>
+                                ) : (
+                                    filteredRegions.map((region) => (
+                                        <div
+                                            key={region.regionId}
+                                            className="p-2"
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => {
+                                                setSelectedRegion(region.regionId);
+                                                setRegionSearch(region.name);
+                                                setShowRegionDropdown(false);
+                                                setSelectedCity('');
+                                            }}
+                                        >
+                                            {region.name}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* City */}
-                    <div className="col-12 col-md-4 col-lg-3">
-                        <select
-                            className="form-select"
-                            value={selectedCity}
-                            onChange={(e) => setSelectedCity(e.target.value)}
-                            disabled={!selectedGeoNode}
-                        >
-                            <option value="">Select City</option>
-                            {cities.length === 0 && selectedGeoNode && <option disabled>No cities found</option>}
-                            {cities.map((c, index) => (
-                                <option key={`${c.cityId || index}`} value={c.cityId}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="col-12 col-md-4 col-lg-3 position-relative dropdown-wrapper">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Select City"
+                            value={citySearch}
+                            disabled={!selectedCountry}
+                            onFocus={() => {
+                                if (!selectedCountry) return;
+                                setShowCityDropdown(true);
+                                if (selectedCityObj) {
+                                    setCitySearch(selectedCityObj.name);
+                                }
+                            }}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setCitySearch(value);
+                                setShowCityDropdown(true);
+
+                                if (selectedCity) {
+                                    setSelectedCity('');
+                                }
+                            }}
+                        />
+
+                        {showCityDropdown && selectedCountry && (
+                            <div
+                                className="border bg-white position-absolute w-100 mt-1"
+                                style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                            >
+                                {filteredCities.length === 0 ? (
+                                    <div className="p-2 text-muted">No cities found</div>
+                                ) : (
+                                    filteredCities.map((city) => (
+                                        <div
+                                            key={city.cityId}
+                                            className="p-2"
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => {
+                                                setSelectedCity(city.cityId);
+                                                setCitySearch(city.name);
+                                                setShowCityDropdown(false);
+                                            }}
+                                        >
+                                            {city.name}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -181,7 +339,11 @@ export default function CollectionList({ initialCollections, initialGeoNodes }) 
                                         <span className="badge bg-success">{item.status}</span>
                                     </td>
                                     <td>{item.hotelCount}</td>
-                                    <td>{item.publishDate ? new Date(item.publishDate).toLocaleDateString() : '-'}</td>
+                                    <td>{
+                                        item.publishDate
+                                            ? new Date(item.publishDate).toLocaleDateString('en-GB')
+                                            : '-'
+                                    }</td>
                                     <td>
                                         <button className="btn btn-sm btn-outline-secondary me-2">Edit</button>
                                         <button className="btn btn-sm btn-outline-secondary me-2">Clone</button>
