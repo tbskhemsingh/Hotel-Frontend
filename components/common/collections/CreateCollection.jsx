@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     getCitiesByCountryOrRegion,
-    getGeoNodes,
     getHotelsByCity,
     upsertCollection,
     saveContent,
@@ -20,6 +19,7 @@ import RulesTab from './RulesTab';
 import CurationTab from './CurationTab';
 import PreviewTab from './PreviewTab';
 import toast from 'react-hot-toast';
+import { getCountriesApi } from '@/lib/api/public/countryapi';
 
 export default function CreateCollection() {
     const router = useRouter();
@@ -29,7 +29,6 @@ export default function CreateCollection() {
     const [geoSearch, setGeoSearch] = useState('');
     const [citySearch, setCitySearch] = useState('');
 
-    const [geoOptions, setGeoOptions] = useState([]);
     const [cityOptions, setCityOptions] = useState([]);
 
     const [showGeoDropdown, setShowGeoDropdown] = useState(false);
@@ -39,6 +38,7 @@ export default function CreateCollection() {
     const [selectedCityObj, setSelectedCityObj] = useState(null);
     const [collectionId, setCollectionId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [countries, setCountries] = useState([]);
 
     const [contentData, setContentData] = useState({
         header: '',
@@ -55,7 +55,7 @@ export default function CreateCollection() {
     const [ruleField, setRuleField] = useState('');
     const [ruleOperator, setRuleOperator] = useState('=');
     const [ruleValue, setRuleValue] = useState('');
-
+    const [excludeError, setExcludeError] = useState('');
     const [hotelSearch, setHotelSearch] = useState('');
     const [excludeSearch, setExcludeSearch] = useState('');
     const [excludeReason, setExcludeReason] = useState('');
@@ -88,43 +88,6 @@ export default function CreateCollection() {
         template: ''
     });
 
-    useEffect(() => {
-        const delay = setTimeout(() => {
-            if (geoSearch.length >= 2 && !selectedGeoNode) {
-                loadGeoNodesBySearch(geoSearch);
-            } else {
-                setShowGeoDropdown(false);
-            }
-
-            if (citySearch.length >= 2 && selectedGeoNode && !selectedCityObj) {
-                loadCitiesBySearch(citySearch);
-            } else {
-                setShowCityDropdown(false);
-            }
-        }, 400);
-
-        return () => clearTimeout(delay);
-    }, [geoSearch, citySearch]);
-
-    const loadGeoNodesBySearch = async (search) => {
-        const res = await getGeoNodes({ search });
-
-        const results = res?.data?.countries || [];
-
-        setGeoOptions(results);
-        setShowGeoDropdown(true);
-    };
-
-    const loadCitiesBySearch = async (search) => {
-        const payload = {
-            search,
-            countryId: selectedGeoNode?.countryId
-        };
-
-        const res = await getCitiesByCountryOrRegion(payload);
-        setCityOptions(res?.data?.slice(0, 50) || []);
-        setShowCityDropdown(true);
-    };
     // ---------------- TAB NAV ----------------
     const goNext = () => {
         const i = tabOrder.indexOf(activeTab);
@@ -136,61 +99,72 @@ export default function CreateCollection() {
         if (i > 0) setActiveTab(tabOrder[i - 1]);
     };
 
-    // ---------------- LOAD GEO ----------------
-    // useEffect(() => {
-    //     loadGeoNodes();
-    // }, []);
+    useEffect(() => {
+        if (!selectedGeoNode?.countryId) {
+            setCities([]);
+            return;
+        }
 
-    // const loadGeoNodes = async () => {
-    //     const res = await getGeoNodes();
-    //     setGeoNodes(res?.data?.countries || []);
-    // };
+        const loadCities = async () => {
+            const res = await getCitiesByCountryOrRegion({
+                countryId: selectedGeoNode.countryId
+            });
 
-    // useEffect(() => {
-    //     if (formData.geoNodeId) loadCities(formData.geoNodeId);
-    // }, [formData.geoNodeId]);
+            setCities(res?.data || []);
+        };
 
-    // const loadCities = async (countryId) => {
-    //     const res = await getCitiesByCountryOrRegion({ countryId });
-    //     setCities(res?.data || []);
-    // };
+        loadCities();
+    }, [selectedGeoNode]);
 
-    // ---------------- HOTEL SEARCH ----------------
     useEffect(() => {
         const delay = setTimeout(() => {
-            if (hotelSearch.length >= 2 && !selectedPinnedHotel) {
-                loadHotels(hotelSearch, 'pinned');
-            } else {
-                setShowPinnedDropdown(false);
-            }
-
-            if (excludeSearch.length >= 2 && !selectedExcludeHotel) {
-                loadHotels(excludeSearch, 'exclude');
-            } else {
-                setShowExcludeDropdown(false);
-            }
+            loadHotels(hotelSearch, 'pinned');
+            loadHotels(excludeSearch, 'exclude');
         }, 400);
 
         return () => clearTimeout(delay);
     }, [hotelSearch, excludeSearch, selectedCity]);
 
+    useEffect(() => {
+        const loadCountries = async () => {
+            const res = await getCountriesApi();
+            setCountries(res || []);
+        };
+
+        loadCountries();
+    }, []);
+
+    useEffect(() => {
+        const loadCountries = async () => {
+            const res = await getCountriesApi();
+            setCountries(res || []);
+        };
+
+        loadCountries();
+    }, []);
+
     const loadHotels = async (search, type) => {
-        const payload = { search };
-        if (selectedCity) payload.cityId = selectedCity;
+        const payload = {
+            searchTerm: search || ''
+        };
+
+        // ✅ Only send cityId if selected
+        if (selectedCity) {
+            payload.cityId = selectedCity;
+        }
 
         const res = await getHotelsByCity(payload);
         const results = res?.data?.slice(0, 50) || [];
 
         if (type === 'pinned') {
             setPinnedOptions(results);
-            setShowPinnedDropdown(true);
         } else {
             setExcludeOptions(results);
-            setShowExcludeDropdown(true);
         }
     };
 
     // ---------------- RULE FUNCTIONS ----------------
+
     const addRule = () => {
         if (!ruleField || !ruleValue) return;
 
@@ -210,7 +184,7 @@ export default function CreateCollection() {
         if (!selectedPinnedHotel) return;
 
         if (pinnedHotels.some((h) => h.id === selectedPinnedHotel.id)) {
-            alert('Hotel already pinned');
+            toast.error('Hotel already pinned');
             return;
         }
 
@@ -229,11 +203,41 @@ export default function CreateCollection() {
     };
 
     // ---------------- EXCLUDE ----------------
+    // const addExcludedHotel = () => {
+    //     if (!selectedExcludeHotel || !excludeReason) return;
+
+    //     if (excludedHotels.some((h) => h.id === selectedExcludeHotel.id)) {
+    //         toast.error('Hotel already excluded');
+    //         return;
+    //     }
+
+    //     setExcludedHotels([
+    //         ...excludedHotels,
+    //         {
+    //             id: selectedExcludeHotel.id,
+    //             name: selectedExcludeHotel.name,
+    //             reason: excludeReason
+    //         }
+    //     ]);
+
+    //     setSelectedExcludeHotel(null);
+    //     setExcludeSearch('');
+    //     setExcludeReason('');
+    // };
+
     const addExcludedHotel = () => {
-        if (!selectedExcludeHotel || !excludeReason) return;
+        if (!selectedExcludeHotel) {
+            setExcludeError('Please select a hotel');
+            return;
+        }
+
+        if (!excludeReason.trim()) {
+            setExcludeError('Reason is required to exclude a hotel');
+            return;
+        }
 
         if (excludedHotels.some((h) => h.id === selectedExcludeHotel.id)) {
-            alert('Already excluded');
+            setExcludeError('Hotel already excluded');
             return;
         }
 
@@ -246,9 +250,11 @@ export default function CreateCollection() {
             }
         ]);
 
+        // clear after success
         setSelectedExcludeHotel(null);
         setExcludeSearch('');
         setExcludeReason('');
+        setExcludeError('');
     };
 
     // ---------------- SAVE CONTENT ----------------
@@ -416,6 +422,7 @@ export default function CreateCollection() {
             setLoading(false);
         }
     };
+
     useEffect(() => {
         if (!selectedGeoNode) {
             setSelectedCity(null);
@@ -423,6 +430,13 @@ export default function CreateCollection() {
             setCitySearch('');
             setCityOptions([]);
             setShowCityDropdown(false);
+
+            setPinnedOptions([]);
+            setExcludeOptions([]);
+            setPinnedHotels([]);
+            setExcludedHotels([]);
+            setHotelSearch('');
+            setExcludeSearch('');
         }
     }, [selectedGeoNode]);
 
@@ -665,7 +679,6 @@ export default function CreateCollection() {
                         setShowExcludeDropdown={setShowExcludeDropdown}
                         geoSearch={geoSearch}
                         setGeoSearch={setGeoSearch}
-                        geoOptions={geoOptions}
                         showGeoDropdown={showGeoDropdown}
                         setShowGeoDropdown={setShowGeoDropdown}
                         selectedGeoNode={selectedGeoNode}
@@ -677,8 +690,6 @@ export default function CreateCollection() {
                         setShowCityDropdown={setShowCityDropdown}
                         selectedCityObj={selectedCityObj}
                         setSelectedCityObj={setSelectedCityObj}
-                        loadGeoNodesBySearch={loadGeoNodesBySearch}
-                        loadCitiesBySearch={loadCitiesBySearch}
                         addPinnedHotel={addPinnedHotel}
                         addExcludedHotel={addExcludedHotel}
                         moveHotel={moveHotel}
@@ -686,6 +697,10 @@ export default function CreateCollection() {
                         onBack={goBack}
                         setCityOptions={setCityOptions}
                         loading={loading}
+                        countries={countries}
+                        cities={cities}
+                        excludeError={excludeError}
+                        setExcludeError={setExcludeError}
                     />
                 )}
 

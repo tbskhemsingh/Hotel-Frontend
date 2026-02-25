@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 
 export default function CurationTab({
     formData,
+    countries,
     setFormData,
     geoNodes,
     cities,
@@ -48,7 +49,9 @@ export default function CurationTab({
     setSelectedCityObj,
     cityOptions,
     setCityOptions,
-    loading
+    loading,
+    excludeError,
+    setExcludeError
 }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -57,45 +60,77 @@ export default function CurationTab({
 
     const pinnedRef = useRef(null);
     const excludeRef = useRef(null);
-
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (pinnedRef.current && !pinnedRef.current.contains(event.target)) {
+        const handleClickOutside = (e) => {
+            // Country / City dropdown
+            if (!e.target.closest('.dropdown-wrapper')) {
+                setShowGeoDropdown(false);
+                setShowCityDropdown(false);
+            }
+
+            // Pinned
+            if (pinnedRef.current && !pinnedRef.current.contains(e.target)) {
                 setShowPinnedDropdown(false);
             }
 
-            if (excludeRef.current && !excludeRef.current.contains(event.target)) {
+            // Exclude
+            if (excludeRef.current && !excludeRef.current.contains(e.target)) {
                 setShowExcludeDropdown(false);
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
     }, []);
+
     return (
         <>
             {/* ================= LOCATION SECTION ================= */}
             <div className="row">
-                <div className="col-12 col-lg-6 mb-3">
-                    <div className="position-relative" style={{ overflow: 'visible' }}>
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search By Country"
-                            value={geoSearch}
-                            onChange={(e) => {
-                                setGeoSearch(e.target.value);
-                                setSelectedGeoNode(null);
-                                setShowGeoDropdown(true);
-                            }}
-                        />
+                {/* COUNTRY */}
+                <div className="col-12 col-lg-4 mb-3 position-relative dropdown-wrapper">
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Select Country"
+                        value={geoSearch}
+                        onFocus={() => {
+                            setShowGeoDropdown(true);
+                            if (selectedGeoNode) {
+                                setGeoSearch(selectedGeoNode.name);
+                            }
+                        }}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setGeoSearch(value);
+                            setShowGeoDropdown(true);
 
-                        {showGeoDropdown && geoOptions.length > 0 && (
-                            <div
-                                className="position-absolute bg-white border w-100 mt-1 rounded shadow-sm"
-                                style={{ zIndex: 1000, maxHeight: '200px', overflowY: 'auto' }}
-                            >
-                                {geoOptions.map((node) => (
+                            // Clear selection when user edits
+                            if (selectedGeoNode) {
+                                setSelectedGeoNode(null);
+                                setSelectedCity(null);
+                                setSelectedCityObj(null);
+                                setCitySearch('');
+                                setCityOptions([]);
+
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    geoNodeId: null,
+                                    regionId: null,
+                                    cityId: null
+                                }));
+                            }
+                        }}
+                    />
+
+                    {showGeoDropdown && (
+                        <div
+                            className="border bg-white position-absolute w-100 mt-1"
+                            style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                        >
+                            {countries
+                                .filter((c) => c.name.toLowerCase().includes(geoSearch.toLowerCase()))
+                                .map((node) => (
                                     <div
                                         key={node.countryId}
                                         className="p-2"
@@ -103,83 +138,89 @@ export default function CurationTab({
                                         onClick={() => {
                                             setSelectedGeoNode(node);
                                             setGeoSearch(node.name);
+                                            setShowGeoDropdown(false);
 
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                geoNodeId: node.countryId
-                                            }));
                                             setSelectedCity(null);
                                             setSelectedCityObj(null);
                                             setCitySearch('');
-                                            setCityOptions([]);
-                                            setShowCityDropdown(false);
+
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                geoNodeId: node.countryId,
+                                                cityId: null
+                                            }));
                                         }}
-                                        // onClick={() => {
-                                        //     setSelectedGeoNode(node);
-                                        //     setGeoSearch(node.name);
-                                        //     setFormData((prev) => ({
-                                        //         ...prev,
-                                        //         geoNodeId: node.countryID
-                                        //     }));
-                                        //     setShowGeoDropdown(false);
-                                        // }}
                                     >
                                         {node.name}
                                     </div>
                                 ))}
-                            </div>
-                        )}
-                    </div>
-                    {/* <label className="form-label">GeoNode </label>
-                    <select className="form-select" name="geoNodeId" value={formData.geoNodeId} onChange={handleChange}>
-                        <option value="">Select GeoNode</option>
-                        {geoNodes.map((node) => (
-                            <option key={node.countryID} value={node.countryID}>
-                                {node.name}
-                            </option>
-                        ))}
-                    </select> */}
+                        </div>
+                    )}
                 </div>
 
-                <div className="col-12 col-lg-6 mb-3">
-                    <div className="position-relative" style={{ overflow: 'visible' }}>
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search By City"
-                            value={citySearch}
-                            disabled={!selectedGeoNode}
-                            onChange={(e) => {
-                                setCitySearch(e.target.value);
-                                setSelectedCityObj(null);
-                                setShowCityDropdown(true);
-                            }}
-                        />
+                {/* CITY */}
+                <div className="col-12 col-lg-4 mb-3 position-relative dropdown-wrapper">
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Select City"
+                        value={citySearch}
+                        disabled={!selectedGeoNode}
+                        onFocus={() => {
+                            if (!selectedGeoNode) return;
+                            setShowCityDropdown(true);
 
-                        {showCityDropdown && cityOptions.length > 0 && (
-                            <div
-                                className="position-absolute bg-white border w-100 mt-1 rounded shadow-sm"
-                                style={{ zIndex: 9999, maxHeight: '200px', overflowY: 'auto' }}
-                            >
-                                {cityOptions.map((city) => (
+                            const selectedCityObj = cities?.find((ct) => ct.cityId === selectedCity);
+
+                            if (selectedCityObj) {
+                                setCitySearch(selectedCityObj.name);
+                            }
+                        }}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setCitySearch(value);
+                            setShowCityDropdown(true);
+
+                            if (selectedCity) {
+                                setSelectedCity(null);
+                                setSelectedCityObj(null);
+
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    cityId: null
+                                }));
+                            }
+                        }}
+                    />
+
+                    {showCityDropdown && selectedGeoNode && (
+                        <div
+                            className="border bg-white position-absolute w-100 mt-1"
+                            style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                        >
+                            {cities
+                                ?.filter((ct) => ct.name.toLowerCase().includes(citySearch.toLowerCase()))
+                                .map((city) => (
                                     <div
                                         key={city.cityId}
                                         className="p-2"
                                         style={{ cursor: 'pointer' }}
                                         onClick={() => {
-                                            setSelectedCityObj(city);
-                                            setCitySearch(city.name);
                                             setSelectedCity(city.cityId);
+                                            setCitySearch(city.name);
                                             setShowCityDropdown(false);
+
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                cityId: city.cityId
+                                            }));
                                         }}
                                     >
                                         {city.name}
                                     </div>
                                 ))}
-                            </div>
-                        )}
-                    </div>
-                  
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -196,8 +237,14 @@ export default function CurationTab({
                             className="form-control"
                             placeholder="Search hotel"
                             value={hotelSearch}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowPinnedDropdown(true);
+                                setShowExcludeDropdown(false);
+                            }}
                             onChange={(e) => {
                                 setHotelSearch(e.target.value);
+                                setSelectedPinnedHotel(null);
                                 setShowPinnedDropdown(true);
                             }}
                         />
@@ -212,7 +259,8 @@ export default function CurationTab({
                                         key={hotel.id}
                                         className="p-2"
                                         style={{ cursor: 'pointer' }}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.stopPropagation();
                                             setSelectedPinnedHotel(hotel);
                                             setHotelSearch(hotel.name);
                                             setShowPinnedDropdown(false);
@@ -268,6 +316,11 @@ export default function CurationTab({
                             className="form-control mb-2"
                             placeholder="Search hotel"
                             value={excludeSearch}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowExcludeDropdown(true);
+                                setShowPinnedDropdown(false);
+                            }}
                             onChange={(e) => {
                                 setExcludeSearch(e.target.value);
                                 setSelectedExcludeHotel(null);
@@ -285,7 +338,8 @@ export default function CurationTab({
                                         key={hotel.id}
                                         className="p-2"
                                         style={{ cursor: 'pointer' }}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.stopPropagation();
                                             setSelectedExcludeHotel(hotel);
                                             setExcludeSearch(hotel.name);
                                             setShowExcludeDropdown(false);
@@ -301,11 +355,18 @@ export default function CurationTab({
                     {/* Reason Input */}
                     <input
                         type="text"
-                        className="form-control mb-2"
+                        className={`form-control mb-1 ${excludeError ? 'is-invalid' : ''}`}
                         placeholder="Reason for exclusion"
                         value={excludeReason}
-                        onChange={(e) => setExcludeReason(e.target.value)}
+                        onChange={(e) => {
+                            setExcludeReason(e.target.value);
+                            if (e.target.value.trim()) {
+                                setExcludeError('');
+                            }
+                        }}
                     />
+
+                    {excludeError && <div className="text-danger small mb-2">{excludeError}</div>}
 
                     {/* Exclude Button */}
                     <button type="button" className="theme-button-orange  rounded-2 mb-3" onClick={addExcludedHotel}>
