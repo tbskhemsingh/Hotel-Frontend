@@ -523,7 +523,9 @@ export default function CreateCollection() {
                     />
                 )}
 
-                {activeTab === 'Content' && <ContentTab data={contentData} onBack={goBack} onNext={handleSaveContent} loading={loading} />}
+                {activeTab === 'Content' && (
+                    <ContentTab data={contentData} setData={setContentData} onBack={goBack} onNext={handleSaveContent} loading={loading} />
+                )}
 
                 {activeTab === 'Rules' && (
                     <RulesTab
