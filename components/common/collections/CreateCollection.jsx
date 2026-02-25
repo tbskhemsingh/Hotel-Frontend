@@ -375,8 +375,6 @@ export default function CreateCollection() {
 
             setPinnedOptions([]);
             setExcludeOptions([]);
-            setPinnedHotels([]);
-            setExcludedHotels([]);
             setHotelSearch('');
             setExcludeSearch('');
         }
