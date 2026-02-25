@@ -135,21 +135,7 @@ export default function BasicsTab({ formData, setFormData, onNext, loading }) {
                         placeholder="Enter maximum number of hotels"
                     />
                 </div>
-
-                {/* <div className="col-12 col-lg-6 mb-3">
-                    <label className="form-label">Debug Mode</label>
-                    <div>
-                        <input
-                            type="checkbox"
-                            name="isDebug"
-                            checked={formData.isDebug}
-                            onChange={(e) => setFormData({ ...formData, isDebug: e.target.checked })}
-                        />{' '}
-                        Enable Debug
-                    </div>
-                </div> */}
             </div>
-
 
             <div className="d-flex justify-content-between">
                 <button className="btn btn-outline-secondary" onClick={handleCancel}>

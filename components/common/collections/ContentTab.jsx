@@ -3,7 +3,7 @@
 import CKEditorField from '@/components/ui/CKEditorField';
 import { saveContent } from '@/lib/api/admin/collectionapi';
 
-export default function ContentTab({ collectionId, data, setData, onNext, onBack }) {
+export default function ContentTab({ collectionId, data, setData, onNext, onBack  , loading}) {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setData((prev) => ({
@@ -212,13 +212,20 @@ export default function ContentTab({ collectionId, data, setData, onNext, onBack
 
                 <div>
                     <button
-                        className="theme-button-orange rounded-2"
-                        onClick={async () => {
-                            await handleSave();
-                            onNext();
-                        }}
+                        className="theme-button-orange rounded-2 d-flex align-items-center justify-content-center"
+                        onClick={handleSave}
+                        type="button"
+                        disabled={loading}
+                        style={{ minWidth: '100px' }}
                     >
-                        Next
+                        {loading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Loading...
+                            </>
+                        ) : (
+                            'Next'
+                        )}
                     </button>
                 </div>
             </div>

@@ -513,6 +513,7 @@ export default function CreateCollection() {
                         onBack={goBack}
                         onNext={handleSaveContent}
                         collectionId={collectionId}
+                        loading={loading}
                     />
                 )}
 
@@ -532,6 +533,7 @@ export default function CreateCollection() {
                         removeRule={removeRule}
                         onNext={handleSaveRules}
                         onBack={handleRulesBack}
+                        loading={loading}
                     />
                 )}
 
@@ -583,6 +585,7 @@ export default function CreateCollection() {
                         onNext={handleSaveCuration}
                         onBack={goBack}
                         setCityOptions={setCityOptions}
+                        loading={loading}
                     />
                 )}
 
@@ -594,6 +597,7 @@ export default function CreateCollection() {
                         excludedHotels={excludedHotels}
                         onBack={goBack}
                         onSubmit={handleStatusUpdate}
+                        loading={loading}
                     />
                 )}
             </div>

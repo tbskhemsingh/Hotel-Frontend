@@ -16,7 +16,8 @@ export default function RulesTab({
     addRule,
     removeRule,
     onNext,
-    onBack
+    onBack,
+    loading
 }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -25,7 +26,7 @@ export default function RulesTab({
             [name]: value
         }));
     };
-   
+
     return (
         <>
             <div className="row">
@@ -147,8 +148,21 @@ export default function RulesTab({
                     Back
                 </button>
 
-                <button type="button" className="theme-button-orange rounded-2" onClick={onNext}>
-                    Next
+                <button
+                    className="theme-button-orange rounded-2 d-flex align-items-center justify-content-center"
+                    onClick={onNext}
+                    type="button"
+                    disabled={loading}
+                    style={{ minWidth: '100px' }}
+                >
+                    {loading ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Loading...
+                        </>
+                    ) : (
+                        'Next'
+                    )}
                 </button>
             </div>
         </>

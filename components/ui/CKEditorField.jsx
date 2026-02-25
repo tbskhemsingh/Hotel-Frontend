@@ -9,13 +9,12 @@ export default function CKEditorField({ value, onChange }) {
     const [editor, setEditor] = useState(null);
 
     useEffect(() => {
-        // Dynamically load ClassicEditor on client
         import('@ckeditor/ckeditor5-build-classic').then((mod) => {
             setEditor(() => mod.default);
         });
     }, []);
 
-    if (!editor) return null; // prevent SSR crash
+    if (!editor) return null; 
 
     return (
         <CKEditor
