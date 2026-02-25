@@ -114,7 +114,7 @@ export default function CollectionList({ initialCollections, initialCountries })
         <div className="card shadow-sm mb-5">
             <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">Hotel Collections</h5>
-                <button className="theme-button-orange rounded-1" onClick={() => router.push('/collections/create')}>
+                <button className="theme-button-orange rounded-1" onClick={() => router.push('/admin/collections/create')}>
                     Create New Collection
                 </button>
             </div>

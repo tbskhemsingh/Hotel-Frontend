@@ -26,7 +26,7 @@ export default function AdminTopNav() {
                             </a>
                             <ul className="dropdown-menu">
                                 <li>
-                                    <Link className="dropdown-item" href="/collections">
+                                    <Link className="dropdown-item" href="/admin/collections">
                                         Collection
                                     </Link>
                                 </li>

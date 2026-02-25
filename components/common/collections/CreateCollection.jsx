@@ -432,7 +432,7 @@ export default function CreateCollection() {
                 status: action === 'publish' ? 'Published' : 'Draft'
             }));
 
-            router.push('/collections');
+            router.push('/admin/collections');
         } catch (error) {
             console.error('Status update failed:', error);
             toast.error(error?.message || 'Failed to update status');

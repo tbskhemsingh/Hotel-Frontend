@@ -25,9 +25,9 @@ export default function LoginPage() {
             if (roleName === 'User') {
                 router.replace('/');
             } else if (['Admin', 'Editor', 'Viewer'].includes(roleName)) {
-                router.replace('/dashboard');
+                router.replace('/admin/dashboard');
             } else {
-                router.replace('/auth/login');
+                router.replace('/admin/auth/login');
             }
         } catch (error) {
             alert(error.message);

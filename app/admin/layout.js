@@ -30,19 +30,21 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import AdminHeader from './_layout_components/Header';
 import AdminTopNav from './_layout_components/AdminTopNav';
 
 export default function AdminLayout({ children }) {
     const router = useRouter();
+        const pathname = usePathname();
+        const hideHeader = pathname === '/admin/auth/login';
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
         const role = localStorage.getItem('adminRole');
 
         if (!token) {
-            router.replace('/auth/login');
+            router.replace('/admin/auth/login');
             return;
         }
 
@@ -50,17 +52,13 @@ export default function AdminLayout({ children }) {
             router.replace('/');
             return;
         }
-    }, []);
+    }, [router]);
 
     return (
-        <>
-            {' '}
-            <div className="min-vh-100 d-flex flex-column">
-                <AdminHeader />
-                <AdminTopNav />
-
-                <main className="flex-fill p-4 bg-light">{children}</main>
-            </div>
-        </>
+        <div className="min-vh-100 d-flex flex-column">
+          {!hideHeader && <AdminHeader />}
+            {!hideHeader && <AdminTopNav />}
+            <main className="flex-fill p-4 bg-light">{children}</main>
+        </div>
     );
 }
