@@ -51,7 +51,6 @@ export default function CurationTab({
     const excludeRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (e) => {
-            // Country / City dropdown
             if (!e.target.closest('.dropdown-wrapper')) {
                 setShowGeoDropdown(false);
                 setShowCityDropdown(false);

@@ -33,17 +33,10 @@ export default function AdminTopNav() {
                             </ul>
                         </li>
 
-                        <li className="nav-item dropdown">
-                            <a className="nav-link dropdown-toggle text-white px-4 py-3" href="#" data-bs-toggle="dropdown">
+                        <li className="nav-item">
+                            <Link className="nav-link text-white px-4 py-3" href="#">
                                 Hotel
-                            </a>
-                            <ul className="dropdown-menu">
-                                <li>
-                                    <Link className="dropdown-item" href="#">
-                                        Hotel List
-                                    </Link>
-                                </li>
-                            </ul>
+                            </Link>
                         </li>
 
                         <li className="nav-item">

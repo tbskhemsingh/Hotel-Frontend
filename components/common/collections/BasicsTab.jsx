@@ -1,8 +1,20 @@
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function BasicsTab({ formData, setFormData, onNext, loading }) {
+export default function BasicsTab({
+    formData,
+    setFormData,
+    onNext,
+    loading,
+    countries,
+    geoSearch,
+    setGeoSearch,
+    showGeoDropdown,
+    setShowGeoDropdown,
+    selectedGeoNode,
+    setSelectedGeoNode
+}) {
     const router = useRouter();
     const [errors, setErrors] = useState({});
 
@@ -23,11 +35,25 @@ export default function BasicsTab({ formData, setFormData, onNext, loading }) {
         if (!formData.maxHotels || formData.maxHotels < 1) {
             newErrors.maxHotels = 'Max Hotels must be at least 1';
         }
+        if (!formData.geoNodeId) {
+            newErrors.geoNodeId = 'Country is required';
+        }
 
         setErrors(newErrors);
 
         return Object.keys(newErrors).length === 0;
     };
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.dropdown-wrapper')) {
+                setShowGeoDropdown(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
     const handleCancel = () => {
         router.push('/collections');
     };
@@ -114,6 +140,73 @@ export default function BasicsTab({ formData, setFormData, onNext, loading }) {
                     {errors.slug && <div className="invalid-feedback">{errors.slug}</div>}
                 </div>
 
+                <div className="col-12 col-lg-6 mb-3 position-relative dropdown-wrapper">
+                    <label className="form-label">Country</label>
+
+                    <input
+                        type="text"
+                        className={`form-control ${errors.geoNodeId ? 'is-invalid' : ''}`}
+                        placeholder="Search By Country"
+                        value={geoSearch}
+                        onFocus={() => {
+                            setShowGeoDropdown(true);
+                            if (selectedGeoNode) {
+                                setGeoSearch(selectedGeoNode.name);
+                            }
+                        }}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setGeoSearch(value);
+                            setShowGeoDropdown(true);
+
+                            if (selectedGeoNode) {
+                                setSelectedGeoNode(null);
+
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    geoNodeId: null
+                                }));
+                            }
+                        }}
+                    />
+
+                    {errors.geoNodeId && <div className="invalid-feedback d-block">{errors.geoNodeId}</div>}
+
+                    {showGeoDropdown && (
+                        <div
+                            className="border bg-white position-absolute w-100 mt-1"
+                            style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
+                        >
+                            {countries
+                                .filter((c) => c.name.toLowerCase().includes(geoSearch.toLowerCase()))
+                                .map((node) => (
+                                    <div
+                                        key={node.countryId}
+                                        className="p-2"
+                                        style={{ cursor: 'pointer' }}
+                                        onClick={() => {
+                                            setSelectedGeoNode(node);
+                                            setGeoSearch(node.name);
+                                            setShowGeoDropdown(false);
+
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                geoNodeId: node.countryId
+                                            }));
+
+                                            setErrors((prev) => ({
+                                                ...prev,
+                                                geoNodeId: null
+                                            }));
+                                        }}
+                                    >
+                                        {node.name}
+                                    </div>
+                                ))}
+                        </div>
+                    )}
+                </div>
+
                 {/* Template */}
                 <div className="col-12 col-lg-6 mb-3">
                     <label className="form-label">Template</label>
@@ -132,27 +225,6 @@ export default function BasicsTab({ formData, setFormData, onNext, loading }) {
                     </select>
 
                     {errors.template && <div className="invalid-feedback d-block">{errors.template}</div>}
-                </div>
-
-                {/* Status */}
-                <div className="col-12 col-lg-6 mb-3">
-                    <label className="form-label">Status</label>
-                    <div className="d-flex gap-3">
-                        <div>
-                            <input type="radio" name="status" value="Draft" checked={formData.status === 'Draft'} onChange={handleChange} />{' '}
-                            Draft
-                        </div>
-                        <div>
-                            <input
-                                type="radio"
-                                name="status"
-                                value="Published"
-                                checked={formData.status === 'Published'}
-                                onChange={handleChange}
-                            />{' '}
-                            Published
-                        </div>
-                    </div>
                 </div>
 
                 {/* Expiry Date */}
@@ -174,6 +246,27 @@ export default function BasicsTab({ formData, setFormData, onNext, loading }) {
                         placeholder="Enter maximum number of hotels"
                     />
                     {errors.maxHotels && <div className="invalid-feedback">{errors.maxHotels}</div>}
+                </div>
+
+                {/* Status */}
+                <div className="col-12 col-lg-6 mb-3">
+                    <label className="form-label">Status</label>
+                    <div className="d-flex gap-3">
+                        <div>
+                            <input type="radio" name="status" value="Draft" checked={formData.status === 'Draft'} onChange={handleChange} />{' '}
+                            Draft
+                        </div>
+                        <div>
+                            <input
+                                type="radio"
+                                name="status"
+                                value="Published"
+                                checked={formData.status === 'Published'}
+                                onChange={handleChange}
+                            />{' '}
+                            Published
+                        </div>
+                    </div>
                 </div>
             </div>
 

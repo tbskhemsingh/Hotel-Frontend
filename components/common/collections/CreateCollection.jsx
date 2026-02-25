@@ -480,47 +480,6 @@ export default function CreateCollection() {
         }
     };
 
-    // const handleSaveCuration = async () => {
-    //     if (!collectionId) {
-    //         toast.error('Please save Basics first');
-    //         return;
-    //     }
-
-    //     try {
-    //         setLoading(true);
-
-    //         // ✅ Build pinned structure EXACTLY as backend expects
-    //         const pinnedPayload = pinnedHotels.map((hotel, index) => ({
-    //             HotelID: hotel.id,
-    //             Position: index + 1,
-    //             PinType: 'FIXED' // default for manual pin
-    //         }));
-
-    //         // ✅ Build exclude structure EXACTLY as backend expects
-    //         const excludePayload = excludedHotels.map((hotel) => ({
-    //             HotelID: hotel.id,
-    //             ChainID: null, // as per backend contract
-    //             Reason: hotel.reason
-    //         }));
-
-    //         const payload = {
-    //             collectionId: collectionId,
-    //             pinnedJson: JSON.stringify(pinnedPayload),
-    //             excludeJson: JSON.stringify(excludePayload)
-    //         };
-
-    //         const response = await saveCuration(payload);
-
-    //         toast.success(response?.message || 'Curation saved successfully!');
-
-    //         goNext(); // move to Preview
-    //     } catch (error) {
-    //         console.error('Curation save failed:', error);
-    //         toast.error(error?.message || 'Failed to save curation');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
     // ---------------- RENDER ----------------
     return (
         <div className="card shadow-sm">
@@ -551,24 +510,20 @@ export default function CreateCollection() {
                     <BasicsTab
                         formData={formData}
                         setFormData={setFormData}
-                        cities={cities}
-                        selectedCity={selectedCity}
-                        setSelectedCity={setSelectedCity}
-                        setCollectionId={setCollectionId}
                         onNext={handleSaveBasics}
                         onBack={goBack}
                         loading={loading}
+                        countries={countries}
+                        geoSearch={geoSearch}
+                        setGeoSearch={setGeoSearch}
+                        showGeoDropdown={showGeoDropdown}
+                        setShowGeoDropdown={setShowGeoDropdown}
+                        selectedGeoNode={selectedGeoNode}
+                        setSelectedGeoNode={setSelectedGeoNode}
                     />
                 )}
 
-                {activeTab === 'Content' && (
-                    <ContentTab
-                        data={contentData}
-                        onBack={goBack}
-                        onNext={handleSaveContent}
-                        loading={loading}
-                    />
-                )}
+                {activeTab === 'Content' && <ContentTab data={contentData} onBack={goBack} onNext={handleSaveContent} loading={loading} />}
 
                 {activeTab === 'Rules' && (
                     <RulesTab
