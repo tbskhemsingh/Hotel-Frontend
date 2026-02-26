@@ -306,11 +306,7 @@ export default function CreateCollection() {
         const payload = {
             collectionId: null,
             collectionJson: JSON.stringify(collectionObject),
-            rulesJson: null,
-            pinnedJson: null,
-            excludeJson: null,
             changedBy: formData.changedBy,
-            isDebug: formData.isDebug
         };
 
         try {
