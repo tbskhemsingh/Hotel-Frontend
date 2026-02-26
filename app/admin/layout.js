@@ -1,32 +1,3 @@
-// 'use client';
-
-// import { useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
-
-// export default function AdminLayout({ children }) {
-//     const router = useRouter();
-
-//     useEffect(() => {
-//         const token = localStorage.getItem('adminToken');
-//         console.log(token);
-//         const role = localStorage.getItem('adminRole');
-
-//         const allowedRoles = ['Admin', 'Editor', 'Viewer'];
-
-//         if (!token) {
-//             router.replace('/auth/login');
-//             return;
-//         }
-
-//         if (!allowedRoles.includes(role)) {
-//             router.replace('/');
-//             return;
-//         }
-//     }, []);
-
-//     return <>{children}</>;
-// }
-
 'use client';
 
 import { useEffect } from 'react';
@@ -36,8 +7,8 @@ import AdminTopNav from './_layout_components/AdminTopNav';
 
 export default function AdminLayout({ children }) {
     const router = useRouter();
-        const pathname = usePathname();
-        const hideHeader = pathname === '/admin/auth/login';
+    const pathname = usePathname();
+    const hideHeader = pathname === '/admin/auth/login';
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
@@ -56,7 +27,7 @@ export default function AdminLayout({ children }) {
 
     return (
         <div className="min-vh-100 d-flex flex-column">
-          {!hideHeader && <AdminHeader />}
+            {!hideHeader && <AdminHeader />}
             {!hideHeader && <AdminTopNav />}
             <main className="flex-fill p-4 bg-light">{children}</main>
         </div>

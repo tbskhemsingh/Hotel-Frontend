@@ -10,7 +10,9 @@ import {
     saveRule,
     getRulesByCollectionId,
     updateCollectionStatus,
-    saveCuration
+    saveCuration,
+    getContentByCollectionId,
+    getCurationByCollectionId
 } from '@/lib/api/admin/collectionapi';
 
 import BasicsTab from './BasicsTab';
@@ -172,8 +174,7 @@ export default function CreateCollection() {
     const addRule = () => {
         if (!ruleField || !ruleValue) return;
 
-        setRules([...rules, { Field: ruleField, Operator: ruleOperator, Value: ruleValue }]);
-
+        setRules([...rules, { ruleId: null, Field: ruleField, Operator: ruleOperator, Value: ruleValue }]);
         setRuleField('');
         setRuleOperator('=');
         setRuleValue('');
@@ -347,21 +348,22 @@ export default function CreateCollection() {
         try {
             setLoading(true);
 
+            const rulesPayload = rules.map((rule) => ({
+                RuleID: rule.RuleID ?? null, // important for update
+                Field: rule.Field,
+                Operator: rule.Operator,
+                Value: rule.Value,
+                LogicalGroup: 'AND'
+            }));
+
             const payload = {
                 collectionId,
-                rules: rules.map((rule) => ({
-                    ruleId: 0,
-                    field: rule.Field,
-                    operator: rule.Operator,
-                    value: rule.Value,
-                    logicalGroup: 'AND'
-                }))
+                rulesJson: JSON.stringify(rulesPayload)
             };
 
             const response = await saveRule(payload);
 
             toast.success(response?.message || 'Rules saved successfully!');
-
             goNext();
         } catch (error) {
             toast.error(error?.message || 'Failed to save rules');
@@ -384,36 +386,6 @@ export default function CreateCollection() {
             setExcludeSearch('');
         }
     }, [activeTab]);
-
-    const handleRulesBack = async () => {
-        if (!collectionId) {
-            goBack();
-            return;
-        }
-        setLoading(true);
-
-        try {
-            const res = await getRulesByCollectionId(collectionId);
-
-            const fetchedRules = res?.data || [];
-
-            const formattedRules = fetchedRules.map((rule) => ({
-                Field: rule.field,
-                Operator: rule.operator,
-                Value: rule.value
-            }));
-
-            setRules(formattedRules);
-
-            // move to previous tab after fetching
-            setActiveTab('Content');
-        } catch (error) {
-            console.error('Failed to fetch rules:', error);
-            goBack();
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleStatusUpdate = async (action) => {
         if (!collectionId) {
@@ -483,6 +455,105 @@ export default function CreateCollection() {
         }
     };
 
+    const fetchRulesByCollectionId = async () => {
+        if (!collectionId) return;
+
+        try {
+            setLoading(true);
+
+            const res = await getRulesByCollectionId(collectionId);
+            const rulesArray = res?.data?.rules || [];
+
+            const formattedRules = rulesArray.map((rule) => ({
+                RuleID: rule.ruleId ?? null,
+                Field: rule.field ?? '',
+                Operator: rule.operator ?? '',
+                Value: rule.value ?? ''
+            }));
+            setRules(formattedRules);
+        } catch (error) {
+            console.error('Failed to fetch rules:', error);
+            toast.error('Failed to fetch rules');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRulesBack = async () => {
+        await fetchRulesByCollectionId();
+        setActiveTab('Rules');
+    };
+
+    const fetchContentByCollectionId = async () => {
+        if (!collectionId) return;
+
+        try {
+            setLoading(true);
+
+            const res = await getContentByCollectionId(collectionId);
+
+            const content = res?.data;
+
+            setContentData({
+                header: content?.header || '',
+                metaTitle: content?.metaTitle || '',
+                metaDescription: content?.metaDescription || '',
+                introShortCopy: content?.introShortCopy || '',
+                introLongCopy: content?.introLongCopy || '',
+                heroImageUrl: content?.heroImageUrl || '',
+                badge: content?.badge || '',
+                faqs: content?.faqsJson ? JSON.parse(content.faqsJson) : []
+            });
+        } catch (error) {
+            console.error('Failed to fetch content:', error);
+            toast.error(error?.message || 'Failed to fetch content');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleContentBack = async () => {
+        await fetchContentByCollectionId();
+        setActiveTab('Content');
+    };
+
+    const fetchCurationByCollectionId = async () => {
+        if (!collectionId) return;
+
+        try {
+            setLoading(true);
+
+            const res = await getCurationByCollectionId(collectionId);
+
+            const data = res?.data;
+
+            // ✅ Pinned Hotels
+            const formattedPinned = (data?.pinnedHotels || []).map((hotel) => ({
+                id: hotel.hotelID,
+                position: hotel.position,
+                pinType: hotel.pinType
+            }));
+
+            // ✅ Excluded Hotels
+            const formattedExcluded = (data?.excludedHotels || []).map((hotel) => ({
+                id: hotel.hotelID,
+                reason: hotel.reason
+            }));
+
+            setPinnedHotels(formattedPinned);
+            setExcludedHotels(formattedExcluded);
+        } catch (error) {
+            console.error('Failed to fetch curation:', error);
+            toast.error('Failed to fetch curation');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePreviewBack = async () => {
+        await fetchCurationByCollectionId();
+        setActiveTab('Curation');
+    };
     // ---------------- RENDER ----------------
     return (
         <div className="card shadow-sm">
@@ -527,7 +598,14 @@ export default function CreateCollection() {
                 )}
 
                 {activeTab === 'Content' && (
-                    <ContentTab data={contentData} setData={setContentData} onBack={goBack} onNext={handleSaveContent} loading={loading} />
+                    <ContentTab
+                        data={contentData}
+                        setData={setContentData}
+                        onBack={goBack}
+                        // onBack={handleBasicBack}
+                        onNext={handleSaveContent}
+                        loading={loading}
+                    />
                 )}
 
                 {activeTab === 'Rules' && (
@@ -545,7 +623,7 @@ export default function CreateCollection() {
                         addRule={addRule}
                         removeRule={removeRule}
                         onNext={handleSaveRules}
-                        onBack={handleRulesBack}
+                        onBack={handleContentBack}
                         loading={loading}
                     />
                 )}
@@ -591,7 +669,7 @@ export default function CreateCollection() {
                         addExcludedHotel={addExcludedHotel}
                         moveHotel={moveHotel}
                         onNext={handleSaveCuration}
-                        onBack={goBack}
+                        onBack={handleRulesBack}
                         setCityOptions={setCityOptions}
                         loading={loading}
                         countries={countries}
@@ -607,7 +685,7 @@ export default function CreateCollection() {
                         rules={rules}
                         pinnedHotels={pinnedHotels}
                         excludedHotels={excludedHotels}
-                        onBack={goBack}
+                        onBack={handlePreviewBack}
                         onSubmit={handleStatusUpdate}
                         loading={loading}
                     />

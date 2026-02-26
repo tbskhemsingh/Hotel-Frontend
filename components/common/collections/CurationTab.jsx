@@ -45,7 +45,7 @@ export default function CurationTab({
     setCityOptions,
     loading,
     excludeError,
-    setExcludeError
+    setExcludeError,
 }) {
     const pinnedRef = useRef(null);
     const excludeRef = useRef(null);
@@ -84,7 +84,7 @@ export default function CurationTab({
                         value={geoSearch}
                         onFocus={() => {
                             setShowGeoDropdown(true);
-                       }}
+                        }}
                         onChange={(e) => {
                             const value = e.target.value;
                             setGeoSearch(value);

@@ -37,6 +37,23 @@ export default function RulesTab({
 
         onNext();
     };
+    const handleAddRule = () => {
+        const newErrors = {};
+
+        if (!ruleField) {
+            newErrors.ruleField = 'Please select a field';
+        }
+
+        if (!ruleValue || !ruleValue.toString().trim()) {
+            newErrors.ruleValue = 'Please enter/select a value';
+        }
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) return;
+
+        addRule(); // call parent function
+    };
     return (
         <>
             <div className="row">
@@ -70,7 +87,8 @@ export default function RulesTab({
                 <div className="border p-3 rounded-2 mb-3">
                     <h6 className="mb-3">Add Rule</h6>
 
-                    <div className="row g-2">
+                    {/* <div className="row g-2"> */}
+                    <div className="row g-2 align-items-start">
                         {/* Field */}
                         <div className="col-12 col-md-4">
                             {/* <select className="form-select" value={ruleField} onChange={(e) => setRuleField(e.target.value)}> */}
@@ -102,41 +120,47 @@ export default function RulesTab({
                                 ))}
                             </select>
                         </div>
-
-                        {/* Value */}
                         <div className="col-12 col-md-3">
                             {RULE_VALUE_OPTIONS[ruleField] ? (
-                                <select
-                                    className={`form-select ${errors.ruleValue ? 'is-invalid' : ''}`}
-                                    value={ruleValue}
-                                    onChange={(e) => {
-                                        setRuleValue(e.target.value);
-                                        setErrors((prev) => ({ ...prev, ruleValue: null }));
-                                    }}
-                                >
-                                    <option value="">Select Value</option>
-                                    {RULE_VALUE_OPTIONS[ruleField].map((val) => (
-                                        <option key={val} value={val}>
-                                            {val}
-                                        </option>
-                                    ))}
-                                </select>
+                                <>
+                                    <select
+                                        className={`form-select ${errors.ruleValue ? 'is-invalid' : ''}`}
+                                        value={ruleValue}
+                                        onChange={(e) => {
+                                            setRuleValue(e.target.value);
+                                            setErrors((prev) => ({ ...prev, ruleValue: null }));
+                                        }}
+                                    >
+                                        <option value="">Select Value</option>
+                                        {RULE_VALUE_OPTIONS[ruleField].map((val) => (
+                                            <option key={val} value={val}>
+                                                {val}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    {errors.ruleValue && <div className="invalid-feedback">{errors.ruleValue}</div>}
+                                </>
                             ) : (
-                                <input
-                                    type="text"
-                                    className={`form-control ${errors.ruleValue ? 'is-invalid' : ''}`}
-                                    value={ruleValue}
-                                    onChange={(e) => {
-                                        setRuleValue(e.target.value);
-                                        setErrors((prev) => ({ ...prev, ruleValue: null }));
-                                    }}
-                                />
+                                <>
+                                    <input
+                                        type="text"
+                                        className={`form-control ${errors.ruleValue ? 'is-invalid' : ''}`}
+                                        value={ruleValue}
+                                        onChange={(e) => {
+                                            setRuleValue(e.target.value);
+                                            setErrors((prev) => ({ ...prev, ruleValue: null }));
+                                        }}
+                                    />
+
+                                    {errors.ruleValue && <div className="invalid-feedback">{errors.ruleValue}</div>}
+                                </>
                             )}
                         </div>
 
                         {/* Add Button */}
-                        <div className="col-12 col-md-2 d-grid">
-                            <button type="button" className="theme-button-orange rounded-2" onClick={addRule}>
+                        <div className="col-12 col-md-2 d-flex align-items-start">
+                            <button type="button" className="theme-button-orange rounded-2 w-100 h-100" onClick={handleAddRule}>
                                 + Add
                             </button>
                         </div>
@@ -154,8 +178,7 @@ export default function RulesTab({
                                         rules.length > 1 && index !== rules.length - 1 ? 'border-bottom' : ''
                                     }`}
                                 >
-                                    {/* <div key={index} className="d-flex justify-content-between align-items-center border-bottom py-2"> */}
-                                    <div>
+                                     <div>
                                         {r.Field} {r.Operator} {r.Value}
                                     </div>
 
