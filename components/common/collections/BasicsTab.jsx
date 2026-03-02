@@ -587,7 +587,7 @@ export default function BasicsTab({
                 </div>
 
                 <div className="d-flex justify-content-between">
-                    <button className="btn btn-outline-secondary" onClick={handleCancel}>
+                    <button className="btn btn-outline-secondary" type="button" onClick={handleCancel}>
                         Cancel
                     </button>
 
