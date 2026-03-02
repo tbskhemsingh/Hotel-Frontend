@@ -97,21 +97,22 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     useEffect(() => {
         if (propCollectionId) {
             setCollectionId(propCollectionId);
+            fetchCollectionById(propCollectionId);
         }
     }, [propCollectionId]);
 
-    useEffect(() => {
-        if (!propCollectionId) return;
+    // useEffect(() => {
+    //     if (!propCollectionId) return;
 
-        const loadAll = async () => {
-            await fetchCollectionById();
-            await fetchContentByCollectionId();
-            await fetchRulesByCollectionId();
-            await fetchCurationByCollectionId();
-        };
+    //     const loadAll = async () => {
+    //         await fetchCollectionById();
+    //         await fetchContentByCollectionId();
+    //         await fetchRulesByCollectionId();
+    //         await fetchCurationByCollectionId();
+    //     };
 
-        loadAll();
-    }, []);
+    //     loadAll();
+    // }, []);
 
     // ---------------- TAB NAV ----------------
     const goNext = () => {
@@ -470,14 +471,234 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         }
     };
 
-    const fetchRulesByCollectionId = async () => {
-        if (!collectionId) return;
+    // const fetchRulesByCollectionId = async () => {
+    //     if (!collectionId) return;
+
+    //     try {
+    //         setLoading(true);
+
+    //         const res = await getRulesByCollectionId(collectionId);
+    //         const rulesArray = res?.data?.rules || [];
+
+    //         const formattedRules = rulesArray.map((rule) => ({
+    //             RuleID: rule.ruleId ?? null,
+    //             Field: rule.field ?? '',
+    //             Operator: rule.operator ?? '',
+    //             Value: rule.value ?? ''
+    //         }));
+    //         setRules(formattedRules);
+    //     } catch (error) {
+    //         console.error('Failed to fetch rules:', error);
+    //         toast.error('Failed to fetch rules');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    const handleRulesBack = async () => {
+        // await fetchRulesByCollectionId();
+        setActiveTab('Rules');
+    };
+
+    // const fetchContentByCollectionId = async () => {
+    //     if (!collectionId) return;
+
+    //     try {
+    //         setLoading(true);
+
+    //         const res = await getContentByCollectionId(collectionId);
+    //         const content = res?.data;
+    //         let parsedFaqs = [];
+
+    //         if (content?.faQsJson) {
+    //             try {
+    //                 const rawFaqs = JSON.parse(content.faQsJson);
+
+    //                 parsedFaqs = rawFaqs.map((f) => ({
+    //                     question: f.question || '',
+    //                     answer: f.answer || ''
+    //                 }));
+    //             } catch (err) {
+    //                 console.error('FAQ parse error:', err);
+    //                 parsedFaqs = [];
+    //             }
+    //         }
+
+    //         setContentData({
+    //             header: content?.header || '',
+    //             metaTitle: content?.metaTitle || '',
+    //             metaDescription: content?.metaDescription || '',
+    //             introShortCopy: content?.introShortCopy || '',
+    //             introLongCopy: content?.introLongCopy || '',
+    //             heroImageUrl: content?.heroImageUrl || '',
+    //             badge: content?.badge || '',
+    //             faqs: parsedFaqs
+    //         });
+    //     } catch (error) {
+    //         console.error('Failed to fetch content:', error);
+    //         toast.error(error?.message || 'Failed to fetch content');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    const handleContentBack = async () => {
+        // await fetchContentByCollectionId();
+        setActiveTab('Content');
+    };
+
+    // const fetchCurationByCollectionId = async () => {
+    //     if (!collectionId) return;
+
+    //     try {
+    //         setLoading(true);
+
+    //         const res = await getCurationByCollectionId(collectionId);
+
+    //         const data = res?.data;
+
+    //         // ✅ Pinned Hotels
+    //         const formattedPinned = (data?.pinnedHotels || []).map((hotel) => ({
+    //             id: hotel.hotelID,
+    //             name: hotel.hotelName,
+    //             position: hotel.position,
+    //             pinType: hotel.pinType
+    //         }));
+
+    //         // ✅ Excluded Hotels
+    //         const formattedExcluded = (data?.excludedHotels || []).map((hotel) => ({
+    //             id: hotel.hotelID,
+    //             name: hotel.hotelName,
+    //             reason: hotel.reason
+    //         }));
+
+    //         setPinnedHotels(formattedPinned);
+    //         setExcludedHotels(formattedExcluded);
+    //     } catch (error) {
+    //         console.error('Failed to fetch curation:', error);
+    //         toast.error('Failed to fetch curation');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    const handlePreviewBack = async () => {
+        // await fetchCurationByCollectionId();
+        setActiveTab('Curation');
+    };
+
+    // const fetchCollectionById = async () => {
+    //     if (!collectionId) return;
+
+    //     try {
+    //         setLoading(true);
+
+    //         const res = await getCollectionById(collectionId);
+    //         const data = res?.data;
+
+    //         setFormData((prev) => ({
+    //             ...prev,
+    //             name: data?.name || '',
+    //             slug: data?.slug || '',
+    //             geoNodeId: data?.geoNodeId || '',
+    //             template: data?.template || '',
+    //             expiryDate: data?.expiryDate ? data.expiryDate.split('T')[0] : '',
+    //             maxHotels: data?.maxHotels || '',
+    //             status: data?.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Draft'
+    //         }));
+
+    //         if (data?.geoNodeId) {
+    //             setSelectedGeoNode({
+    //                 geoNodeId: data.geoNodeId,
+    //                 name: data.geoName
+    //             });
+    //         }
+
+    //         setGeoSearch(data.geoName);
+    //     } catch (error) {
+    //         console.error('Failed to fetch collection:', error);
+    //         toast.error('Failed to fetch collection');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    const fetchCollectionById = async (idParam) => {
+        const idToUse = idParam || collectionId;
+        if (!idToUse) return;
 
         try {
             setLoading(true);
 
-            const res = await getRulesByCollectionId(collectionId);
-            const rulesArray = res?.data?.rules || [];
+            const res = await getCollectionById(idToUse);
+            const data = res?.data;
+
+            if (!data) return;
+
+            const { basicCollection, collectionContent, collectionRules, collectionCuration } = data;
+
+            // ---------------- BASICS ----------------
+
+            const geoId = basicCollection?.geoNodeId || null;
+
+            setFormData((prev) => ({
+                ...prev,
+                name: basicCollection?.name || '',
+                slug: basicCollection?.slug || '',
+                geoNodeId: geoId,
+                template: basicCollection?.template || '',
+                expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
+                maxHotels: basicCollection?.maxHotels || '',
+                status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft',
+
+                // IMPORTANT:
+                countryId: geoId,
+                regionId: null,
+                cityId: null,
+                districtId: null
+            }));
+            if (geoId) {
+                const selectedCountryObj = countries.find((c) => c.countryId === geoId);
+
+                if (selectedCountryObj) {
+                    setSelectedGeoNode(selectedCountryObj);
+                    setGeoSearch(selectedCountryObj.name);
+                }
+            }
+            // setFormData((prev) => ({
+            //     ...prev,
+            //     name: basicCollection?.name || '',
+            //     slug: basicCollection?.slug || '',
+            //     geoNodeId: basicCollection?.geoNodeId || null,
+            //     template: basicCollection?.template || '',
+            //     expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
+            //     maxHotels: basicCollection?.maxHotels || '',
+            //     status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft'
+            // }));
+
+            // ---------------- CONTENT ----------------
+            let parsedFaqs = [];
+            if (collectionContent?.faqsJson) {
+                try {
+                    parsedFaqs = JSON.parse(collectionContent.faqsJson);
+                } catch {
+                    parsedFaqs = [];
+                }
+            }
+
+            setContentData({
+                header: collectionContent?.header || '',
+                metaTitle: collectionContent?.metaTitle || '',
+                metaDescription: collectionContent?.metaDescription || '',
+                introShortCopy: collectionContent?.introShortCopy || '',
+                introLongCopy: collectionContent?.introLongCopy || '',
+                heroImageUrl: collectionContent?.heroImageUrl || '',
+                badge: collectionContent?.badge || '',
+                faqs: parsedFaqs
+            });
+
+            // ---------------- RULES ----------------
+            const rulesArray = collectionRules?.[0]?.rules || [];
 
             const formattedRules = rulesArray.map((rule) => ({
                 RuleID: rule.ruleId ?? null,
@@ -485,87 +706,21 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 Operator: rule.operator ?? '',
                 Value: rule.value ?? ''
             }));
+
             setRules(formattedRules);
-        } catch (error) {
-            console.error('Failed to fetch rules:', error);
-            toast.error('Failed to fetch rules');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const handleRulesBack = async () => {
-        await fetchRulesByCollectionId();
-        setActiveTab('Rules');
-    };
+            // ---------------- CURATION ----------------
+            const pinned = collectionCuration?.[0]?.pinnedHotels || [];
+            const excluded = collectionCuration?.[0]?.excludedHotels || [];
 
-    const fetchContentByCollectionId = async () => {
-        if (!collectionId) return;
-
-        try {
-            setLoading(true);
-
-            const res = await getContentByCollectionId(collectionId);
-            const content = res?.data;
-            let parsedFaqs = [];
-
-            if (content?.faQsJson) {
-                try {
-                    const rawFaqs = JSON.parse(content.faQsJson);
-
-                    parsedFaqs = rawFaqs.map((f) => ({
-                        question: f.question || '',
-                        answer: f.answer || ''
-                    }));
-                } catch (err) {
-                    console.error('FAQ parse error:', err);
-                    parsedFaqs = [];
-                }
-            }
-
-            setContentData({
-                header: content?.header || '',
-                metaTitle: content?.metaTitle || '',
-                metaDescription: content?.metaDescription || '',
-                introShortCopy: content?.introShortCopy || '',
-                introLongCopy: content?.introLongCopy || '',
-                heroImageUrl: content?.heroImageUrl || '',
-                badge: content?.badge || '',
-                faqs: parsedFaqs
-            });
-        } catch (error) {
-            console.error('Failed to fetch content:', error);
-            toast.error(error?.message || 'Failed to fetch content');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleContentBack = async () => {
-        await fetchContentByCollectionId();
-        setActiveTab('Content');
-    };
-
-    const fetchCurationByCollectionId = async () => {
-        if (!collectionId) return;
-
-        try {
-            setLoading(true);
-
-            const res = await getCurationByCollectionId(collectionId);
-
-            const data = res?.data;
-
-            // ✅ Pinned Hotels
-            const formattedPinned = (data?.pinnedHotels || []).map((hotel) => ({
+            const formattedPinned = pinned.map((hotel) => ({
                 id: hotel.hotelID,
                 name: hotel.hotelName,
                 position: hotel.position,
                 pinType: hotel.pinType
             }));
 
-            // ✅ Excluded Hotels
-            const formattedExcluded = (data?.excludedHotels || []).map((hotel) => ({
+            const formattedExcluded = excluded.map((hotel) => ({
                 id: hotel.hotelID,
                 name: hotel.hotelName,
                 reason: hotel.reason
@@ -573,47 +728,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
             setPinnedHotels(formattedPinned);
             setExcludedHotels(formattedExcluded);
-        } catch (error) {
-            console.error('Failed to fetch curation:', error);
-            toast.error('Failed to fetch curation');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handlePreviewBack = async () => {
-        await fetchCurationByCollectionId();
-        setActiveTab('Curation');
-    };
-
-    const fetchCollectionById = async () => {
-        if (!collectionId) return;
-
-        try {
-            setLoading(true);
-
-            const res = await getCollectionById(collectionId);
-            const data = res?.data;
-
-            setFormData((prev) => ({
-                ...prev,
-                name: data?.name || '',
-                slug: data?.slug || '',
-                geoNodeId: data?.geoNodeId || '',
-                template: data?.template || '',
-                expiryDate: data?.expiryDate ? data.expiryDate.split('T')[0] : '',
-                maxHotels: data?.maxHotels || '',
-                status: data?.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Draft'
-            }));
-
-            if (data?.geoNodeId) {
-                setSelectedGeoNode({
-                    geoNodeId: data.geoNodeId,
-                    name: data.geoName
-                });
-            }
-
-            setGeoSearch(data.geoName);
         } catch (error) {
             console.error('Failed to fetch collection:', error);
             toast.error('Failed to fetch collection');
