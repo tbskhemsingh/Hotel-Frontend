@@ -1,9 +1,11 @@
 'use client';
 
-import { getCitiesByCountryOrRegion, getCollectionList, getRegionsByCountry } from '@/lib/api/admin/collectionapi';
+import { cloneCollection, getCitiesByCountryOrRegion, getCollectionList, getRegionsByCountry } from '@/lib/api/admin/collectionapi';
 import { COLLECTION_STATUS_OPTIONS } from '@/lib/constants/ruleConfig';
+import { ADMIN_ROUTES } from '@/lib/route';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function CollectionList({ initialCollections, initialCountries }) {
     const countries = initialCountries;
@@ -23,19 +25,65 @@ export default function CollectionList({ initialCollections, initialCountries })
     const [showRegionDropdown, setShowRegionDropdown] = useState(false);
     const [citySearch, setCitySearch] = useState('');
     const [showCityDropdown, setShowCityDropdown] = useState(false);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize] = useState(10);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const totalPages = Math.ceil(totalRecords / pageSize);
 
+    // useEffect(() => {
+    //     const loadCollections = async () => {
+    //         try {
+    //             setLoading(true);
+
+    //             const res = await getCollectionList({
+    //                 status: statusFilter,
+    //                 countryId: selectedCountry || null,
+    //                 regionId: selectedRegion || null,
+    //                 cityId: selectedCity || null
+    //             });
+    //             setCollections(res?.data || []);
+    //         } catch (error) {
+    //             console.error('Error loading collections:', error);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     loadCollections();
+    // }, [statusFilter, selectedCountry, selectedRegion, selectedCity]);
+
+    const getFinalGeoSelection = () => {
+        if (selectedCity) {
+            return { geoNodeType: 'City', geoNodeId: selectedCity };
+        }
+
+        if (selectedRegion) {
+            return { geoNodeType: 'Region', geoNodeId: selectedRegion };
+        }
+
+        if (selectedCountry) {
+            return { geoNodeType: 'Country', geoNodeId: selectedCountry };
+        }
+
+        return { geoNodeType: null, geoNodeId: null };
+    };
     useEffect(() => {
         const loadCollections = async () => {
             try {
                 setLoading(true);
 
+                const { geoNodeType, geoNodeId } = getFinalGeoSelection();
+
                 const res = await getCollectionList({
-                    status: statusFilter,
-                    countryId: selectedCountry || null,
-                    regionId: selectedRegion || null,
-                    cityId: selectedCity || null
+                    status: statusFilter || null,
+                    geoNodeType,
+                    geoNodeId,
+                    pageNumber,
+                    pageSize
                 });
-                setCollections(res?.data || []);
+
+                setCollections(res?.data?.collections || []);
+                setTotalRecords(Number(res?.data?.totalRecords || 0));
             } catch (error) {
                 console.error('Error loading collections:', error);
             } finally {
@@ -44,7 +92,7 @@ export default function CollectionList({ initialCollections, initialCountries })
         };
 
         loadCollections();
-    }, [statusFilter, selectedCountry, selectedRegion, selectedCity]);
+    }, [statusFilter, selectedCountry, selectedRegion, selectedCity, pageNumber]);
 
     useEffect(() => {
         if (!selectedCountry) {
@@ -86,35 +134,43 @@ export default function CollectionList({ initialCollections, initialCountries })
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const filteredCountries = countries.filter((c) =>
-        c.name.toLowerCase().includes(countrySearch.toLowerCase())
-    );
+    const filteredCountries = countries.filter((c) => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
 
-    const selectedCountryObj = countries.find(
-        c => c.countryId === selectedCountry
-    );
+    const selectedCountryObj = countries.find((c) => c.countryId === selectedCountry);
 
-    const filteredRegions = regions.filter((r) =>
-        r.name.toLowerCase().includes(regionSearch.toLowerCase())
-    );
+    const filteredRegions = regions.filter((r) => r.name.toLowerCase().includes(regionSearch.toLowerCase()));
 
-    const selectedRegionObj = regions.find(
-        r => r.regionId === selectedRegion
-    );
+    const selectedRegionObj = regions.find((r) => r.regionId === selectedRegion);
 
-    const filteredCities = cities.filter((ct) =>
-        ct.name.toLowerCase().includes(citySearch.toLowerCase())
-    );
+    const filteredCities = cities.filter((ct) => ct.name.toLowerCase().includes(citySearch.toLowerCase()));
 
-    const selectedCityObj = cities.find(
-        ct => ct.cityId === selectedCity
-    );
+    const selectedCityObj = cities.find((ct) => ct.cityId === selectedCity);
 
+    const handleClone = async (collectionId) => {
+        try {
+            const res = await cloneCollection(collectionId);
+
+            toast.success(res?.message || 'Collection cloned successfully');
+
+            const { geoNodeType, geoNodeId } = getFinalGeoSelection();
+
+            const updated = await getCollectionList({
+                status: statusFilter || null,
+                geoNodeType,
+                geoNodeId
+            });
+
+            setCollections(updated?.data || []);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to clone collection');
+        }
+    };
     return (
         <div className="card shadow-sm mb-5">
             <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">Hotel Collections</h5>
-                <button className="theme-button-orange rounded-1" onClick={() => router.push('/admin/collections/create')}>
+                <button className="theme-button-orange rounded-1" onClick={() => router.push(ADMIN_ROUTES.createCollection)}>
                     Create New Collection
                 </button>
             </div>
@@ -319,12 +375,35 @@ export default function CollectionList({ initialCollections, initialCountries })
 
                     <tbody>
                         {loading ? (
-                            <tr>
-                                <td colSpan="6" className="text-center py-4">
-                                    Loading collections...
-                                </td>
-                            </tr>
-                        ) : collections.length === 0 ? (
+                            [...Array(5)].map((_, rowIndex) => (
+                                <tr key={rowIndex}>
+                                    <td>
+                                        <div className="skeleton-name"></div>
+                                    </td>
+                                    <td>
+                                        <div className="skeleton-small"></div>
+                                    </td>
+                                    <td>
+                                        <div className="skeleton-badge"></div>
+                                    </td>
+                                    <td>
+                                        <div className="skeleton-number"></div>
+                                    </td>
+                                    <td>
+                                        <div className="skeleton-small"></div>
+                                    </td>
+                                    <td>
+                                        <div className="skeleton-actions"></div>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : // <tr>
+                        //     <td colSpan="6" className="text-center py-4">
+                        //         Loading collections...
+                        //     </td>
+                        // </tr>
+
+                        collections.length === 0 ? (
                             <tr>
                                 <td colSpan="6" className="text-center py-4 text-muted">
                                     No collections found
@@ -339,14 +418,20 @@ export default function CollectionList({ initialCollections, initialCountries })
                                         <span className="badge bg-success">{item.status}</span>
                                     </td>
                                     <td>{item.hotelCount}</td>
-                                    <td>{
-                                        item.publishDate
-                                            ? new Date(item.publishDate).toLocaleDateString('en-GB')
-                                            : '-'
-                                    }</td>
+                                    <td>{item.publishDate ? new Date(item.publishDate).toLocaleDateString('en-GB') : '-'}</td>
                                     <td>
-                                        <button className="btn btn-sm btn-outline-secondary me-2">Edit</button>
-                                        <button className="btn btn-sm btn-outline-secondary me-2">Clone</button>
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary me-2"
+                                            onClick={() => router.push(`${ADMIN_ROUTES.collections}/${item.collectionId}`)}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary me-2"
+                                            onClick={() => handleClone(item.collectionId)}
+                                        >
+                                            Clone
+                                        </button>
                                         <button className="btn btn-sm btn-outline-secondary">Preview</button>
                                     </td>
                                 </tr>
@@ -354,6 +439,30 @@ export default function CollectionList({ initialCollections, initialCountries })
                         )}
                     </tbody>
                 </table>
+
+                <div className="d-flex justify-content-between align-items-center mt-3 ">
+                    <div>
+                        Showing page {pageNumber} of {totalPages}
+                    </div>
+
+                    <div className="d-flex gap-2 justify-content-end mt-3">
+                        <button
+                            className="theme-button-orange rounded-1"
+                            disabled={pageNumber === 1}
+                            onClick={() => setPageNumber((prev) => prev - 1)}
+                        >
+                            Previous
+                        </button>
+
+                        <button
+                            className="theme-button-orange rounded-1"
+                            disabled={pageNumber === totalPages}
+                            onClick={() => setPageNumber((prev) => prev + 1)}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );

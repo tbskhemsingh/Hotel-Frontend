@@ -1,10 +1,11 @@
 'use client';
 
 import CKEditorField from '@/components/ui/CKEditorField';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function ContentTab({  data, setData, onNext, onBack, loading }) {
+export default function ContentTab({ data, setData, onNext, onBack, loading }) {
     const [errors, setErrors] = useState({});
     const handleNextClick = () => {
         if (!validateForm()) return;
@@ -49,24 +50,7 @@ export default function ContentTab({  data, setData, onNext, onBack, loading }) 
             newErrors.introLongCopy = 'Intro Long Copy is required';
         }
 
-        // 🔹 FAQ Validation
-        // if (data.faqs?.length) {
-        //     const hasInvalidFaq = data.faqs.some((faq) => !faq.question?.trim() || !faq.answer?.trim());
-
-        //     if (hasInvalidFaq) {
-        //         toast.error('Please complete all FAQs before saving.');
-        //         return false;
-        //     }
-
-        //     const questions = data.faqs.map((f) => f.question.trim().toLowerCase());
-
-        //     const hasDuplicate = new Set(questions).size !== questions.length;
-
-        //     if (hasDuplicate) {
-        //         toast.error('Duplicate FAQ questions are not allowed.');
-        //         return false;
-        //     }
-        // }
+    
 
         setErrors(newErrors);
 
@@ -116,7 +100,27 @@ export default function ContentTab({  data, setData, onNext, onBack, loading }) 
 
                 <div className="col-md-12 mb-3">
                     <label className="form-label">Intro Short Copy</label>
-                    <CKEditorField
+                    <RichTextEditor
+                        height={150}
+                        value={data.introShortCopy}
+                        onChange={(val) => {
+                            setData((prev) => ({
+                                ...prev,
+                                introShortCopy: val
+                            }));
+
+                            // Remove HTML tags and validate plain text
+                            const plainText = val.replace(/<[^>]*>/g, '').trim();
+
+                            if (plainText) {
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    introShortCopy: null
+                                }));
+                            }
+                        }}
+                    />
+                    {/* <CKEditorField
                         value={data.introShortCopy}
                         onChange={(val) => {
                             setData((prev) => ({
@@ -131,19 +135,33 @@ export default function ContentTab({  data, setData, onNext, onBack, loading }) 
                                 }));
                             }
                         }}
-                        // onChange={(val) =>
-                        //     setData((prev) => ({
-                        //         ...prev,
-                        //         introShortCopy: val
-                        //     }))
-                        // }
-                    />
+                    /> */}
                     {errors.introShortCopy && <div className="text-danger small mt-1">{errors.introShortCopy}</div>}
                 </div>
 
                 <div className="col-md-12 mb-3">
                     <label className="form-label">Intro Long Copy</label>
-                    <CKEditorField
+                    <RichTextEditor
+                        height={150}
+                        value={data.introLongCopy}
+                        onChange={(val) => {
+                            setData((prev) => ({
+                                ...prev,
+                                introLongCopy: val
+                            }));
+
+                            // Remove HTML tags and validate plain text
+                            const plainText = val.replace(/<[^>]*>/g, '').trim();
+
+                            if (plainText) {
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    introLongCopy: null
+                                }));
+                            }
+                        }}
+                    />
+                    {/* <CKEditorField
                         value={data.introLongCopy}
                         onChange={(val) => {
                             setData((prev) => ({
@@ -159,13 +177,7 @@ export default function ContentTab({  data, setData, onNext, onBack, loading }) 
                             }
                         }}
 
-                        // onChange={(val) =>
-                        //     setData((prev) => ({
-                        //         ...prev,
-                        //         introLongCopy: val
-                        //     }))
-                        // }
-                    />
+                    /> */}
                     {errors.introLongCopy && <div className="text-danger small mt-1">{errors.introLongCopy}</div>}
                 </div>
 
@@ -226,12 +238,12 @@ export default function ContentTab({  data, setData, onNext, onBack, loading }) 
                     <button
                         type="button"
                         className="btn btn-sm btn-outline-primary"
-                        onChange={(e) => {
-                            const updatedFaqs = [...data.faqs];
-                            updatedFaqs[index].question = e.target.value;
+                        // onChange={(e) => {
+                        //     const updatedFaqs = [...data.faqs];
+                        //     updatedFaqs[index].question = e.target.value;
 
-                            setData({ ...data, faqs: updatedFaqs });
-                        }}
+                        //     setData({ ...data, faqs: updatedFaqs });
+                        // }}
                         onClick={() => {
                             const faqs = data.faqs || [];
 
