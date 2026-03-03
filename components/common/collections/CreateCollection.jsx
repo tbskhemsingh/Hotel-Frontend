@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     getCitiesByCountryOrRegion,
@@ -8,11 +8,9 @@ import {
     upsertCollection,
     saveContent,
     saveRule,
-    getRulesByCollectionId,
+
     updateCollectionStatus,
     saveCuration,
-    getContentByCollectionId,
-    getCurationByCollectionId,
     getCollectionById
 } from '@/lib/api/admin/collectionapi';
 
@@ -40,9 +38,13 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
     const [selectedGeoNode, setSelectedGeoNode] = useState(null);
     const [selectedCityObj, setSelectedCityObj] = useState(null);
-    // const [collectionId, setCollectionId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [countries, setCountries] = useState([]);
+
+    const [initialBasicData, setInitialBasicData] = useState(null);
+    const [initialContentData, setInitialContentData] = useState(null);
+    const [initialRules, setInitialRules] = useState(null);
+    const [initialCuration, setInitialCuration] = useState(null);
 
     const [contentData, setContentData] = useState({
         header: '',
@@ -100,19 +102,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             fetchCollectionById(propCollectionId);
         }
     }, [propCollectionId]);
-
-    // useEffect(() => {
-    //     if (!propCollectionId) return;
-
-    //     const loadAll = async () => {
-    //         await fetchCollectionById();
-    //         await fetchContentByCollectionId();
-    //         await fetchRulesByCollectionId();
-    //         await fetchCurationByCollectionId();
-    //     };
-
-    //     loadAll();
-    // }, []);
 
     // ---------------- TAB NAV ----------------
     const goNext = () => {
@@ -263,6 +252,10 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
     // ---------------- SAVE CONTENT ----------------
     const handleSaveContent = async () => {
+        if (collectionId && !isContentChanged()) {
+            goNext();
+            return;
+        }
         if (!collectionId) {
             toast.error('Please save Basics first');
             return;
@@ -300,6 +293,18 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         try {
             const response = await saveContent(collectionId, payload);
             toast.success(response?.message || 'Content saved successfully!');
+
+            setInitialContentData({
+                header: contentData.header,
+                metaTitle: contentData.metaTitle,
+                metaDescription: contentData.metaDescription,
+                introShortCopy: contentData.introShortCopy,
+                introLongCopy: contentData.introLongCopy,
+                heroImageUrl: contentData.heroImageUrl,
+                badge: contentData.badge,
+                faqs: contentData.faqs
+            });
+
             setActiveTab('Rules');
         } catch (error) {
             console.error('Save failed:', error);
@@ -310,7 +315,13 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     };
 
     const handleSaveBasics = async () => {
+        if (collectionId && !isBasicsChanged()) {
+            goNext();
+            return;
+        }
+
         setLoading(true);
+
         const collectionObject = {
             GeoNodeId: Number(formData.geoNodeId),
             Name: formData.name,
@@ -339,6 +350,16 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
                 toast.success(response?.message || 'Basics saved successfully!');
                 goNext();
+
+                setInitialBasicData({
+                    name: formData.name,
+                    slug: formData.slug,
+                    geoNodeId: formData.geoNodeId,
+                    template: formData.template,
+                    expiryDate: formData.expiryDate,
+                    maxHotels: formData.maxHotels,
+                    status: formData.status
+                });
             } else {
                 toast.error(response?.message || 'Failed to get collectionId from response');
             }
@@ -351,6 +372,10 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     };
 
     const handleSaveRules = async () => {
+        if (collectionId && !isRulesChanged()) {
+            goNext();
+            return;
+        }
         if (!collectionId) {
             toast.error('Please save Basics first');
             return;
@@ -365,7 +390,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             setLoading(true);
 
             const rulesPayload = rules.map((rule) => ({
-                RuleID: rule.RuleID ?? null, // important for update
+                RuleID: rule.RuleID ?? null,
                 Field: rule.Field,
                 Operator: rule.Operator,
                 Value: rule.Value,
@@ -380,6 +405,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             const response = await saveRule(payload);
 
             toast.success(response?.message || 'Rules saved successfully!');
+            setInitialRules(rules);
             goNext();
         } catch (error) {
             toast.error(error?.message || 'Failed to save rules');
@@ -426,6 +452,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             toast.error(error?.message || 'Failed to update status');
         }
     };
+
     const handleSaveCuration = async () => {
         if (!collectionId) {
             toast.error('Please save Basics first');
@@ -433,7 +460,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         }
 
         // ✅ If nothing added → just move next (no save, no toast)
-        if (pinnedHotels.length === 0 && excludedHotels.length === 0) {
+        if (collectionId && !isCurationChanged()) {
             goNext();
             return;
         }
@@ -454,7 +481,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             }));
 
             const payload = {
-                collectionId: collectionId,
+                collectionId,
                 pinnedJson: JSON.stringify(pinnedPayload),
                 excludeJson: JSON.stringify(excludePayload)
             };
@@ -462,6 +489,12 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             const response = await saveCuration(payload);
 
             toast.success(response?.message || 'Curation saved successfully!');
+
+            setInitialCuration({
+                pinned: [...pinnedHotels],
+                excluded: [...excludedHotels]
+            });
+
             goNext();
         } catch (error) {
             console.error('Curation save failed:', error);
@@ -471,157 +504,17 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         }
     };
 
-    // const fetchRulesByCollectionId = async () => {
-    //     if (!collectionId) return;
-
-    //     try {
-    //         setLoading(true);
-
-    //         const res = await getRulesByCollectionId(collectionId);
-    //         const rulesArray = res?.data?.rules || [];
-
-    //         const formattedRules = rulesArray.map((rule) => ({
-    //             RuleID: rule.ruleId ?? null,
-    //             Field: rule.field ?? '',
-    //             Operator: rule.operator ?? '',
-    //             Value: rule.value ?? ''
-    //         }));
-    //         setRules(formattedRules);
-    //     } catch (error) {
-    //         console.error('Failed to fetch rules:', error);
-    //         toast.error('Failed to fetch rules');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
     const handleRulesBack = async () => {
-        // await fetchRulesByCollectionId();
         setActiveTab('Rules');
     };
 
-    // const fetchContentByCollectionId = async () => {
-    //     if (!collectionId) return;
-
-    //     try {
-    //         setLoading(true);
-
-    //         const res = await getContentByCollectionId(collectionId);
-    //         const content = res?.data;
-    //         let parsedFaqs = [];
-
-    //         if (content?.faQsJson) {
-    //             try {
-    //                 const rawFaqs = JSON.parse(content.faQsJson);
-
-    //                 parsedFaqs = rawFaqs.map((f) => ({
-    //                     question: f.question || '',
-    //                     answer: f.answer || ''
-    //                 }));
-    //             } catch (err) {
-    //                 console.error('FAQ parse error:', err);
-    //                 parsedFaqs = [];
-    //             }
-    //         }
-
-    //         setContentData({
-    //             header: content?.header || '',
-    //             metaTitle: content?.metaTitle || '',
-    //             metaDescription: content?.metaDescription || '',
-    //             introShortCopy: content?.introShortCopy || '',
-    //             introLongCopy: content?.introLongCopy || '',
-    //             heroImageUrl: content?.heroImageUrl || '',
-    //             badge: content?.badge || '',
-    //             faqs: parsedFaqs
-    //         });
-    //     } catch (error) {
-    //         console.error('Failed to fetch content:', error);
-    //         toast.error(error?.message || 'Failed to fetch content');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
     const handleContentBack = async () => {
-        // await fetchContentByCollectionId();
         setActiveTab('Content');
     };
 
-    // const fetchCurationByCollectionId = async () => {
-    //     if (!collectionId) return;
-
-    //     try {
-    //         setLoading(true);
-
-    //         const res = await getCurationByCollectionId(collectionId);
-
-    //         const data = res?.data;
-
-    //         // ✅ Pinned Hotels
-    //         const formattedPinned = (data?.pinnedHotels || []).map((hotel) => ({
-    //             id: hotel.hotelID,
-    //             name: hotel.hotelName,
-    //             position: hotel.position,
-    //             pinType: hotel.pinType
-    //         }));
-
-    //         // ✅ Excluded Hotels
-    //         const formattedExcluded = (data?.excludedHotels || []).map((hotel) => ({
-    //             id: hotel.hotelID,
-    //             name: hotel.hotelName,
-    //             reason: hotel.reason
-    //         }));
-
-    //         setPinnedHotels(formattedPinned);
-    //         setExcludedHotels(formattedExcluded);
-    //     } catch (error) {
-    //         console.error('Failed to fetch curation:', error);
-    //         toast.error('Failed to fetch curation');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
     const handlePreviewBack = async () => {
-        // await fetchCurationByCollectionId();
         setActiveTab('Curation');
     };
-
-    // const fetchCollectionById = async () => {
-    //     if (!collectionId) return;
-
-    //     try {
-    //         setLoading(true);
-
-    //         const res = await getCollectionById(collectionId);
-    //         const data = res?.data;
-
-    //         setFormData((prev) => ({
-    //             ...prev,
-    //             name: data?.name || '',
-    //             slug: data?.slug || '',
-    //             geoNodeId: data?.geoNodeId || '',
-    //             template: data?.template || '',
-    //             expiryDate: data?.expiryDate ? data.expiryDate.split('T')[0] : '',
-    //             maxHotels: data?.maxHotels || '',
-    //             status: data?.status ? data.status.charAt(0).toUpperCase() + data.status.slice(1) : 'Draft'
-    //         }));
-
-    //         if (data?.geoNodeId) {
-    //             setSelectedGeoNode({
-    //                 geoNodeId: data.geoNodeId,
-    //                 name: data.geoName
-    //             });
-    //         }
-
-    //         setGeoSearch(data.geoName);
-    //     } catch (error) {
-    //         console.error('Failed to fetch collection:', error);
-    //         toast.error('Failed to fetch collection');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     const fetchCollectionById = async (idParam) => {
         const idToUse = idParam || collectionId;
@@ -648,7 +541,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 geoNodeId: geoId,
                 template: basicCollection?.template || '',
                 expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
-                maxHotels: basicCollection?.maxHotels || '',
+                maxHotels: basicCollection?.maxHotels ?? '',
                 status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft',
 
                 // IMPORTANT:
@@ -657,6 +550,22 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 cityId: null,
                 districtId: null
             }));
+
+            setInitialBasicData({
+                name: basicCollection?.name || '',
+                slug: basicCollection?.slug || '',
+                geoNodeId: basicCollection?.geoNodeId || null,
+                template: basicCollection?.template || '',
+                expiryDate: basicCollection?.expiryDate
+                    ? basicCollection.expiryDate.split('T')[0]
+                    : '',
+                maxHotels: basicCollection?.maxHotels ?? '',
+                status:
+                    basicCollection?.status?.toLowerCase() === 'published'
+                        ? 'Published'
+                        : 'Draft'
+            });
+
             if (geoId) {
                 const selectedCountryObj = countries.find((c) => c.countryId === geoId);
 
@@ -665,16 +574,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                     setGeoSearch(selectedCountryObj.name);
                 }
             }
-            // setFormData((prev) => ({
-            //     ...prev,
-            //     name: basicCollection?.name || '',
-            //     slug: basicCollection?.slug || '',
-            //     geoNodeId: basicCollection?.geoNodeId || null,
-            //     template: basicCollection?.template || '',
-            //     expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
-            //     maxHotels: basicCollection?.maxHotels || '',
-            //     status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft'
-            // }));
 
             // ---------------- CONTENT ----------------
             let parsedFaqs = [];
@@ -697,6 +596,17 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 faqs: parsedFaqs
             });
 
+            setInitialContentData({
+                header: collectionContent?.header || '',
+                metaTitle: collectionContent?.metaTitle || '',
+                metaDescription: collectionContent?.metaDescription || '',
+                introShortCopy: collectionContent?.introShortCopy || '',
+                introLongCopy: collectionContent?.introLongCopy || '',
+                heroImageUrl: collectionContent?.heroImageUrl || '',
+                badge: collectionContent?.badge || '',
+                faqs: parsedFaqs
+            });
+
             // ---------------- RULES ----------------
             const rulesArray = collectionRules?.[0]?.rules || [];
 
@@ -707,6 +617,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 Value: rule.value ?? ''
             }));
 
+            setInitialRules(formattedRules);
             setRules(formattedRules);
 
             // ---------------- CURATION ----------------
@@ -728,6 +639,11 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
             setPinnedHotels(formattedPinned);
             setExcludedHotels(formattedExcluded);
+
+            setInitialCuration({
+                pinned: formattedPinned,
+                excluded: formattedExcluded
+            });
         } catch (error) {
             console.error('Failed to fetch collection:', error);
             toast.error('Failed to fetch collection');
@@ -735,10 +651,84 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             setLoading(false);
         }
     };
+
     const handleBasicBack = async () => {
         await fetchCollectionById();
         setActiveTab('Basics');
     };
+
+    const isBasicsChanged = () => {
+        if (!initialBasicData) return true;
+
+        return (
+            initialBasicData.name !== formData.name ||
+            initialBasicData.slug !== formData.slug ||
+            initialBasicData.geoNodeId !== formData.geoNodeId ||
+            initialBasicData.template !== formData.template ||
+            initialBasicData.expiryDate !== formData.expiryDate ||
+            Number(initialBasicData.maxHotels) !== Number(formData.maxHotels) ||
+            initialBasicData.status !== formData.status
+        );
+    };
+
+    const isContentChanged = () => {
+        if (!initialContentData) return true;
+
+        const currentFaqs = JSON.stringify(contentData.faqs || []);
+        const initialFaqs = JSON.stringify(initialContentData.faqs || []);
+
+        return (
+            initialContentData.header !== contentData.header ||
+            initialContentData.metaTitle !== contentData.metaTitle ||
+            initialContentData.metaDescription !== contentData.metaDescription ||
+            initialContentData.introShortCopy !== contentData.introShortCopy ||
+            initialContentData.introLongCopy !== contentData.introLongCopy ||
+            initialContentData.heroImageUrl !== contentData.heroImageUrl ||
+            initialContentData.badge !== contentData.badge ||
+            initialFaqs !== currentFaqs
+        );
+    };
+
+    const isRulesChanged = () => {
+        if (!initialRules) return true;
+
+        const normalize = (rulesArray) =>
+            (rulesArray || []).map((r) => ({
+                Field: r.Field,
+                Operator: r.Operator,
+                Value: r.Value
+            }));
+
+        const current = JSON.stringify(normalize(rules));
+        const initial = JSON.stringify(normalize(initialRules));
+
+        return current !== initial;
+    };
+
+    const isCurationChanged = () => {
+        if (!initialCuration) return true;
+
+        const normalizePinned = (arr) =>
+            (arr || []).map((h, index) => ({
+                id: h.id,
+                position: index + 1
+            }));
+
+        const normalizeExcluded = (arr) =>
+            (arr || []).map((h) => ({
+                id: h.id,
+                reason: h.reason?.trim() || ''
+            }));
+
+        const currentPinned = JSON.stringify(normalizePinned(pinnedHotels));
+        const initialPinned = JSON.stringify(normalizePinned(initialCuration.pinned));
+
+        const currentExcluded = JSON.stringify(normalizeExcluded(excludedHotels));
+        const initialExcluded = JSON.stringify(normalizeExcluded(initialCuration.excluded));
+
+        return currentPinned !== initialPinned || currentExcluded !== initialExcluded;
+    };
+
     // ---------------- RENDER ----------------
     return (
         <div className="card shadow-sm">
@@ -795,7 +785,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 {activeTab === 'Rules' && (
                     <RulesTab
                         rules={rules}
-                        // setRules={setRules}
                         ruleField={ruleField}
                         setRuleField={setRuleField}
                         ruleOperator={ruleOperator}

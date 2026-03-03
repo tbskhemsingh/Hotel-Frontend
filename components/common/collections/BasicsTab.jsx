@@ -153,29 +153,24 @@ export default function BasicsTab({
 
         onNext();
     };
+
     useEffect(() => {
-        if (!formData.countryId) {
-            setRegions([]);
-            return;
-        }
+        if (!formData.countryId) return;
 
         const loadRegions = async () => {
             try {
                 const res = await getRegionsByCountry(formData.countryId);
                 setRegions(res?.data || []);
-            } catch (err) {
-                console.error('Failed to load regions');
+            } catch {
                 setRegions([]);
             }
         };
 
         loadRegions();
     }, [formData.countryId]);
+
     useEffect(() => {
-        if (!formData.countryId && !formData.regionId) {
-            setCities([]);
-            return;
-        }
+        if (!formData.countryId) return;
 
         const loadCities = async () => {
             try {
@@ -185,8 +180,7 @@ export default function BasicsTab({
                 });
 
                 setCities(res?.data || []);
-            } catch (err) {
-                console.error('Failed to load cities');
+            } catch {
                 setCities([]);
             }
         };
@@ -195,23 +189,20 @@ export default function BasicsTab({
     }, [formData.regionId, formData.countryId]);
 
     useEffect(() => {
-        if (!formData.cityId) {
-            setDistricts([]);
-            return;
-        }
+        if (!formData.cityId) return;
 
         const loadDistricts = async () => {
             try {
                 const res = await getDistrictsByCity(formData.cityId);
                 setDistricts(res?.data || []);
-            } catch (err) {
-                console.error('Failed to load districts');
+            } catch {
                 setDistricts([]);
             }
         };
 
         loadDistricts();
     }, [formData.cityId]);
+
     return (
         <>
             <form autoComplete="off">
@@ -593,7 +584,6 @@ export default function BasicsTab({
 
                     <button
                         className="theme-button-orange rounded-2 d-flex align-items-center justify-content-center"
-                        // onClick={onNext}
                         onClick={handleNextClick}
                         type="button"
                         disabled={loading}
@@ -602,15 +592,11 @@ export default function BasicsTab({
                         {loading ? (
                             <>
                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                {/* Loading... */}
                             </>
                         ) : (
                             'Next'
                         )}
                     </button>
-                    {/* <button className="theme-button-orange rounded-2" onClick={onNext} type="button">
-                    Next
-                </button> */}
                 </div>
             </form>
         </>

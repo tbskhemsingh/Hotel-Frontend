@@ -1,6 +1,6 @@
 'use client';
 
-import { cloneCollection, getCitiesByCountryOrRegion, getCollectionList, getRegionsByCountry } from '@/lib/api/admin/collectionapi';
+import { getCitiesByCountryOrRegion, getCollectionList, getRegionsByCountry, cloneCollection, deleteCollection } from '@/lib/api/admin/collectionapi';
 import { COLLECTION_STATUS_OPTIONS } from '@/lib/constants/ruleConfig';
 import { ADMIN_ROUTES } from '@/lib/route';
 import { useRouter } from 'next/navigation';
@@ -28,29 +28,11 @@ export default function CollectionList({ initialCollections, initialCountries })
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize] = useState(10);
     const [totalRecords, setTotalRecords] = useState(0);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [collectionToDelete, setCollectionToDelete] = useState(null);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
     const totalPages = Math.ceil(totalRecords / pageSize);
-
-    // useEffect(() => {
-    //     const loadCollections = async () => {
-    //         try {
-    //             setLoading(true);
-
-    //             const res = await getCollectionList({
-    //                 status: statusFilter,
-    //                 countryId: selectedCountry || null,
-    //                 regionId: selectedRegion || null,
-    //                 cityId: selectedCity || null
-    //             });
-    //             setCollections(res?.data || []);
-    //         } catch (error) {
-    //             console.error('Error loading collections:', error);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-
-    //     loadCollections();
-    // }, [statusFilter, selectedCountry, selectedRegion, selectedCity]);
 
     const getFinalGeoSelection = () => {
         if (selectedCity) {
@@ -67,6 +49,7 @@ export default function CollectionList({ initialCollections, initialCountries })
 
         return { geoNodeType: null, geoNodeId: null };
     };
+
     useEffect(() => {
         const loadCollections = async () => {
             try {
@@ -83,6 +66,7 @@ export default function CollectionList({ initialCollections, initialCountries })
                 });
 
                 setCollections(res?.data?.collections || []);
+
                 setTotalRecords(Number(res?.data?.totalRecords || 0));
             } catch (error) {
                 console.error('Error loading collections:', error);
@@ -160,12 +144,48 @@ export default function CollectionList({ initialCollections, initialCountries })
                 geoNodeId
             });
 
-            setCollections(updated?.data || []);
+            setCollections(updated?.data?.collections || []);
+            setTotalRecords(Number(updated?.data?.totalRecords || 0));
         } catch (error) {
             console.error(error);
             toast.error('Failed to clone collection');
         }
     };
+
+    const confirmDelete = async () => {
+        if (!collectionToDelete) return;
+
+        try {
+            setDeleteLoading(true);
+
+            await deleteCollection(collectionToDelete);
+
+            toast.success('Collection deleted successfully');
+
+            const { geoNodeType, geoNodeId } = getFinalGeoSelection();
+
+            const updated = await getCollectionList({
+                status: statusFilter || null,
+                geoNodeType,
+                geoNodeId,
+                pageNumber,
+                pageSize
+            });
+
+            setCollections(updated?.data?.collections || []);
+            setTotalRecords(Number(updated?.data?.totalRecords || 0));
+
+            setShowDeleteModal(false);
+            setCollectionToDelete(null);
+
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to delete collection');
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
     return (
         <div className="card shadow-sm mb-5">
             <div className="card-header d-flex justify-content-between align-items-center">
@@ -397,46 +417,51 @@ export default function CollectionList({ initialCollections, initialCountries })
                                     </td>
                                 </tr>
                             ))
-                        ) : // <tr>
-                        //     <td colSpan="6" className="text-center py-4">
-                        //         Loading collections...
-                        //     </td>
-                        // </tr>
+                        ) :
 
-                        collections.length === 0 ? (
-                            <tr>
-                                <td colSpan="6" className="text-center py-4 text-muted">
-                                    No collections found
-                                </td>
-                            </tr>
-                        ) : (
-                            collections.map((item) => (
-                                <tr key={item.collectionId}>
-                                    <td>{item.name}</td>
-                                    <td>{item.type}</td>
-                                    <td>
-                                        <span className="badge bg-success">{item.status}</span>
-                                    </td>
-                                    <td>{item.hotelCount}</td>
-                                    <td>{item.publishDate ? new Date(item.publishDate).toLocaleDateString('en-GB') : '-'}</td>
-                                    <td>
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary me-2"
-                                            onClick={() => router.push(`${ADMIN_ROUTES.collections}/${item.collectionId}`)}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary me-2"
-                                            onClick={() => handleClone(item.collectionId)}
-                                        >
-                                            Clone
-                                        </button>
-                                        <button className="btn btn-sm btn-outline-secondary">Preview</button>
+                            collections.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-4 text-muted">
+                                        No collections found
                                     </td>
                                 </tr>
-                            ))
-                        )}
+                            ) : (
+                                collections?.map((item) => (
+                                    <tr key={item.collectionId}>
+                                        <td>{item.name}</td>
+                                        <td>{item.type}</td>
+                                        <td>
+                                            <span className="badge bg-success">{item.status}</span>
+                                        </td>
+                                        <td>{item.hotelCount}</td>
+                                        <td>{item.publishDate ? new Date(item.publishDate).toLocaleDateString('en-GB') : '-'}</td>
+                                        <td>
+                                            <button
+                                                className="btn btn-sm btn-outline-secondary me-2"
+                                                onClick={() => router.push(`${ADMIN_ROUTES.collections}/${item.collectionId}`)}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-secondary me-2"
+                                                onClick={() => handleClone(item.collectionId)}
+                                            >
+                                                Clone
+                                            </button>
+                                            <button className="btn btn-sm btn-outline-secondary me-2">Preview</button>
+                                            <button
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={() => {
+                                                    setCollectionToDelete(item.collectionId);
+                                                    setShowDeleteModal(true);
+                                                }}
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                     </tbody>
                 </table>
 
@@ -464,6 +489,55 @@ export default function CollectionList({ initialCollections, initialCountries })
                     </div>
                 </div>
             </div>
+
+            {showDeleteModal && (
+                <>
+                    <div className="modal fade show d-block" tabIndex="-1">
+                        <div className="modal-dialog modal-dialog-centered">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">Delete Collection</h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => setShowDeleteModal(false)}
+                                    ></button>
+                                </div>
+
+                                <div className="modal-body">
+                                    <p className="mb-0">
+                                        Are you sure you want to delete this collection?
+                                    </p>
+                                    <small className="text-danger">
+                                        This action cannot be undone.
+                                    </small>
+                                </div>
+
+                                <div className="modal-footer">
+                                    <button
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => setShowDeleteModal(false)}
+                                        disabled={deleteLoading}
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        className="btn btn-danger"
+                                        onClick={confirmDelete}
+                                        disabled={deleteLoading}
+                                    >
+                                        {deleteLoading ? 'Deleting...' : 'Delete'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Backdrop */}
+                    <div className="modal-backdrop fade show"></div>
+                </>
+            )}
         </div>
     );
 }
