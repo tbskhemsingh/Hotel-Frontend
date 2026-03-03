@@ -28,7 +28,7 @@ export default function HeroSection() {
     const datePickerRef = useRef(null);
     const debounceRef = useRef(null);
     const router = useRouter();
-
+    
     // Handle click outside to close
     useEffect(() => {
         function handleClickOutside(event) {

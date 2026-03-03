@@ -1,15 +1,42 @@
 .date-range-picker-popup {
-    position: absolute !important;
-    top: unset !important;
-    left: 28px !important;
-    width: 513px !important;
-    background: white !important;
-    border-radius: 4px !important;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
-    margin-top: 5px !important;
-    border: 1px solid #e0e0e0 !important;
-    display: block !important;
-    z-index: 99999 !important;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-width: none;      /* remove 520px restriction */
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    margin-top: 8px;
+    border: 1px solid #e0e0e0;
+    z-index: 9999;
+}
+
+@media (max-width: 768px) {
+    .date-range-picker-popup {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 8px;
+        border-radius: 8px;
+        transform: none;
+    }
+
+    .calendar-container {
+        width: 100%;
+    }
+
+    .react-datepicker {
+        width: 100% !important;
+    }
+
+    .react-datepicker__month-container {
+        width: 100% !important;
+        float: none !important;
+        border-right: none !important;
+    }
 }
 
 .country-date-range-picker-popup {
@@ -28,18 +55,9 @@
 }
 
 .date-picker-wrapper {
-    position: static !important;
+    position: relative;
     width: 100%;
     height: 60px;
-}
-
-hero-form,
-.container,
-.row,
-.col-12,
-.col-md-6,
-.col-lg-3 {
-    overflow: visible !important;
 }
 
 .react-datepicker__month-container {
@@ -263,5 +281,162 @@ hero-form,
         border-bottom: 1px solid #dee2e6;
         padding-bottom: 5px;
         margin-bottom: 5px;
+    }
+}
+
+@media (min-width: 992px) {
+    .react-datepicker {
+        display: flex !important;
+    }
+
+    .react-datepicker__month-container {
+        width: 50% !important;
+    }
+
+    .date-range-picker-popup {
+        min-width: 650px;   
+    }
+}
+
+/* @media (max-width: 991px) {
+    .react-datepicker__month-container {
+        width: 100% !important;
+    }
+
+    .date-range-picker-popup {
+        width: 95vw;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+} */
+/* ========================================= */
+/* HERO PAGE – STACK CALENDAR FOR TABLET & MOBILE */
+/* ========================================= */
+
+@media (max-width: 991px) {
+
+    .date-range-picker-popup .react-datepicker {
+        display: block !important;
+    }
+
+    .date-range-picker-popup .react-datepicker__month-container {
+        width: 100% !important;
+        float: none !important;
+        border-right: none !important;
+    }
+
+    .date-range-picker-popup .react-datepicker__month-container:first-child {
+        border-bottom: 1px solid #e0e0e0 !important;
+        padding-right: 0 !important;
+    }
+}
+
+@media (min-width: 992px) {
+
+    .country-date-range-picker-popup {
+        width: auto !important;
+        min-width: 650px !important;   
+        left: 0 !important;           
+        top: 100% !important;
+        margin-top: 8px !important;
+        border-radius: 8px !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker {
+        display: flex !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker__month-container {
+        width: 50% !important;
+        float: left !important;
+    }
+}
+
+/* Tablet & Mobile */
+@media (max-width: 991px) {
+
+    .country-date-range-picker-popup {
+        width: 95vw !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        min-width: auto !important;
+        top: 100% !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker {
+        display: block !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker__month-container {
+        width: 100% !important;
+        float: none !important;
+        border-right: none !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker__month-container:first-child {
+        border-bottom: 1px solid #e0e0e0 !important;
+    }
+}
+
+/* ========================================= */
+/* COUNTRY PAGE - TABLET FIX ONLY */
+/* ========================================= */
+
+@media (min-width: 768px) and (max-width: 991px) {
+
+    .country-date-range-picker-popup {
+        width: 720px !important;       
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+           width: 650px !important; 
+
+    }
+
+    .country-date-range-picker-popup .react-datepicker {
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker__month-container {
+        width: 50% !important;
+        float: none !important;
+    }
+}
+
+
+@media (min-width: 768px) and (max-width: 991px) {
+
+    .country-date-range-picker-popup {
+        width: 650px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker {
+        display: flex !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker__month-container {
+        width: 50% !important;
+        float: left !important;
+    }
+}
+
+/* Desktop (992px and above) */
+@media (min-width: 992px) {
+
+    .country-date-range-picker-popup {
+        width: 650px !important;
+        left: 0 !important;           
+        transform: none !important;   
+    }
+
+    .country-date-range-picker-popup .react-datepicker {
+        display: flex !important;
+    }
+
+    .country-date-range-picker-popup .react-datepicker__month-container {
+        width: 50% !important;
+        float: left !important;
     }
 }

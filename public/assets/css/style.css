@@ -1436,9 +1436,9 @@ a.text-sky-blue:hover {
     display: none !important;
 }
 
-nextjs-portal {
+/* nextjs-portal {
   display: none !important;
-}
+} */
 
 .rich-editor {
   background: #fff;
@@ -1525,3 +1525,4 @@ nextjs-portal {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
 }
+
