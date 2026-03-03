@@ -1,6 +1,12 @@
 'use client';
 
-import { getCitiesByCountryOrRegion, getCollectionList, getRegionsByCountry, cloneCollection, deleteCollection } from '@/lib/api/admin/collectionapi';
+import {
+    getCitiesByCountryOrRegion,
+    getCollectionList,
+    getRegionsByCountry,
+    cloneCollection,
+    deleteCollection
+} from '@/lib/api/admin/collectionapi';
 import { COLLECTION_STATUS_OPTIONS } from '@/lib/constants/ruleConfig';
 import { ADMIN_ROUTES } from '@/lib/route';
 import { useRouter } from 'next/navigation';
@@ -36,18 +42,18 @@ export default function CollectionList({ initialCollections, initialCountries })
 
     const getFinalGeoSelection = () => {
         if (selectedCity) {
-            return { geoNodeType: 'City', geoNodeId: selectedCity };
+            return { geoNodeType: 'City', sourceId: selectedCity };
         }
 
         if (selectedRegion) {
-            return { geoNodeType: 'Region', geoNodeId: selectedRegion };
+            return { geoNodeType: 'Region', sourceId: selectedRegion };
         }
 
         if (selectedCountry) {
-            return { geoNodeType: 'Country', geoNodeId: selectedCountry };
+            return { geoNodeType: 'Country', sourceId: selectedCountry };
         }
 
-        return { geoNodeType: null, geoNodeId: null };
+        return { geoNodeType: null, sourceId: null };
     };
 
     useEffect(() => {
@@ -55,12 +61,12 @@ export default function CollectionList({ initialCollections, initialCountries })
             try {
                 setLoading(true);
 
-                const { geoNodeType, geoNodeId } = getFinalGeoSelection();
+                const { geoNodeType, sourceId } = getFinalGeoSelection();
 
                 const res = await getCollectionList({
                     status: statusFilter || null,
                     geoNodeType,
-                    geoNodeId,
+                    sourceId,
                     pageNumber,
                     pageSize
                 });
@@ -136,12 +142,12 @@ export default function CollectionList({ initialCollections, initialCountries })
 
             toast.success(res?.message || 'Collection cloned successfully');
 
-            const { geoNodeType, geoNodeId } = getFinalGeoSelection();
+            const { geoNodeType, sourceId } = getFinalGeoSelection();
 
             const updated = await getCollectionList({
                 status: statusFilter || null,
                 geoNodeType,
-                geoNodeId
+                sourceId
             });
 
             setCollections(updated?.data?.collections || []);
@@ -162,12 +168,12 @@ export default function CollectionList({ initialCollections, initialCountries })
 
             toast.success('Collection deleted successfully');
 
-            const { geoNodeType, geoNodeId } = getFinalGeoSelection();
+            const { geoNodeType, sourceId } = getFinalGeoSelection();
 
             const updated = await getCollectionList({
                 status: statusFilter || null,
                 geoNodeType,
-                geoNodeId,
+                sourceId,
                 pageNumber,
                 pageSize
             });
@@ -177,7 +183,6 @@ export default function CollectionList({ initialCollections, initialCountries })
 
             setShowDeleteModal(false);
             setCollectionToDelete(null);
-
         } catch (error) {
             console.error(error);
             toast.error('Failed to delete collection');
@@ -417,51 +422,49 @@ export default function CollectionList({ initialCollections, initialCountries })
                                     </td>
                                 </tr>
                             ))
-                        ) :
-
-                            collections.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-4 text-muted">
-                                        No collections found
+                        ) : collections.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className="text-center py-4 text-muted">
+                                    No collections found
+                                </td>
+                            </tr>
+                        ) : (
+                            collections?.map((item) => (
+                                <tr key={item.collectionId}>
+                                    <td>{item.name}</td>
+                                    <td>{item.type}</td>
+                                    <td>
+                                        <span className="badge bg-success">{item.status}</span>
+                                    </td>
+                                    <td>{item.hotelCount}</td>
+                                    <td>{item.publishDate ? new Date(item.publishDate).toLocaleDateString('en-GB') : '-'}</td>
+                                    <td>
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary me-2"
+                                            onClick={() => router.push(`${ADMIN_ROUTES.collections}/${item.collectionId}`)}
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary me-2"
+                                            onClick={() => handleClone(item.collectionId)}
+                                        >
+                                            Clone
+                                        </button>
+                                        <button className="btn btn-sm btn-outline-secondary me-2">Preview</button>
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setCollectionToDelete(item.collectionId);
+                                                setShowDeleteModal(true);
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
                                     </td>
                                 </tr>
-                            ) : (
-                                collections?.map((item) => (
-                                    <tr key={item.collectionId}>
-                                        <td>{item.name}</td>
-                                        <td>{item.type}</td>
-                                        <td>
-                                            <span className="badge bg-success">{item.status}</span>
-                                        </td>
-                                        <td>{item.hotelCount}</td>
-                                        <td>{item.publishDate ? new Date(item.publishDate).toLocaleDateString('en-GB') : '-'}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary me-2"
-                                                onClick={() => router.push(`${ADMIN_ROUTES.collections}/${item.collectionId}`)}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary me-2"
-                                                onClick={() => handleClone(item.collectionId)}
-                                            >
-                                                Clone
-                                            </button>
-                                            <button className="btn btn-sm btn-outline-secondary me-2">Preview</button>
-                                            <button
-                                                className="btn btn-sm btn-outline-secondary"
-                                                onClick={() => {
-                                                    setCollectionToDelete(item.collectionId);
-                                                    setShowDeleteModal(true);
-                                                }}
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            ))
+                        )}
                     </tbody>
                 </table>
 
@@ -497,20 +500,12 @@ export default function CollectionList({ initialCollections, initialCountries })
                             <div className="modal-content">
                                 <div className="modal-header">
                                     <h5 className="modal-title">Delete Collection</h5>
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        onClick={() => setShowDeleteModal(false)}
-                                    ></button>
+                                    <button type="button" className="btn-close" onClick={() => setShowDeleteModal(false)}></button>
                                 </div>
 
                                 <div className="modal-body">
-                                    <p className="mb-0">
-                                        Are you sure you want to delete this collection?
-                                    </p>
-                                    <small className="text-danger">
-                                        This action cannot be undone.
-                                    </small>
+                                    <p className="mb-0">Are you sure you want to delete this collection?</p>
+                                    <small className="text-danger">This action cannot be undone.</small>
                                 </div>
 
                                 <div className="modal-footer">
@@ -522,11 +517,7 @@ export default function CollectionList({ initialCollections, initialCountries })
                                         Cancel
                                     </button>
 
-                                    <button
-                                        className="btn btn-danger"
-                                        onClick={confirmDelete}
-                                        disabled={deleteLoading}
-                                    >
+                                    <button className="btn btn-danger" onClick={confirmDelete} disabled={deleteLoading}>
                                         {deleteLoading ? 'Deleting...' : 'Delete'}
                                     </button>
                                 </div>
