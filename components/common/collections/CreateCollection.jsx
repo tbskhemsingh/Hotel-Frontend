@@ -8,7 +8,6 @@ import {
     upsertCollection,
     saveContent,
     saveRule,
-
     updateCollectionStatus,
     saveCuration,
     getCollectionById
@@ -45,7 +44,12 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     const [initialContentData, setInitialContentData] = useState(null);
     const [initialRules, setInitialRules] = useState(null);
     const [initialCuration, setInitialCuration] = useState(null);
-
+    const [locationNames, setLocationNames] = useState({
+        countryName: '',
+        regionName: '',
+        cityName: '',
+        districtName: ''
+    });
     const [contentData, setContentData] = useState({
         header: '',
         metaTitle: '',
@@ -80,7 +84,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     const [formData, setFormData] = useState({
         name: '',
         slug: '',
-        geoNodeId: null,
+        sourceId: null,
         geoNodeType: null,
         countryId: null,
         regionId: null,
@@ -150,11 +154,11 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     }, []);
 
     const loadHotels = async (search, type) => {
-        if (!formData.geoNodeId || !formData.geoNodeType) return;
+        if (!formData.sourceId || !formData.geoNodeType) return;
 
         const payload = {
             geoNodeType: formData.geoNodeType,
-            geoNodeId: formData.geoNodeId,
+            geoNodeId: formData.sourceId,
             searchTerm: search || ''
         };
 
@@ -323,7 +327,9 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         setLoading(true);
 
         const collectionObject = {
-            GeoNodeId: Number(formData.geoNodeId),
+            // SourceId: Number(formData.sourceId),
+            SourceId: formData.sourceId ? Number(formData.sourceId) : null,
+            GeoNodeType: formData.geoNodeType,
             Name: formData.name,
             Slug: formData.slug,
             Type: formData.mode.toLowerCase(),
@@ -333,6 +339,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             MaxHotels: formData.maxHotels ? Number(formData.maxHotels) : null,
             DefaultSort: formData.defaultSort || 'StarRating DESC'
         };
+        console.log('Saving collection with payload:', collectionObject);
 
         const payload = {
             collectionId: collectionId ?? null,
@@ -354,7 +361,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 setInitialBasicData({
                     name: formData.name,
                     slug: formData.slug,
-                    geoNodeId: formData.geoNodeId,
+                    geoNodeId: formData.sourceId,
                     template: formData.template,
                     expiryDate: formData.expiryDate,
                     maxHotels: formData.maxHotels,
@@ -531,49 +538,82 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             const { basicCollection, collectionContent, collectionRules, collectionCuration } = data;
 
             // ---------------- BASICS ----------------
-
-            const geoId = basicCollection?.geoNodeId || null;
+            const { countryId, regionId, cityId, districtId, countryName, regionName, cityName, districtName, geoNodeType, sourceId } =
+                basicCollection || {};
 
             setFormData((prev) => ({
                 ...prev,
                 name: basicCollection?.name || '',
                 slug: basicCollection?.slug || '',
-                geoNodeId: geoId,
+                sourceId: sourceId || null,
+                geoNodeType: geoNodeType || null,
+
+                countryId: countryId || null,
+                regionId: regionId || null,
+                cityId: cityId || null,
+                districtId: districtId || null,
+
                 template: basicCollection?.template || '',
                 expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
                 maxHotels: basicCollection?.maxHotels ?? '',
-                status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft',
-
-                // IMPORTANT:
-                countryId: geoId,
-                regionId: null,
-                cityId: null,
-                districtId: null
+                status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft'
             }));
 
             setInitialBasicData({
                 name: basicCollection?.name || '',
                 slug: basicCollection?.slug || '',
-                geoNodeId: basicCollection?.geoNodeId || null,
+                sourceId: sourceId || null,
                 template: basicCollection?.template || '',
-                expiryDate: basicCollection?.expiryDate
-                    ? basicCollection.expiryDate.split('T')[0]
-                    : '',
+                expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
                 maxHotels: basicCollection?.maxHotels ?? '',
-                status:
-                    basicCollection?.status?.toLowerCase() === 'published'
-                        ? 'Published'
-                        : 'Draft'
+                status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft'
             });
 
-            if (geoId) {
-                const selectedCountryObj = countries.find((c) => c.countryId === geoId);
+            setLocationNames({
+                countryName: countryName || '',
+                regionName: regionName || '',
+                cityName: cityName || '',
+                districtName: districtName || ''
+            });
+            // Set visible dropdown labels
 
-                if (selectedCountryObj) {
-                    setSelectedGeoNode(selectedCountryObj);
-                    setGeoSearch(selectedCountryObj.name);
-                }
-            }
+            // const geoId = basicCollection?.sourceId || null;
+
+            // setFormData((prev) => ({
+            //     ...prev,
+            //     name: basicCollection?.name || '',
+            //     slug: basicCollection?.slug || '',
+            //     geoNodeId: geoId,
+            //     template: basicCollection?.template || '',
+            //     expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
+            //     maxHotels: basicCollection?.maxHotels ?? '',
+            //     status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft',
+
+            //     // IMPORTANT:
+            //     countryId: geoId,
+            //     regionId: null,
+            //     cityId: null,
+            //     districtId: null
+            // }));
+
+            // setInitialBasicData({
+            //     name: basicCollection?.name || '',
+            //     slug: basicCollection?.slug || '',
+            //     geoNodeId: basicCollection?.sourceId || null,
+            //     template: basicCollection?.template || '',
+            //     expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
+            //     maxHotels: basicCollection?.maxHotels ?? '',
+            //     status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft'
+            // });
+
+            // if (geoId) {
+            //     const selectedCountryObj = countries.find((c) => c.countryId === geoId);
+
+            //     if (selectedCountryObj) {
+            //         setSelectedGeoNode(selectedCountryObj);
+            //         setGeoSearch(selectedCountryObj.name);
+            //     }
+            // }
 
             // ---------------- CONTENT ----------------
             let parsedFaqs = [];
@@ -663,7 +703,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         return (
             initialBasicData.name !== formData.name ||
             initialBasicData.slug !== formData.slug ||
-            initialBasicData.geoNodeId !== formData.geoNodeId ||
+            initialBasicData.sourceId !== formData.sourceId ||
             initialBasicData.template !== formData.template ||
             initialBasicData.expiryDate !== formData.expiryDate ||
             Number(initialBasicData.maxHotels) !== Number(formData.maxHotels) ||
@@ -769,6 +809,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                         setShowGeoDropdown={setShowGeoDropdown}
                         selectedGeoNode={selectedGeoNode}
                         setSelectedGeoNode={setSelectedGeoNode}
+                        locationNames={locationNames}
                     />
                 )}
 

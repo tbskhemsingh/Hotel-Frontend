@@ -15,14 +15,14 @@ export default function BasicsTab({
     showGeoDropdown,
     setShowGeoDropdown,
     selectedGeoNode,
-    setSelectedGeoNode
+    setSelectedGeoNode,
+    locationNames
 }) {
     const router = useRouter();
     const [errors, setErrors] = useState({});
     const [regions, setRegions] = useState([]);
     const [regionSearch, setRegionSearch] = useState('');
     const [showRegionDropdown, setShowRegionDropdown] = useState(false);
-
     const [cities, setCities] = useState([]);
     const [citySearch, setCitySearch] = useState('');
     const [showCityDropdown, setShowCityDropdown] = useState(false);
@@ -30,7 +30,25 @@ export default function BasicsTab({
     const [districts, setDistricts] = useState([]);
     const [districtSearch, setDistrictSearch] = useState('');
     const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+    useEffect(() => {
+        if (!locationNames) return;
 
+        if (locationNames.countryName) {
+            setGeoSearch(locationNames.countryName);
+        }
+
+        if (locationNames.regionName) {
+            setRegionSearch(locationNames.regionName);
+        }
+
+        if (locationNames.cityName) {
+            setCitySearch(locationNames.cityName);
+        }
+
+        if (locationNames.districtName) {
+            setDistrictSearch(locationNames.districtName);
+        }
+    }, [locationNames]);
     const validateForm = () => {
         const newErrors = {};
 
@@ -48,9 +66,9 @@ export default function BasicsTab({
         if (!formData.maxHotels || formData.maxHotels < 1) {
             newErrors.maxHotels = 'Max Hotels must be at least 1';
         }
-        if (!formData.geoNodeId) {
-            newErrors.geoNodeId = 'Country is required';
-        }
+        // if (!formData.geoNodeId) {
+        //     newErrors.geoNodeId = 'Country is required';
+        // }
 
         setErrors(newErrors);
 
@@ -96,13 +114,13 @@ export default function BasicsTab({
             setFormData((prev) => ({
                 ...prev,
                 geoNodeId: finalId,
-                geoNodeType: finalType
+                geoNodeType: finalType,
+                sourceId: finalId
             }));
         }
     }, [formData.countryId, formData.regionId, formData.cityId, formData.districtId]);
     const handleCancel = () => {
         router.push(ADMIN_ROUTES.collections);
-        console.log(ADMIN_ROUTES.collections);
     };
 
     const generateSlug = (text) => {
