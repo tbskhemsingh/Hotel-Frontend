@@ -15,7 +15,6 @@ import toast from 'react-hot-toast';
 
 export default function CollectionList({ initialCollections, initialCountries }) {
     const countries = initialCountries;
-
     const [collections, setCollections] = useState(initialCollections);
     const [loading, setLoading] = useState(true);
     const router = useRouter();

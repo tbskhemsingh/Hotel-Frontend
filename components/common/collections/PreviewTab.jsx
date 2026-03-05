@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function PreviewTab({ formData, rules, pinnedHotels, excludedHotels, onBack, onSubmit }) {
+export default function PreviewTab({ formData, rules, pinnedHotels, excludedHotels, onBack, onSubmit, locationNames }) {
     const [submittingType, setSubmittingType] = useState(null);
     const handleAction = async (action) => {
         try {
@@ -12,6 +12,8 @@ export default function PreviewTab({ formData, rules, pinnedHotels, excludedHote
             setSubmittingType(null);
         }
     };
+    const geoName =
+        locationNames.districtName || locationNames.cityName || locationNames.regionName || locationNames.countryName || formData.sourceId;
 
     return (
         <>
@@ -25,7 +27,7 @@ export default function PreviewTab({ formData, rules, pinnedHotels, excludedHote
                     <strong>Slug:</strong> {formData.slug}
                 </p>
                 <p>
-                    <strong>Country:</strong> {formData.geoNodeId}
+                    <strong>GeoLocation:</strong> {geoName || ''}
                 </p>
                 <p>
                     <strong>Type:</strong> {formData.mode}
@@ -113,22 +115,6 @@ export default function PreviewTab({ formData, rules, pinnedHotels, excludedHote
                             'Save as Draft'
                         )}
                     </button>
-                    {/* <button
-                        type="button"
-                        className="theme-button-orange rounded-2 d-flex align-items-center justify-content-center"
-                        onClick={() => handleAction('draft')}
-                        disabled={isSubmitting}
-                        style={{ minWidth: '100px' }}
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                Saving...
-                            </>
-                        ) : (
-                            'Save as Draft'
-                        )}
-                    </button> */}
 
                     <button
                         type="button"

@@ -902,6 +902,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                         onBack={handlePreviewBack}
                         onSubmit={handleStatusUpdate}
                         loading={loading}
+                        locationNames={locationNames}
                     />
                 )}
             </div>
