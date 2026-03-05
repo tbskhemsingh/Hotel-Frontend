@@ -23,9 +23,9 @@ export default function Header() {
                 <div className="container">
                     <div className="row">
                         <div className="col-6 col-md-3 d-flex justify-content-between justify-content-md-start">
-                            <a href="index.html" className="my-auto">
-                                <Image src="/image/logo.webp" alt="" width={160} height={40} priority />
-                            </a>
+                            <Link href="/" className="my-auto">
+                                <Image src="/image/logo.webp" alt="Hotel.com.au Logo" width={160} height={40} priority />
+                            </Link>
                         </div>
                         <div className="col-6 col-md-9 d-flex">
                             <div className="w-100 my-auto d-flex justify-content-end justify-content-md-end">
