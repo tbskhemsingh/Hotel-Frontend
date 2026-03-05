@@ -327,7 +327,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         setLoading(true);
 
         const collectionObject = {
-            // SourceId: Number(formData.sourceId),
             SourceId: formData.sourceId ? Number(formData.sourceId) : null,
             GeoNodeType: formData.geoNodeType,
             Name: formData.name,
@@ -339,7 +338,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             MaxHotels: formData.maxHotels ? Number(formData.maxHotels) : null,
             DefaultSort: formData.defaultSort || 'StarRating DESC'
         };
-        console.log('Saving collection with payload:', collectionObject);
 
         const payload = {
             collectionId: collectionId ?? null,
@@ -575,45 +573,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 cityName: cityName || '',
                 districtName: districtName || ''
             });
-            // Set visible dropdown labels
-
-            // const geoId = basicCollection?.sourceId || null;
-
-            // setFormData((prev) => ({
-            //     ...prev,
-            //     name: basicCollection?.name || '',
-            //     slug: basicCollection?.slug || '',
-            //     geoNodeId: geoId,
-            //     template: basicCollection?.template || '',
-            //     expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
-            //     maxHotels: basicCollection?.maxHotels ?? '',
-            //     status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft',
-
-            //     // IMPORTANT:
-            //     countryId: geoId,
-            //     regionId: null,
-            //     cityId: null,
-            //     districtId: null
-            // }));
-
-            // setInitialBasicData({
-            //     name: basicCollection?.name || '',
-            //     slug: basicCollection?.slug || '',
-            //     geoNodeId: basicCollection?.sourceId || null,
-            //     template: basicCollection?.template || '',
-            //     expiryDate: basicCollection?.expiryDate ? basicCollection.expiryDate.split('T')[0] : '',
-            //     maxHotels: basicCollection?.maxHotels ?? '',
-            //     status: basicCollection?.status?.toLowerCase() === 'published' ? 'Published' : 'Draft'
-            // });
-
-            // if (geoId) {
-            //     const selectedCountryObj = countries.find((c) => c.countryId === geoId);
-
-            //     if (selectedCountryObj) {
-            //         setSelectedGeoNode(selectedCountryObj);
-            //         setGeoSearch(selectedCountryObj.name);
-            //     }
-            // }
 
             // ---------------- CONTENT ----------------
             let parsedFaqs = [];
