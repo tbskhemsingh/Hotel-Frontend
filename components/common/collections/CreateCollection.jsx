@@ -333,7 +333,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             Slug: formData.slug,
             Type: formData.mode.toLowerCase(),
             Template: formData.template || null,
-            Status: formData.status.toLowerCase(),
+            Status: formData.status,
             ExpiryDate: formData.expiryDate || null,
             MaxHotels: formData.maxHotels ? Number(formData.maxHotels) : null,
             DefaultSort: formData.defaultSort || 'StarRating DESC'
@@ -665,8 +665,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             initialBasicData.sourceId !== formData.sourceId ||
             initialBasicData.template !== formData.template ||
             initialBasicData.expiryDate !== formData.expiryDate ||
-            Number(initialBasicData.maxHotels) !== Number(formData.maxHotels) ||
-            initialBasicData.status !== formData.status
+            Number(initialBasicData.maxHotels) !== Number(formData.maxHotels)
         );
     };
 

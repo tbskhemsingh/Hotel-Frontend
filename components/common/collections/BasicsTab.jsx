@@ -30,6 +30,7 @@ export default function BasicsTab({
     const [districts, setDistricts] = useState([]);
     const [districtSearch, setDistrictSearch] = useState('');
     const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
+
     useEffect(() => {
         if (!locationNames) return;
 
@@ -49,6 +50,7 @@ export default function BasicsTab({
             setDistrictSearch(locationNames.districtName);
         }
     }, [locationNames]);
+
     const validateForm = () => {
         const newErrors = {};
 
@@ -570,27 +572,8 @@ export default function BasicsTab({
                     {/* Status */}
                     <div className="col-12 col-lg-6 mb-3">
                         <label className="form-label">Status</label>
-                        <div className="d-flex gap-3">
-                            <div>
-                                <input
-                                    type="radio"
-                                    name="status"
-                                    value="Draft"
-                                    checked={formData.status === 'Draft'}
-                                    onChange={handleChange}
-                                />{' '}
-                                Draft
-                            </div>
-                            <div>
-                                <input
-                                    type="radio"
-                                    name="status"
-                                    value="Published"
-                                    checked={formData.status === 'Published'}
-                                    onChange={handleChange}
-                                />{' '}
-                                Published
-                            </div>
+                        <div className="form-control bg-light">
+                            {formData.status}
                         </div>
                     </div>
                 </div>
