@@ -434,7 +434,7 @@ export default function CollectionList({ initialCollections, initialCountries })
                                         </span>{' '}
                                     </td>
                                     <td>{item.hotelCount}</td>
-                                    <td>{item.publishDate ? new Date(item.publishDate).toLocaleDateString('en-GB') : '-'}</td>
+                                    <td>{item.publishedDate ? new Date(item.publishedDate).toLocaleDateString('en-GB') : '-'}</td>
                                     <td>
                                         <div className="d-flex gap-2">
                                             <button
