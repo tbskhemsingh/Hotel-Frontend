@@ -25,9 +25,9 @@ export default async function DynamicPage({ params }) {
     }
 
     // REGION PAGE
-    // if (slugArray.length === 2 && data.geoType === 'region') {
-    //     return <RegionDetails country={slugArray[0]} region={slugArray[1]} />;
-    // }
+    if (slugArray.length === 2 && data.geoType === 'region') {
+        return <RegionDetails country={slugArray[0]} region={slugArray[1]} />;
+    }
 
     return notFound();
 }
