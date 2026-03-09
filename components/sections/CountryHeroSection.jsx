@@ -476,7 +476,7 @@ function CountryHeroSection({}) {
                                     onClick={() => setShowFilters((prev) => !prev)}
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <img src="image/filter.webp" className="m-auto" alt="" />
+                                    <img src="/image/filter.webp" className="m-auto" alt="" />
                                 </div>
                             </div>
                             <div className="col-9 col-md-5 col-lg-3 mb-0 mb-lg-0">

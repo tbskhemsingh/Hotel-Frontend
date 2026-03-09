@@ -8,7 +8,6 @@ export default async function DynamicPage({ params }) {
 
     const slugArray = slug || [];
 
-    // "/angola/ambuila"
     const fullSlug = '/' + slugArray.join('/');
 
     const result = await resolveSlug(fullSlug);
@@ -26,7 +25,7 @@ export default async function DynamicPage({ params }) {
 
     // REGION PAGE
     if (slugArray.length === 2 && data.geoType === 'region') {
-        return <RegionDetails country={slugArray[0]} region={slugArray[1]} />;
+        return <RegionDetails country={slugArray[0]} region={slugArray[1]} params={params} />;
     }
 
     return notFound();
