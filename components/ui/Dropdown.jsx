@@ -38,7 +38,6 @@ export default function Dropdown({ id, title, items = [], parentId, defaultOpen 
                         className="accordion-body"
                         style={{
                             padding: '20px',
-                            border: '1px solid #eee',
                             borderTop: 'none'
                         }}
                     >
@@ -46,15 +45,15 @@ export default function Dropdown({ id, title, items = [], parentId, defaultOpen 
                             {items.map((item, index) => (
                                 <div key={index} className="col-6 col-md-4 col-lg-3 mb-2">
                                     {item.href ? (
-                                        <Link href={item.href} className="text-decoration-none text-dark fw-semibold" prefetch={false}>
+                                        <Link href={item.href} className="text-decoration-none text-dark " prefetch={false}>
                                             • {item.label}
                                         </Link>
                                     ) : (
-                                        <span className="text-dark fw-semibold">• {item.label}</span>
+                                        <span className="text-dark ">• {item.label}</span>
                                     )}
                                     {item.count != null && (
-                                        <div className="text-secondary" style={{ fontSize: '13px', marginLeft: '14px', lineHeight: '1.2' }}>
-                                            <Link href="/" className="text-decoration-none text-secondary" prefetch={false}>
+                                        <div className="property-count" style={{ fontSize: '13px', marginLeft: '14px', lineHeight: '1.2' }}>
+                                            <Link href="/" className="text-decoration-none property-link" prefetch={false}>
                                                 ({item.count} properties)
                                             </Link>
                                         </div>

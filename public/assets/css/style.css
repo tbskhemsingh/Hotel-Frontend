@@ -1572,3 +1572,55 @@ a.text-sky-blue:hover {
   border-bottom: 2px solid #ff7a00;
   background: transparent;
 }
+.property-link {
+  color: #3181c7;   /* light blue */
+  transition: color 0.2s ease;
+}
+
+.property-link:hover {
+  color: #f0831e;   /* orange */
+}
+/* arrows */
+.custom-prev,
+.custom-next {
+position: absolute;
+top: 50%;
+transform: translateY(-50%);
+z-index: 10;
+width: 30px;
+height: 30px;
+background: #8e97a6;
+border-radius: 8px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+color: white;
+}
+
+.custom-prev {
+left: -20px;
+}
+
+.custom-next {
+right: -20px;
+}
+
+/* move indicators inside image */
+.carousel-indicators {
+    bottom: 10px;
+}
+
+/* make them horizontal lines */
+.carousel-indicators [data-bs-target] {
+    width: 30px;
+    height: 3px;
+    border-radius: 2px;
+    background-color: rgba(255,255,255,0.6);
+    margin: 0 4px;
+}
+
+/* active line */
+.carousel-indicators .active {
+    background-color: #ffffff;
+}
