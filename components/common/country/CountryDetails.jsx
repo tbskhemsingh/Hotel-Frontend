@@ -27,14 +27,14 @@ export default async function CountryDetails({ country }) {
         .filter((item) => item.type === ITEM_TYPE.Region)
         .map((item) => ({
             label: item.itemName,
-            href: item.urlName ? `/${country}/${item.urlName}` : null
+            href: item.urlName
         }));
 
     const cities = data.countryData
         .filter((item) => item.type === ITEM_TYPE.City)
         .map((item) => ({
             label: item.itemName,
-            href: item.urlName ? `/${item.urlName}` : null
+            href: item.urlName
         }));
 
     const hotelBrands = data.hotelData
@@ -42,7 +42,7 @@ export default async function CountryDetails({ country }) {
         .map((item) => ({
             label: item.itemName,
             count: item.hotelCount,
-            href: item.urlName ? `/${country}/${item.urlName}` : null
+            href: item.urlName
         }));
 
     const hotelTypes = data?.hotelData
@@ -50,7 +50,7 @@ export default async function CountryDetails({ country }) {
         .map((item) => ({
             label: item.itemName,
             count: item.hotelCount,
-            href: item.urlName ? `/hoteltype/${item.urlName}` : null
+            href: item.urlName
         }));
 
     return (
