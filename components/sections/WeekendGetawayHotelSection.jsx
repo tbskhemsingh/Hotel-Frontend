@@ -1,775 +1,344 @@
-import React from 'react';
+'use client';
 
+import React, { useState } from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper/modules';
+
+import 'swiper/css';
+import 'swiper/css/navigation';
 function WeekendGetawayHotelSection() {
+    const [activeCity, setActiveCity] = useState('Adelaide');
+
+    const cities = ['Adelaide', 'Brisbane', 'Canberra', 'Hobart', 'Perth', 'Melbourne', 'Sydney'];
+  
+
+    const hotelsByCity = {
+        Adelaide: [
+            {
+                name: 'Miller Apartments',
+                address: '16 Hindley Street Adelaide',
+                oldPrice: 'AUD $673',
+                price: 'AUD $354',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Hilton Adelaide',
+                address: '233 Victoria Square Adelaide',
+                oldPrice: 'AUD $690',
+                price: 'AUD $370',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Oaks Glenelg Plaza',
+                address: '16 Hindley Street Adelaide',
+                oldPrice: 'AUD $610',
+                price: 'AUD $320',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Oaks Glenelg Plaza',
+                address: '16 Hindley Street Adelaide',
+                oldPrice: 'AUD $610',
+                price: 'AUD $320',
+                image: '/image/property-img.webp'
+            }
+        ],
+
+        Brisbane: [
+            {
+                name: 'Brisbane Marriott',
+                address: '515 Queen St Brisbane',
+                oldPrice: 'AUD $700',
+                price: 'AUD $390',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Hilton Brisbane',
+                address: '190 Elizabeth St Brisbane',
+                oldPrice: 'AUD $650',
+                price: 'AUD $360',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Oaks Brisbane',
+                address: '347 Ann St Brisbane',
+                oldPrice: 'AUD $620',
+                price: 'AUD $340',
+                image: '/image/property-img.webp'
+            }
+        ],
+
+        Canberra: [
+            {
+                name: 'Brisbane Marriott',
+                address: '515 Queen St Brisbane',
+                oldPrice: 'AUD $700',
+                price: 'AUD $390',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Hilton Brisbane',
+                address: '190 Elizabeth St Brisbane',
+                oldPrice: 'AUD $650',
+                price: 'AUD $360',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Oaks Brisbane',
+                address: '347 Ann St Brisbane',
+                oldPrice: 'AUD $620',
+                price: 'AUD $340',
+                image: '/image/property-img.webp'
+            }
+        ],
+
+        // Gold Coast: [
+        //     {
+        //         name: 'Brisbane Marriott',
+        //         address: '515 Queen St Brisbane',
+        //         oldPrice: 'AUD $700',
+        //         price: 'AUD $390',
+        //         image: '/image/property-img.webp'
+        //     },
+        //     {
+        //         name: 'Hilton Brisbane',
+        //         address: '190 Elizabeth St Brisbane',
+        //         oldPrice: 'AUD $650',
+        //         price: 'AUD $360',
+        //         image: '/image/property-img.webp'
+        //     },
+        //     {
+        //         name: 'Oaks Brisbane',
+        //         address: '347 Ann St Brisbane',
+        //         oldPrice: 'AUD $620',
+        //         price: 'AUD $340',
+        //         image: '/image/property-img.webp'
+        //     }
+        // ],
+        Hobart: [
+            {
+                name: 'Brisbane Marriott',
+                address: '515 Queen St Brisbane',
+                oldPrice: 'AUD $700',
+                price: 'AUD $390',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Hilton Brisbane',
+                address: '190 Elizabeth St Brisbane',
+                oldPrice: 'AUD $650',
+                price: 'AUD $360',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Oaks Brisbane',
+                address: '347 Ann St Brisbane',
+                oldPrice: 'AUD $620',
+                price: 'AUD $340',
+                image: '/image/property-img.webp'
+            }
+        ],
+        Perth: [
+            {
+                name: 'Brisbane Marriott',
+                address: '515 Queen St Brisbane',
+                oldPrice: 'AUD $700',
+                price: 'AUD $390',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Hilton Brisbane',
+                address: '190 Elizabeth St Brisbane',
+                oldPrice: 'AUD $650',
+                price: 'AUD $360',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Oaks Brisbane',
+                address: '347 Ann St Brisbane',
+                oldPrice: 'AUD $620',
+                price: 'AUD $340',
+                image: '/image/property-img.webp'
+            }
+        ],
+        Melbourne: [
+            {
+                name: 'Brisbane Marriott',
+                address: '515 Queen St Brisbane',
+                oldPrice: 'AUD $700',
+                price: 'AUD $390',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Hilton Brisbane',
+                address: '190 Elizabeth St Brisbane',
+                oldPrice: 'AUD $650',
+                price: 'AUD $360',
+                image: '/image/property-img.webp'
+            },
+            {
+                name: 'Oaks Brisbane',
+                address: '347 Ann St Brisbane',
+                oldPrice: 'AUD $620',
+                price: 'AUD $340',
+                image: '/image/property-img.webp'
+            }
+        ],
+        Sydney: [
+            {
+                name: 'Hyatt Regency',
+                address: '161 Sussex St Sydney',
+                oldPrice: 'AUD $720',
+                price: 'AUD $420',
+                image: '/image/property-img.webp'
+            }
+        ]
+    };
+    const hotels = hotelsByCity[activeCity] || [];
+
     return (
         <section>
-            <div className="container pt-5 pb-5 pb-md-0">
+            <div className="container pt-5 pb-5">
                 <h2 className="heading text-center">
                     Weekend Getaway <span>Hotel Deals</span>
                 </h2>
-                <p className="small-para-14-px text-center px-0 px-md-5 mx-0 mx-lg-5 mb-3">
+
+                <p className="small-para-14-px text-center mb-4">
                     See the best hotel deals for this weekend and upcoming weekends across quality 4 and 5 star hotels in major capital
-                    cities. We have done the research for you looking at prices over the next 52 weekends. <a href="#">read more</a>
+                    cities.
                 </p>
 
-                <ul
-                    className="nav nav-pills d-flex justify-content-center flex-nowrap flex-row tabs-layout property-grid-tabs"
-                    id="wghoteldeals"
-                    role="tablist"
-                >
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link active"
-                            id="home-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#Adelaide"
-                            type="button"
-                            role="tab"
-                            aria-controls="Adelaide"
-                            aria-selected="true"
-                        >
-                            Adelaide
-                        </button>
-                    </li>
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link"
-                            id="profile-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#Brisbane"
-                            type="button"
-                            role="tab"
-                            aria-controls="Brisbane"
-                            aria-selected="false"
-                        >
-                            Brisbane
-                        </button>
-                    </li>
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link"
-                            id="contact-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#Canberra"
-                            type="button"
-                            role="tab"
-                            aria-controls="Canberra"
-                            aria-selected="false"
-                        >
-                            Canberra
-                        </button>
-                    </li>
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link"
-                            id="contact-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#GoldCoast"
-                            type="button"
-                            role="tab"
-                            aria-controls="GoldCoast"
-                            aria-selected="false"
-                        >
-                            Gold Coast
-                        </button>
-                    </li>
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link"
-                            id="contact-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#Hobart"
-                            type="button"
-                            role="tab"
-                            aria-controls="Hobart"
-                            aria-selected="false"
-                        >
-                            Hobart
-                        </button>
-                    </li>
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link"
-                            id="contact-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#Perth"
-                            type="button"
-                            role="tab"
-                            aria-controls="Perth"
-                            aria-selected="false"
-                        >
-                            Perth
-                        </button>
-                    </li>
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link"
-                            id="contact-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#Melbourne"
-                            type="button"
-                            role="tab"
-                            aria-controls="Melbourne"
-                            aria-selected="false"
-                        >
-                            Melbourne
-                        </button>
-                    </li>
-                    <li className="nav-item mx-0 mx-lg-3" role="presentation">
-                        <button
-                            className="nav-link"
-                            id="contact-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#Sydney"
-                            type="button"
-                            role="tab"
-                            aria-controls="Sydney"
-                            aria-selected="false"
-                        >
-                            Sydney
-                        </button>
-                    </li>
+                {/* Tabs */}
+                <ul className="nav nav-pills d-flex justify-content-center flex-nowrap flex-row tabs-layout property-grid-tabs mb-5">
+                    {cities.map((city) => (
+                        <li key={city} className="nav-item mx-0 mx-lg-3">
+                            <button className={`nav-link ${activeCity === city ? 'active' : ''}`} onClick={() => setActiveCity(city)}>
+                                {city}
+                            </button>
+                        </li>
+                    ))}
                 </ul>
-                <div className="tab-content" id="wghoteldealsContent">
-                    <div className="tab-pane fade show active" id="Adelaide" role="tabpanel" aria-labelledby="home-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="AdelaideOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div className="position-relative  px-5">
+                    <div className="custom-prev">
+                        <i className="fa-solid fa-chevron-left"></i>
                     </div>
 
-                    <div className="tab-pane fade" id="Brisbane" role="tabpanel" aria-labelledby="profile-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="BrisbaneOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    {/* RIGHT BUTTON */}
+                    <div className="custom-next">
+                        <i className="fa-solid fa-chevron-right"></i>
                     </div>
+                    <Swiper
+                        modules={[Navigation]}
+                        slidesPerView={3}
+                        spaceBetween={25}
+                        loop
+                        navigation={{
+                            prevEl: '.custom-prev',
+                            nextEl: '.custom-next'
+                        }}
+                        breakpoints={{
+                            0: { slidesPerView: 1 },
+                            768: { slidesPerView: 2 },
+                            1200: { slidesPerView: 3 }
+                        }}
+                    >
+                        {hotels.map((hotel, index) => (
+                            <SwiperSlide key={index}>
+                                <div
+                                    className="property-grid-box p-3"
+                                    style={{
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                        borderRadius: '15px',
+                                        background: '#fff',
+                                        border: '1px solid #eee'
+                                    }}
+                                >
+                                    <div
+                                        id={`hotelCarousel-${index}`}
+                                        className="carousel slide position-relative mb-3"
+                                        data-bs-ride="carousel"
+                                        data-bs-interval="2500"
+                                    >
+                                        {/* indicators inside image */}
+                                        <div className="carousel-indicators">
+                                            <button
+                                                type="button"
+                                                data-bs-target={`#hotelCarousel-${index}`}
+                                                data-bs-slide-to="0"
+                                                className="active"
+                                            ></button>
 
-                    <div className="tab-pane fade" id="Canberra" role="tabpanel" aria-labelledby="contact-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="CanberraOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                            <button type="button" data-bs-target={`#hotelCarousel-${index}`} data-bs-slide-to="1"></button>
 
-                    <div className="tab-pane fade" id="GoldCoast" role="tabpanel" aria-labelledby="contact-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="GoldCoastOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
+                                            <button type="button" data-bs-target={`#hotelCarousel-${index}`} data-bs-slide-to="2"></button>
                                         </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="tab-pane fade" id="Hobart" role="tabpanel" aria-labelledby="contact-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="HobartOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
+                                        <div className="carousel-inner rounded-4">
+                                            <div className="carousel-item active">
+                                                <img
+                                                    src="/image/property-img.webp"
+                                                    className="d-block w-100"
+                                                    style={{ height: '220px', objectFit: 'cover' }}
+                                                />
                                             </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="tab-pane fade" id="Perth" role="tabpanel" aria-labelledby="contact-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="PerthOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
+                                            <div className="carousel-item">
+                                                <img
+                                                    src="/image/property-img.webp"
+                                                    className="d-block w-100"
+                                                    style={{ height: '220px', objectFit: 'cover' }}
+                                                />
                                             </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="tab-pane fade" id="Melbourne" role="tabpanel" aria-labelledby="contact-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="MelbourneOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
+                                            <div className="carousel-item">
+                                                <img
+                                                    src="/image/property-img.webp"
+                                                    className="d-block w-100"
+                                                    style={{ height: '220px', objectFit: 'cover' }}
+                                                />
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    <div className="d-flex mb-2">
+                                        <h4 className="property-grid-title my-auto me-3">{hotel.name}</h4>
 
-                    <div className="tab-pane fade" id="Sydney" role="tabpanel" aria-labelledby="contact-tab">
-                        <div className="pt-3">
-                            <div className="owl-carousel owl-theme" id="SydneyOwl">
-                                <div className="item p-3">
-                                    <div className="property-grid-box p-2">
-                                        <div id="AdelaideInnerImage" className="carousel slide mb-3" data-bs-ride="carousel">
-                                            <ol className="carousel-indicators">
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="0" className="active"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="1"></li>
-                                                <li data-bs-target="#AdelaideInnerImage" data-bs-slide-to="2"></li>
-                                            </ol>
-                                            <div className="carousel-inner">
-                                                <div className="carousel-item active">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                                <div className="carousel-item">
-                                                    <img src="image/property-img.webp" className="d-block w-100" alt="..." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="px-2">
-                                            <div className="d-flex mb-2">
-                                                <h4 className="property-grid-title my-auto me-3">Miller Apartments</h4>
-                                                <div className="rating my-auto">
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                    <i className="fa-solid fa-star"></i>
-                                                </div>
-                                            </div>
-                                            <p className="small-para-14-px text-black mb-3">16 Hindley Street Adelaide 5000 Australia</p>
-                                            <div className="row mb-4">
-                                                <div className="col-12">
-                                                    <p className="mb-1 small-para-14-px text-decoration-line-through text-black">
-                                                        AUD $673
-                                                    </p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="para text-theme-green my-auto">AUD $354</p>
-                                                </div>
-                                                <div className="col-6 d-flex">
-                                                    <p className="small-para-14-px my-auto ms-auto">1 night, 2 adults</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <a href="#" className="theme-button-blue rounded rounded rounded rounded mb-4 w-100">
-                                                    Book Now
-                                                </a>
-                                            </div>
+                                        <div className="rating my-auto text-warning">
+                                            <i className="fa-solid fa-star"></i>
+                                            <i className="fa-solid fa-star"></i>
+                                            <i className="fa-solid fa-star"></i>
+                                            <i className="fa-solid fa-star"></i>
+                                            <i className="fa-solid fa-star"></i>
                                         </div>
                                     </div>
+
+                                    <p className="small-para-14-px text-black mb-3">{hotel.address}</p>
+
+                                    <div className="row mb-4">
+                                        <div className="col-12">
+                                            <p className="small-para-14-px text-decoration-line-through text-black mb-1">
+                                                {hotel.oldPrice}
+                                            </p>
+                                        </div>
+
+                                        <div className="col-6">
+                                            <p className="para text-theme-green">{hotel.price}</p>
+                                        </div>
+
+                                        <div className="col-6 text-end">
+                                            <p className="small-para-14-px">1 night, 2 adults</p>
+                                        </div>
+                                    </div>
+
+                                    <a href="#" className="theme-button-blue rounded w-100 d-block text-center">
+                                        Book Now
+                                    </a>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
                 </div>
+
+               
             </div>
         </section>
     );

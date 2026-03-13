@@ -28,7 +28,7 @@ export default function HeroSection() {
     const datePickerRef = useRef(null);
     const debounceRef = useRef(null);
     const router = useRouter();
-    
+
     // Handle click outside to close
     useEffect(() => {
         function handleClickOutside(event) {
@@ -97,11 +97,6 @@ export default function HeroSection() {
         setTempCheckInDate(start);
         setTempCheckOutDate(end);
 
-        if (start && end) {
-            setCheckInDate(start);
-            setCheckOutDate(end);
-            setShowDatePicker(false);
-        }
     };
 
     const formatDate = (date) => {
@@ -393,34 +388,67 @@ export default function HeroSection() {
                                                         nextMonthButtonDisabled,
                                                         customHeaderCount
                                                     }) => {
-                                                        let displayDate = date;
-                                                        if (customHeaderCount === 1) {
-                                                            displayDate = addMonths(date, 1);
-                                                        }
+                                                        const isFirstMonth = customHeaderCount === 0;
+                                                        const isSecondMonth = customHeaderCount === 1;
+
+                                                        const displayDate = isSecondMonth ? addMonths(date, 1) : date;
 
                                                         return (
                                                             <div className="custom-header-wrapper">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={decreaseMonth}
-                                                                    disabled={prevMonthButtonDisabled}
-                                                                    className="nav-button prev-month"
-                                                                >
-                                                                    ‹
-                                                                </button>
+                                                                {isFirstMonth && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={decreaseMonth}
+                                                                        disabled={prevMonthButtonDisabled}
+                                                                        className="nav-button prev-month"
+                                                                    >
+                                                                        ‹
+                                                                    </button>
+                                                                )}
+
                                                                 <div className="month-year-display">{format(displayDate, 'MMM yyyy')}</div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={increaseMonth}
-                                                                    disabled={nextMonthButtonDisabled}
-                                                                    className="nav-button next-month"
-                                                                >
-                                                                    ›
-                                                                </button>
+
+                                                                {isSecondMonth && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={increaseMonth}
+                                                                        disabled={nextMonthButtonDisabled}
+                                                                        className="nav-button next-month"
+                                                                    >
+                                                                        ›
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         );
                                                     }}
                                                 />
+                                                <div className="selected-range-footer">
+                                                    <span>
+                                                        {formatDate(tempCheckInDate)} - {formatDate(tempCheckOutDate)}
+                                                    </span>
+
+                                                    <div className="footer-buttons">
+                                                        <button
+                                                            type="button"
+                                                            className="cancel-button"
+                                                            onClick={() => setShowDatePicker(false)}
+                                                        >
+                                                            Cancel
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="apply-button"
+                                                            onClick={() => {
+                                                                setCheckInDate(tempCheckInDate);
+                                                                setCheckOutDate(tempCheckOutDate);
+                                                                setShowDatePicker(false);
+                                                            }}
+                                                        >
+                                                            Apply
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
