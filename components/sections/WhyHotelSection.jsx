@@ -1,5 +1,3 @@
-
-
 export default function WhyHotelSection() {
     const benefits = [
         'Free cancellation on most rooms',
@@ -13,10 +11,7 @@ export default function WhyHotelSection() {
     return (
         <section className="why-book-section py-5">
             <div className="container">
-                {' '}
-                {/* IMPORTANT */}
                 <div className="row justify-content-center align-items-center">
-                    {/* Left Content */}
                     <div className="col-lg-7">
                         <h2 className="heading mb-4">
                             Why book with <span className="text-warning">hotel.com.au</span>

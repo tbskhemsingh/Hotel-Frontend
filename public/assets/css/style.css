@@ -1587,8 +1587,8 @@ position: absolute;
 top: 50%;
 transform: translateY(-50%);
 z-index: 10;
-width: 30px;
-height: 30px;
+width: 40px;
+height: 40px;
 background: #8e97a6;
 border-radius: 8px;
 display: flex;
@@ -1599,11 +1599,11 @@ color: white;
 }
 
 .custom-prev {
-left: -20px;
+left: -50px;
 }
 
 .custom-next {
-right: -20px;
+right: -50px;
 }
 
 /* move indicators inside image */
@@ -1623,4 +1623,10 @@ right: -20px;
 /* active line */
 .carousel-indicators .active {
     background-color: #ffffff;
+}
+.swiper-slide {
+  background: transparent !important;
+}
+.card-content{
+padding:20px 22px 22px 22px;
 }
