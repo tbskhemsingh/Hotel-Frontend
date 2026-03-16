@@ -10,7 +10,6 @@ function WeekendGetawayHotelSection() {
     const [activeCity, setActiveCity] = useState('Adelaide');
 
     const cities = ['Adelaide', 'Brisbane', 'Canberra', 'Hobart', 'Perth', 'Melbourne', 'Sydney'];
-  
 
     const hotelsByCity = {
         Adelaide: [
@@ -218,7 +217,7 @@ function WeekendGetawayHotelSection() {
                         </li>
                     ))}
                 </ul>
-                <div className="position-relative  px-5">
+                <div className="position-relative overflow-visible">
                     <div className="custom-prev">
                         <i className="fa-solid fa-chevron-left"></i>
                     </div>
@@ -230,7 +229,7 @@ function WeekendGetawayHotelSection() {
                     <Swiper
                         modules={[Navigation]}
                         slidesPerView={3}
-                        spaceBetween={25}
+                        spaceBetween={35}
                         loop
                         navigation={{
                             prevEl: '.custom-prev',
@@ -243,14 +242,18 @@ function WeekendGetawayHotelSection() {
                         }}
                     >
                         {hotels.map((hotel, index) => (
-                            <SwiperSlide key={index}>
+                            <SwiperSlide key={index} style={{ padding: '15px 5px' }}>
+                                {' '}
                                 <div
-                                    className="property-grid-box p-3"
+                                    className="property-grid-box p-2"
                                     style={{
-                                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                        borderRadius: '15px',
+                                        borderRadius: '18px',
                                         background: '#fff',
-                                        border: '1px solid #eee'
+                                        border: '1px solid #e9ecef',
+                                        maxWidth: '420px',
+                                        margin: '0 auto',
+                                        overflow: 'hidden'
+                                        
                                     }}
                                 >
                                     <div
@@ -278,7 +281,12 @@ function WeekendGetawayHotelSection() {
                                                 <img
                                                     src="/image/property-img.webp"
                                                     className="d-block w-100"
-                                                    style={{ height: '220px', objectFit: 'cover' }}
+                                                    // style={{ height: '220px', objectFit: 'cover' }}
+                                                    style={{
+                                                        height: '200px',
+                                                        objectFit: 'cover',
+                                                        borderRadius: '14px'
+                                                    }}
                                                 />
                                             </div>
 
@@ -299,22 +307,32 @@ function WeekendGetawayHotelSection() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="d-flex mb-2">
-                                        <h4 className="property-grid-title my-auto me-3">{hotel.name}</h4>
+                                    <div className="card-content">
+                                        <div className="d-flex mb-2">
+                                            <h4 className="property-grid-title my-auto me-3">{hotel.name}</h4>
 
-                                        <div className="rating my-auto text-warning">
-                                            <i className="fa-solid fa-star"></i>
-                                            <i className="fa-solid fa-star"></i>
-                                            <i className="fa-solid fa-star"></i>
-                                            <i className="fa-solid fa-star"></i>
-                                            <i className="fa-solid fa-star"></i>
+                                            <div className="rating my-auto text-warning">
+                                                <i className="fa-solid fa-star"></i>
+                                                <i className="fa-solid fa-star"></i>
+                                                <i className="fa-solid fa-star"></i>
+                                                <i className="fa-solid fa-star"></i>
+                                                <i className="fa-solid fa-star"></i>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <p className="small-para-14-px text-black mb-3">{hotel.address}</p>
+                                        <p className="small-para-14-px text-black mb-3">{hotel.address}</p>
 
-                                    <div className="row mb-4">
-                                        <div className="col-12">
+                                        {/* <div className="row mb-4"> */}
+                                        <div className="d-flex justify-content-between align-items-end mb-3">
+                                            <div>
+                                                <p className="text-decoration-line-through small-para-14-px text-muted mb-0">
+                                                    {hotel.oldPrice}
+                                                </p>
+                                                <p className="para text-theme-green mb-0">{hotel.price}</p>
+                                            </div>
+
+                                            <p className="small-para-14-px mb-0">1 night, 2 adults</p>
+                                            {/* <div className="col-12">
                                             <p className="small-para-14-px text-decoration-line-through text-black mb-1">
                                                 {hotel.oldPrice}
                                             </p>
@@ -326,19 +344,18 @@ function WeekendGetawayHotelSection() {
 
                                         <div className="col-6 text-end">
                                             <p className="small-para-14-px">1 night, 2 adults</p>
+                                        </div> */}
                                         </div>
-                                    </div>
 
-                                    <a href="#" className="theme-button-blue rounded w-100 d-block text-center">
-                                        Book Now
-                                    </a>
+                                        <a href="#" className="theme-button-blue rounded w-100 text-center">
+                                            Book Now
+                                        </a>
+                                    </div>
                                 </div>
                             </SwiperSlide>
                         ))}
                     </Swiper>
                 </div>
-
-               
             </div>
         </section>
     );

@@ -7,7 +7,6 @@ export default async function DynamicPage({ params }) {
     const { slug } = await params;
 
     const slugArray = slug || [];
-
     const fullSlug = '/' + slugArray.join('/');
 
     const result = await resolveSlug(fullSlug);

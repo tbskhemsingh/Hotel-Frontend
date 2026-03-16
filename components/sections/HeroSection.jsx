@@ -96,7 +96,6 @@ export default function HeroSection() {
         const [start, end] = dates;
         setTempCheckInDate(start);
         setTempCheckOutDate(end);
-
     };
 
     const formatDate = (date) => {
@@ -340,7 +339,7 @@ export default function HeroSection() {
                                     Check-In and Check-Out
                                 </label>
                                 <div className="date-picker-wrapper">
-                                    <div className="main-date-picker">
+                                    <div className="main-date-picker" onClick={handleOpenDatePicker} style={{ cursor: 'pointer' }}>
                                         <div className="date-range-input-content">
                                             <div className="date-range-labels">
                                                 <div className="check-in-out-label">

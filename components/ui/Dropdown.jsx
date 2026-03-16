@@ -42,6 +42,34 @@ export default function Dropdown({ id, title, items = [], parentId, defaultOpen 
                         }}
                     >
                         <div className="row">
+                            {items.length === 0 ? (
+                                <div className="col-12 text-muted">No data found</div>
+                            ) : (
+                                items.map((item, index) => (
+                                    <div key={index} className="col-6 col-md-4 col-lg-3 mb-2">
+                                        {item.href ? (
+                                            <Link href={item.href} className="text-decoration-none text-dark" prefetch={false}>
+                                                • {item.label}
+                                            </Link>
+                                        ) : (
+                                            <span className="text-dark">• {item.label}</span>
+                                        )}
+
+                                        {item.count != null && (
+                                            <div
+                                                className="property-count"
+                                                style={{ fontSize: '13px', marginLeft: '14px', lineHeight: '1.2' }}
+                                            >
+                                                <Link href="/" className="text-decoration-none property-link" prefetch={false}>
+                                                    ({item.count} properties)
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        {/* <div className="row">
                             {items.map((item, index) => (
                                 <div key={index} className="col-6 col-md-4 col-lg-3 mb-2">
                                     {item.href ? (
@@ -58,21 +86,10 @@ export default function Dropdown({ id, title, items = [], parentId, defaultOpen 
                                             </Link>
                                         </div>
                                     )}
-                                    {/* {item.count != null && (
-                                        <div
-                                            className="text-secondary"
-                                            style={{
-                                                fontSize: '13px',
-                                                marginLeft: '14px',
-                                                lineHeight: '1.2'
-                                            }}
-                                        >
-                                            ({item.count} properties)
-                                        </div>
-                                    )} */}
+                                    
                                 </div>
                             ))}
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
