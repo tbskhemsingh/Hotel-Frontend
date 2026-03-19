@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     getCitiesByCountryOrRegion,
@@ -78,10 +78,12 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     const [excludeOptions, setExcludeOptions] = useState([]);
     const [showPinnedDropdown, setShowPinnedDropdown] = useState(false);
     const [showExcludeDropdown, setShowExcludeDropdown] = useState(false);
+    const [newlyAddedHotels, setNewlyAddedHotels] = useState([]);
 
     const [cities, setCities] = useState([]);
     const [selectedCity, setSelectedCity] = useState('');
     const [selectedHotels, setSelectedHotels] = useState([]);
+    const hasInitializedCurationSelectionRef = useRef(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -105,6 +107,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
     useEffect(() => {
         if (propCollectionId) {
+            hasInitializedCurationSelectionRef.current = false;
             setCollectionId(propCollectionId);
             fetchCollectionById(propCollectionId);
         }
@@ -190,7 +193,16 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         const res = await getHotelsByCity(payload);
         const results = res?.data || [];
 
-        setHotelList(results);
+        setHotelList(() => {
+            const newHotelsById = new Map();
+            [...newlyAddedHotels, ...results].forEach((hotel) => {
+                if (hotel?.id && !newHotelsById.has(hotel.id)) {
+                    newHotelsById.set(hotel.id, hotel);
+                }
+            });
+
+            return Array.from(newHotelsById.values());
+        });
         // setPinnedHotels(results);
 
         // if (type === 'pinned') setPinnedOptions(results);
@@ -207,6 +219,22 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
         fetchInitialHotels();
     }, [activeTab, selectedGeoNode]);
+
+    useEffect(() => {
+        if (activeTab !== 'Curation') return;
+        if (hasInitializedCurationSelectionRef.current) return;
+        if (!hotelList.length) return;
+
+        const effectiveMaxHotels = Number(formData.maxHotels) || 20;
+
+        const initialSelection =
+            includedHotelIds.length > 0
+                ? includedHotelIds.filter((id) => hotelList.some((hotel) => hotel.id === id))
+                : hotelList.slice(0, effectiveMaxHotels).map((hotel) => hotel.id);
+
+        setSelectedHotels(initialSelection);
+        hasInitializedCurationSelectionRef.current = true;
+    }, [activeTab, hotelList, includedHotelIds, formData.maxHotels]);
 
     // ---------------- RULE FUNCTIONS ----------------
 
@@ -587,6 +615,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 pinned: [...pinnedHotels],
                 excluded: [...excludedHotels]
             });
+            setNewlyAddedHotels([]);
 
             goNext();
         } catch (error) {
@@ -748,6 +777,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             setPinnedHotels(formattedPinned);
             setExcludedHotels(formattedExcluded);
             setIncludedHotelIds(includedIds);
+            setNewlyAddedHotels([]);
 
             // Important: Set selectedHotels after hotelList is loaded
             // We'll need to wait for hotelList to be populated
@@ -854,6 +884,46 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
         return currentPinned !== initialPinned || currentExcluded !== initialExcluded || currentSelected !== initialSelected;
     };
+
+    const normalizeGlobalHotel = (hotel) => ({
+        id: hotel?.id ?? hotel?.hotelID ?? hotel?.hotelId ?? hotel?.ID ?? null,
+        name: hotel?.name ?? hotel?.hotelName ?? hotel?.Name ?? '',
+        cityId: hotel?.cityId ?? hotel?.cityID ?? hotel?.CityID ?? null,
+        cityName: hotel?.cityName ?? hotel?.city ?? hotel?.CityName ?? '',
+        address: hotel?.address ?? hotel?.Address ?? '',
+        stars: hotel?.stars ?? hotel?.Stars ?? null,
+        reviewScore: hotel?.reviewScore ?? hotel?.ReviewScore ?? null
+    });
+
+    const handleAddGlobalHotel = (hotel) => {
+        const normalizedHotel = normalizeGlobalHotel(hotel);
+
+        if (!normalizedHotel.id) {
+            toast.error('Unable to add this hotel');
+            return;
+        }
+
+        const effectiveMaxHotels = Number(formData.maxHotels) || 20;
+
+        const alreadySelected =
+            selectedHotels.includes(normalizedHotel.id) ||
+            hotelList.some((item) => item.id === normalizedHotel.id) ||
+            pinnedHotels.some((item) => item.id === normalizedHotel.id);
+
+        if (alreadySelected) {
+            return;
+        }
+
+        if (selectedHotels.length >= effectiveMaxHotels) {
+            toast.error(`You can only select up to ${effectiveMaxHotels} hotels`);
+            return;
+        }
+
+        setHotelList((prev) => [normalizedHotel, ...prev.filter((item) => item.id !== normalizedHotel.id)]);
+        setSelectedHotels((prev) => [...prev, normalizedHotel.id]);
+        setNewlyAddedHotels((prev) => (prev.some((item) => item.id === normalizedHotel.id) ? prev : [...prev, normalizedHotel]));
+    };
+
 
     // ---------------- RENDER ----------------
     return (
@@ -977,6 +1047,9 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                         selectedHotels={selectedHotels}
                         setSelectedHotels={setSelectedHotels}
                         includedHotelIds={includedHotelIds}
+                        newlyAddedHotels={newlyAddedHotels}
+                        setNewlyAddedHotels={setNewlyAddedHotels}
+                        onAddGlobalHotel={handleAddGlobalHotel}
                     />
                 )}
 
