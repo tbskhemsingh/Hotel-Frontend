@@ -1630,3 +1630,43 @@ right: -50px;
 .card-content{
 padding:20px 22px 22px 22px;
 }
+
+.hotel-row-info {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.hotel-name {
+  font-weight: 600;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hotel-stars {
+  color: #f5a623;
+  flex: 0 0 auto;
+}
+
+.hotel-address {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hotel-score {
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
+.hotel-separator {
+  color: #adb5bd;
+  flex: 0 0 auto;
+}
