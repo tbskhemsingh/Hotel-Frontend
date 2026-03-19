@@ -256,10 +256,15 @@ export default function CollectionDetails({ collection, hotels, slug, introShort
                                                     </div>
 
                                                     <div className="col-12 col-md-6 d-flex">
-                                                        <button className="theme-button-blue rounded w-100 d-block text-center">
+                                                        <Link
+                                                            className="theme-button-blue rounded w-100 d-block text-center"
+                                                            href={`${hotel.url}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
                                                             See Availability
                                                             <i className="fa-solid fa-arrow-right ms-2"></i>
-                                                        </button>
+                                                        </Link>
                                                     </div>
                                                 </div>
                                             </div>
