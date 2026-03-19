@@ -99,8 +99,8 @@ export default function CollectionDetails({ slug }) {
             ) : !collection ? (
                 <div className="container py-5 text-center">
                     <h3>Collection not found</h3>
-                    <Link href="/collections" className="theme-button-orange rounded-1 mt-3 d-inline-block">
-                        Back to Collections
+                    <Link href="/" className="theme-button-orange rounded-1 mt-3 d-inline-block">
+                        Back to Home
                     </Link>
                 </div>
             ) : (
