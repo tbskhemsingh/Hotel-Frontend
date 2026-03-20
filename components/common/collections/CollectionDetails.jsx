@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { FaMapMarkerAlt, FaHotel } from 'react-icons/fa';
@@ -10,6 +10,31 @@ export default function CollectionDetails({ collection, hotels }) {
     const basic = collection?.basicCollection;
     const content = collection?.collectionContent;
     const hotelsData = hotels || [];
+
+    // Default image path
+    const defaultImage = '/image/property-img.webp';
+    const [timestamp, setTimestamp] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setTimestamp(Date.now().toString());
+        }, 0);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const handleImageError = (e) => {
+        // Only set default if not already showing default
+        if (!e.target.src.includes(defaultImage)) {
+            e.target.src = defaultImage;
+        }
+    };
+
+    // Generate cache-busted URL
+    const getImageUrl = (photo) => {
+        if (!photo) return defaultImage;
+        const sep = photo.includes('?') ? '&' : '?';
+        return timestamp ? `${photo}${sep}t=${timestamp}` : photo;
+    };
 
     function decodeHtml(html) {
         if (!html) return '';
@@ -138,10 +163,11 @@ export default function CollectionDetails({ collection, hotels }) {
                                                         {hotel.hotelType || 'Apartment Hotel'}
                                                     </span>
                                                     <img
-                                                        src={hotel?.photo || '/public/image/property-img.webp'}
+                                                        src={getImageUrl(hotel?.photo)}
                                                         className="d-block w-100 rounded-4"
                                                         style={{ height: '280px', objectFit: 'cover' }}
                                                         alt={hotel.hotelName}
+                                                        onError={handleImageError}
                                                     />{' '}
                                                 </div>
                                             </div>
