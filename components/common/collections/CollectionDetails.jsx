@@ -140,7 +140,7 @@ export default function CollectionDetails({ collection, hotels }) {
                                                     <img
                                                         src={hotel?.photo || '/public/image/property-img.webp'}
                                                         className="d-block w-100 rounded-4"
-                                                        style={{ height: '340px', objectFit: 'cover' }}
+                                                        style={{ height: '280px', objectFit: 'cover' }}
                                                         alt={hotel.hotelName}
                                                     />{' '}
                                                 </div>
