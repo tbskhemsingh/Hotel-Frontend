@@ -63,16 +63,6 @@ export default function CollectionDetails({ collection, hotels }) {
         return decoded;
     }
 
-    // Get rating text based on review score
-    function getRatingText(score) {
-        if (score === 0 || score === null || score === undefined) return 'No reviews yet';
-        if (score >= 9) return 'Exceptional';
-        if (score >= 8) return 'Excellent';
-        if (score >= 7) return 'Very good';
-        if (score >= 6) return 'Good';
-        if (score >= 5) return 'Pleasant';
-        return 'Review score needed';
-    }
 
     return (
         <>
@@ -147,36 +137,38 @@ export default function CollectionDetails({ collection, hotels }) {
                                         <div className="row g-3">
                                             {/* Image */}
                                             <div className="col-md-4">
-                                                <div className="position-relative">
-                                                    {/* TAG */}
-                                                    <span
-                                                        className="position-absolute text-white px-3 py-1"
-                                                        style={{
-                                                            top: '12px',
-                                                            right: '12px',
-                                                            background: '#ff7a00',
-                                                            borderRadius: '20px',
-                                                            fontSize: '12px',
-                                                            zIndex: 2
-                                                        }}
-                                                    >
-                                                        {hotel.hotelType || 'Apartment Hotel'}
-                                                    </span>
-                                                    <img
-                                                        src={getImageUrl(hotel?.photo)}
-                                                        className="d-block w-100 rounded-4"
-                                                        style={{ height: '280px', objectFit: 'cover' }}
-                                                        alt={hotel.hotelName}
-                                                        onError={handleImageError}
-                                                    />{' '}
-                                                </div>
+                                                <Link href={`${hotel.url}`} target="_blank" className="text-decoration-none">
+                                                    <div className="position-relative">
+                                                        {/* TAG */}
+                                                        <span
+                                                            className="position-absolute text-white px-3 py-1"
+                                                            style={{
+                                                                top: '12px',
+                                                                right: '12px',
+                                                                background: '#ff7a00',
+                                                                borderRadius: '20px',
+                                                                fontSize: '12px',
+                                                                zIndex: 2
+                                                            }}
+                                                        >
+                                                            {hotel.hotelType || 'Apartment Hotel'}
+                                                        </span>
+                                                        <img
+                                                            src={getImageUrl(hotel?.photo)}
+                                                            className="d-block w-100 rounded-4"
+                                                            style={{ height: '280px', objectFit: 'cover' }}
+                                                            alt={hotel.hotelName}
+                                                            onError={handleImageError}
+                                                        />{' '}
+                                                    </div>
+                                                </Link>
                                             </div>
 
                                             {/* Hotel Info */}
                                             <div className="col-md-8">
                                                 {/* TITLE + STARS */}
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <Link href={`/${hotel.urlName}`} className="text-decoration-none hotel-name-link">
+                                                    <Link href={`${hotel.urlName}`} className="text-decoration-none hotel-name-link">
                                                         <h4 className="property-grid-title font-size-18 my-auto me-3 text-primary">{hotel.hotelName}</h4>
                                                     </Link>
                                                     <div className="text-warning">
@@ -209,7 +201,7 @@ export default function CollectionDetails({ collection, hotels }) {
                                                                     </span>
                                                                 ))}
                                                             {hotel.hotelFacilities.split(',').length > 5 && (
-                                                                <Link href={`/${hotel.urlName}`} className="rating" style={{ fontSize: '11px' }}>
+                                                                <Link href={`${hotel.urlName}`} className="rating" style={{ fontSize: '11px' }}>
                                                                     +{hotel.hotelFacilities.split(',').length - 5} more
                                                                 </Link>
                                                             )}
@@ -238,7 +230,7 @@ export default function CollectionDetails({ collection, hotels }) {
                                                             ? `${hotel.hotelDescription.slice(0, 200)}... `
                                                             : hotel.hotelDescription}
                                                         {hotel.hotelDescription.length > 200 && (
-                                                            <Link href={`/${hotel.urlName}`} className="rating">
+                                                            <Link href={`${hotel.urlName}`} className="rating">
                                                                 more
                                                             </Link>
                                                         )}
@@ -273,7 +265,7 @@ export default function CollectionDetails({ collection, hotels }) {
 
                                                             <div className="my-auto">
                                                                 <p className="small-para-14-px font-weight-bold mb-1">
-                                                                    {getRatingText(hotel.reviewScore)}
+                                                                    {hotel.ratingText}
                                                                 </p>
 
                                                                 <p className="para-12px mb-0">

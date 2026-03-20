@@ -41,7 +41,7 @@ export default async function DynamicPage({ params }) {
 
     // HOTEL PAGE (CityHotel)
     if (slugArray.length === 2 && data.entityType === 'Hotel') {
-        return <HotelDetails city={slugArray[0]} hotel={slugArray[1]} params={params} />;
+        return <HotelDetails city={slugArray[0]} hotel={slugArray[1]} />;
     }
 
     return notFound();
