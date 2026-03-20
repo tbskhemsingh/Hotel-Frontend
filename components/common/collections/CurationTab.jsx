@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
+import GlobalHotelSearch from './GlobalHotelSearch';
+import HotelRowInfo from './HotelRowInfo';
 
 export default function CurationTab({
     hotelList,
@@ -15,36 +17,23 @@ export default function CurationTab({
     setHotelSearch,
     onBack,
     maxHotels,
-    includedHotelIds, // New prop
     selectedHotels,
-    setSelectedHotels
+    setSelectedHotels,
+    newlyAddedHotels = [],
+    onAddGlobalHotel
 }) {
     const [reasonModal, setReasonModal] = useState(false);
     const [selectedHotel, setSelectedHotel] = useState(null);
     const [reason, setReason] = useState('');
 
-    // ---------- SORT HOTELS (PINNED FIRST) ----------
+    const effectiveMaxHotels = Number(maxHotels) || 20;
+
     const sortedHotels = [...pinnedHotels, ...hotelList.filter((hotel) => !pinnedHotels.some((p) => p.id === hotel.id))];
 
-    // Initialize selected hotels based on includedHotelIds when editing, or top maxHotels when creating
-    useEffect(() => {
-        if (!hotelList.length) return;
-
-        if (includedHotelIds && includedHotelIds.length > 0) {
-            // Editing mode: select hotels that are already included in the collection
-            setSelectedHotels(includedHotelIds);
-        } else {
-            // Creation mode: select top maxHotels
-            setSelectedHotels(hotelList.slice(0, maxHotels).map((h) => h.id));
-        }
-    }, [hotelList, maxHotels, includedHotelIds]);
-
-    // ---------- CHECKBOX ----------
     const handleCheckboxChange = (hotelId, checked) => {
         if (checked) {
-            // Check if we can add more hotels
-            if (selectedHotels.length >= maxHotels) {
-                toast.error(`You can only select up to ${maxHotels} hotels`);
+            if (selectedHotels.length >= effectiveMaxHotels) {
+                toast.error(`You can only select up to ${effectiveMaxHotels} hotels`);
                 return;
             }
             setSelectedHotels((prev) => [...prev, hotelId]);
@@ -53,7 +42,6 @@ export default function CurationTab({
         }
     };
 
-    // ---------- EXCLUDE ----------
     const confirmExclude = () => {
         if (!reason.trim()) return;
 
@@ -66,17 +54,13 @@ export default function CurationTab({
             }
         ]);
 
-        // Remove from selected hotels if excluded
-        setSelectedHotels((prev) => prev.filter(id => id !== selectedHotel.id));
-
-        // Remove from pinned if excluded
+        setSelectedHotels((prev) => prev.filter((id) => id !== selectedHotel.id));
         setPinnedHotels((prev) => prev.filter((h) => h.id !== selectedHotel.id));
 
         setReasonModal(false);
         setReason('');
     };
 
-    // ---------- PIN ----------
     const handlePin = (hotel) => {
         setPinnedHotels((prev) => {
             if (prev.some((h) => h.id === hotel.id)) return prev;
@@ -90,12 +74,10 @@ export default function CurationTab({
         });
     };
 
-    // ---------- UNPIN ----------
     const handleUnpin = (hotelId) => {
         setPinnedHotels((prev) => prev.filter((h) => h.id !== hotelId));
     };
 
-    // ---------- MOVE PIN ----------
     const movePin = (index, direction) => {
         const updated = [...pinnedHotels];
         const target = index + direction;
@@ -103,7 +85,6 @@ export default function CurationTab({
         if (target < 0 || target >= updated.length) return;
 
         [updated[index], updated[target]] = [updated[target], updated[index]];
-
         setPinnedHotels(updated);
     };
 
@@ -122,7 +103,7 @@ export default function CurationTab({
             </div>
 
             <div className="mb-2 text-end">
-                Selected: {selectedHotels.length}/{maxHotels}
+                Selected: {selectedHotels.length}/{effectiveMaxHotels}
             </div>
 
             <div className="border rounded p-3" style={{ maxHeight: '550px', overflowY: 'auto' }}>
@@ -131,60 +112,60 @@ export default function CurationTab({
                     const pinIndex = pinnedHotels.findIndex((h) => h.id === hotel.id);
                     const isPinned = pinIndex !== -1;
                     const isSelected = selectedHotels.includes(hotel.id);
+                    const isNewlyAdded = newlyAddedHotels.some((item) => item.id === hotel.id);
 
                     return (
-                        <div key={hotel.id} className="d-flex align-items-center border-bottom py-2">
-                            {/* Checkbox */}
+                        <div
+                            key={hotel.id}
+                            className={`d-flex align-items-center border-bottom py-2 ${
+                                isNewlyAdded ? 'border-start border-danger border-3 ps-2' : ''
+                            }`}
+                        >
                             <input
                                 type="checkbox"
                                 className="form-check-input me-2"
                                 checked={isSelected || isPinned}
-                                disabled={isExcluded || (!isSelected && selectedHotels.length >= maxHotels)}
+                                disabled={isExcluded || (!isSelected && selectedHotels.length >= effectiveMaxHotels)}
                                 onChange={(e) => handleCheckboxChange(hotel.id, e.target.checked)}
                             />
 
-                            {/* Hotel Name */}
-                            <span className="flex-grow-1">
-                                {isPinned && <span className="text-warning fw-bold me-2">⭐ </span>}
-                                {hotel.name}
-                                {isExcluded && <span className="text-danger ms-2">(Excluded)</span>}
-                            </span>
+                            <div className="flex-grow-1 d-flex align-items-center gap-2" style={{ minWidth: 0 }}>
+                                {isPinned && <span className="text-warning fw-bold">* </span>}
+                                <HotelRowInfo
+                                    name={hotel.name}
+                                    stars={hotel.stars}
+                                    address={hotel.address || ''}
+                                    reviewScore={hotel.reviewScore}
+                                />
+                                {isNewlyAdded && <span className="badge bg-danger">New</span>}
+                                {isExcluded && <span className="text-danger">(Excluded)</span>}
+                            </div>
 
-                            {/* PIN CONTROLS */}
                             {!isExcluded && (
                                 <div className="d-flex align-items-center gap-1">
                                     {!isPinned ? (
                                         <button
                                             className="btn btn-sm btn-outline-primary"
                                             onClick={() => handlePin(hotel)}
-                                            disabled={!isSelected} // Only allow pinning selected hotels
+                                            disabled={!isSelected}
                                         >
                                             Pin
                                         </button>
                                     ) : (
                                         <>
                                             {pinIndex > 0 && (
-                                                <button
-                                                    className="btn btn-sm btn-outline-secondary"
-                                                    onClick={() => movePin(pinIndex, -1)}
-                                                >
-                                                    ↑
+                                                <button className="btn btn-sm btn-outline-secondary" onClick={() => movePin(pinIndex, -1)}>
+                                                    ^
                                                 </button>
                                             )}
 
                                             {pinIndex < pinnedHotels.length - 1 && (
-                                                <button
-                                                    className="btn btn-sm btn-outline-secondary"
-                                                    onClick={() => movePin(pinIndex, 1)}
-                                                >
-                                                    ↓
+                                                <button className="btn btn-sm btn-outline-secondary" onClick={() => movePin(pinIndex, 1)}>
+                                                    v
                                                 </button>
                                             )}
 
-                                            <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => handleUnpin(hotel.id)}
-                                            >
+                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleUnpin(hotel.id)}>
                                                 Unpin
                                             </button>
                                         </>
@@ -195,6 +176,13 @@ export default function CurationTab({
                     );
                 })}
             </div>
+
+            <GlobalHotelSearch
+                hotelList={hotelList}
+                selectedHotels={selectedHotels}
+                maxHotels={effectiveMaxHotels}
+                onAddHotel={onAddGlobalHotel}
+            />
 
             {reasonModal && (
                 <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
@@ -227,7 +215,6 @@ export default function CurationTab({
                 </div>
             )}
 
-            {/* ---------- NAVIGATION ---------- */}
             <div className="d-flex justify-content-between mt-3">
                 <button className="btn btn-outline-secondary" onClick={onBack}>
                     Back

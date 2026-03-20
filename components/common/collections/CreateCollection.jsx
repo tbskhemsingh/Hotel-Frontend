@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     getCitiesByCountryOrRegion,
@@ -78,10 +78,12 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     const [excludeOptions, setExcludeOptions] = useState([]);
     const [showPinnedDropdown, setShowPinnedDropdown] = useState(false);
     const [showExcludeDropdown, setShowExcludeDropdown] = useState(false);
+    const [newlyAddedHotels, setNewlyAddedHotels] = useState([]);
 
     const [cities, setCities] = useState([]);
     const [selectedCity, setSelectedCity] = useState('');
     const [selectedHotels, setSelectedHotels] = useState([]);
+    const hasInitializedCurationSelectionRef = useRef(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -105,6 +107,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
     useEffect(() => {
         if (propCollectionId) {
+            hasInitializedCurationSelectionRef.current = false;
             setCollectionId(propCollectionId);
             fetchCollectionById(propCollectionId);
         }
@@ -114,9 +117,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     useEffect(() => {
         if (hotelList.length > 0 && includedHotelIds.length > 0) {
             // Filter included IDs to only those that exist in the current hotel list
-            const validIncludedIds = includedHotelIds.filter(id =>
-                hotelList.some(hotel => hotel.id === id)
-            );
+            const validIncludedIds = includedHotelIds.filter((id) => hotelList.some((hotel) => hotel.id === id));
             setSelectedHotels(validIncludedIds);
         }
     }, [hotelList, includedHotelIds]);
@@ -127,24 +128,24 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         if (i < tabOrder.length - 1) setActiveTab(tabOrder[i + 1]);
     };
 
-   const goBack = async () => {
-    const i = tabOrder.indexOf(activeTab);
-    if (i > 0) {
-        const prevTab = tabOrder[i - 1];
-        
-        // Fetch data when going back to certain tabs
-        if (prevTab === 'Basics' || prevTab === 'Content' || prevTab === 'Rules' || prevTab === 'Curation') {
-            setLoading(true);
-            try {
-                await fetchCollectionById();
-            } finally {
-                setLoading(false);
+    const goBack = async () => {
+        const i = tabOrder.indexOf(activeTab);
+        if (i > 0) {
+            const prevTab = tabOrder[i - 1];
+
+            // Fetch data when going back to certain tabs
+            if (prevTab === 'Basics' || prevTab === 'Content' || prevTab === 'Rules' || prevTab === 'Curation') {
+                setLoading(true);
+                try {
+                    await fetchCollectionById();
+                } finally {
+                    setLoading(false);
+                }
             }
+
+            setActiveTab(prevTab);
         }
-        
-        setActiveTab(prevTab);
-    }
-};
+    };
 
     useEffect(() => {
         if (!selectedGeoNode?.countryId) {
@@ -192,7 +193,16 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         const res = await getHotelsByCity(payload);
         const results = res?.data || [];
 
-        setHotelList(results);
+        setHotelList(() => {
+            const newHotelsById = new Map();
+            [...newlyAddedHotels, ...results].forEach((hotel) => {
+                if (hotel?.id && !newHotelsById.has(hotel.id)) {
+                    newHotelsById.set(hotel.id, hotel);
+                }
+            });
+
+            return Array.from(newHotelsById.values());
+        });
         // setPinnedHotels(results);
 
         // if (type === 'pinned') setPinnedOptions(results);
@@ -209,6 +219,22 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
         fetchInitialHotels();
     }, [activeTab, selectedGeoNode]);
+
+    useEffect(() => {
+        if (activeTab !== 'Curation') return;
+        if (hasInitializedCurationSelectionRef.current) return;
+        if (!hotelList.length) return;
+
+        const effectiveMaxHotels = Number(formData.maxHotels) || 20;
+
+        const initialSelection =
+            includedHotelIds.length > 0
+                ? includedHotelIds.filter((id) => hotelList.some((hotel) => hotel.id === id))
+                : hotelList.slice(0, effectiveMaxHotels).map((hotel) => hotel.id);
+
+        setSelectedHotels(initialSelection);
+        hasInitializedCurationSelectionRef.current = true;
+    }, [activeTab, hotelList, includedHotelIds, formData.maxHotels]);
 
     // ---------------- RULE FUNCTIONS ----------------
 
@@ -292,12 +318,35 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             toast.error('Please save Basics first');
             return;
         }
-        const hasInvalidFaq = contentData.faqs?.some((faq) => !faq.question?.trim() || !faq.answer?.trim());
+        // ✅ CHECK IF CONTENT IS EMPTY
+        const isEmptyContent =
+            !contentData.header &&
+            !contentData.metaTitle &&
+            !contentData.metaDescription &&
+            !contentData.introShortCopy &&
+            !contentData.introLongCopy &&
+            !contentData.heroImageUrl &&
+            !contentData.badge &&
+            (!contentData.faqs || contentData.faqs.length === 0);
 
-        if (hasInvalidFaq) {
-            toast.error('Please complete all FAQs before saving.');
+        // ✅ IF EMPTY → SKIP API
+        if (isEmptyContent) {
+            goNext();
             return;
         }
+
+        // ✅ IF NO CHANGE → SKIP API
+        if (collectionId && !isContentChanged()) {
+            goNext();
+            return;
+        }
+
+        const hasInvalidFaq = contentData.faqs?.some((faq) => !faq.question?.trim() || !faq.answer?.trim());
+
+        // if (hasInvalidFaq) {
+        //     toast.error('Please complete all FAQs before saving.');
+        //     return;
+        // }
 
         const questions = contentData.faqs?.map((f) => f.question.trim().toLowerCase());
 
@@ -442,10 +491,15 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             return;
         }
 
-        // if (!rules.length) {
-        //     toast.error('Please add at least one rule');
-        //     return;
-        // }
+        if (!rules || rules.length === 0) {
+            goNext();
+            return;
+        }
+
+        if (collectionId && !isRulesChanged()) {
+            goNext();
+            return;
+        }
 
         try {
             setLoading(true);
@@ -561,6 +615,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 pinned: [...pinnedHotels],
                 excluded: [...excludedHotels]
             });
+            setNewlyAddedHotels([]);
 
             goNext();
         } catch (error) {
@@ -722,11 +777,12 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             setPinnedHotels(formattedPinned);
             setExcludedHotels(formattedExcluded);
             setIncludedHotelIds(includedIds);
+            setNewlyAddedHotels([]);
 
             // Important: Set selectedHotels after hotelList is loaded
             // We'll need to wait for hotelList to be populated
             if (hotelList.length > 0) {
-                setSelectedHotels(includedIds.filter(id => hotelList.some(hotel => hotel.id === id)));
+                setSelectedHotels(includedIds.filter((id) => hotelList.some((hotel) => hotel.id === id)));
             } else {
                 // If hotelList isn't loaded yet, just store the IDs and they'll be applied when hotelList loads
                 setSelectedHotels(includedIds);
@@ -829,6 +885,44 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         return currentPinned !== initialPinned || currentExcluded !== initialExcluded || currentSelected !== initialSelected;
     };
 
+    const normalizeGlobalHotel = (hotel) => ({
+        id: hotel?.id ?? hotel?.hotelID ?? hotel?.hotelId ?? hotel?.ID ?? null,
+        name: hotel?.name ?? hotel?.hotelName ?? hotel?.Name ?? '',
+        cityId: hotel?.cityId ?? hotel?.cityID ?? hotel?.CityID ?? null,
+        cityName: hotel?.cityName ?? hotel?.city ?? hotel?.CityName ?? '',
+        address: hotel?.address ?? hotel?.Address ?? '',
+        stars: hotel?.stars ?? hotel?.Stars ?? null,
+        reviewScore: hotel?.reviewScore ?? hotel?.ReviewScore ?? null
+    });
+
+    const handleAddGlobalHotel = (hotel) => {
+        const normalizedHotel = normalizeGlobalHotel(hotel);
+
+        if (!normalizedHotel.id) {
+            toast.error('Unable to add this hotel');
+            return;
+        }
+
+        const effectiveMaxHotels = Number(formData.maxHotels) || 20;
+
+        const alreadySelected =
+            selectedHotels.includes(normalizedHotel.id) ||
+            hotelList.some((item) => item.id === normalizedHotel.id) ||
+            pinnedHotels.some((item) => item.id === normalizedHotel.id);
+
+        if (alreadySelected) {
+            return;
+        }
+
+        if (selectedHotels.length >= effectiveMaxHotels) {
+            toast.error(`You can only select up to ${effectiveMaxHotels} hotels`);
+            return;
+        }
+
+        setHotelList((prev) => [normalizedHotel, ...prev.filter((item) => item.id !== normalizedHotel.id)]);
+        setSelectedHotels((prev) => [...prev, normalizedHotel.id]);
+        setNewlyAddedHotels((prev) => (prev.some((item) => item.id === normalizedHotel.id) ? prev : [...prev, normalizedHotel]));
+    };
 
     // ---------------- RENDER ----------------
     return (
@@ -867,6 +961,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                         selectedGeoNode={selectedGeoNode}
                         setSelectedGeoNode={setSelectedGeoNode}
                         locationNames={locationNames}
+                        isEdit={!!collectionId}
                     />
                 )}
 
@@ -952,6 +1047,9 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                         selectedHotels={selectedHotels}
                         setSelectedHotels={setSelectedHotels}
                         includedHotelIds={includedHotelIds}
+                        newlyAddedHotels={newlyAddedHotels}
+                        setNewlyAddedHotels={setNewlyAddedHotels}
+                        onAddGlobalHotel={handleAddGlobalHotel}
                     />
                 )}
 

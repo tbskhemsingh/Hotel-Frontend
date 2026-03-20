@@ -6,10 +6,9 @@ import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { FaMapMarkerAlt, FaHotel } from 'react-icons/fa';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 
-export default function CollectionDetails({ collection, hotels, slug }) {
+export default function CollectionDetails({ collection, hotels }) {
     const basic = collection?.basicCollection;
     const content = collection?.collectionContent;
-    const loading = false;
     const hotelsData = hotels || [];
 
     function decodeHtml(html) {
@@ -32,7 +31,7 @@ export default function CollectionDetails({ collection, hotels, slug }) {
         };
 
         let decoded = html;
-        Object.keys(entities).forEach(entity => {
+        Object.keys(entities).forEach((entity) => {
             decoded = decoded.replace(new RegExp(entity, 'g'), entities[entity]);
         });
 
@@ -50,8 +49,6 @@ export default function CollectionDetails({ collection, hotels, slug }) {
         return 'Review score needed';
     }
 
-
-
     return (
         <>
             <CountryHeroSection />
@@ -59,8 +56,8 @@ export default function CollectionDetails({ collection, hotels, slug }) {
             {!collection ? (
                 <div className="container py-5 text-center">
                     <h3>Collection not found</h3>
-                    <Link href="/collections" className="theme-button-orange rounded-1 mt-3 d-inline-block">
-                        Back to Collections
+                    <Link href="/" className="theme-button-orange rounded-1 mt-3 d-inline-block">
+                        Back to Home
                     </Link>
                 </div>
             ) : (
@@ -73,9 +70,7 @@ export default function CollectionDetails({ collection, hotels, slug }) {
                                     Home
                                 </Link>
                                 <span className="mx-2 text-muted">•</span>
-                                <span className="fw-semibold text-decoration-none text-primary">
-                                    {basic?.name}
-                                </span>
+                                <span className="fw-semibold text-decoration-none text-primary">{basic?.name}</span>
                             </div>
                         </div>
                     </div>
@@ -84,10 +79,7 @@ export default function CollectionDetails({ collection, hotels, slug }) {
                     <section className="container py-5">
                         <div className="row align-items-center">
                             <div className="col-lg-8">
-
-                                <h1 className="display-5 fw-bold mb-3">
-                                    {basic?.name}
-                                </h1>
+                                <h2 className="display-5 fw-bold mb-3">{content?.header}</h2>
 
                                 {content?.introShortCopy && (
                                     <div
@@ -101,9 +93,7 @@ export default function CollectionDetails({ collection, hotels, slug }) {
                                 <div className="d-flex flex-wrap gap-4 mt-3">
                                     <div className="d-flex align-items-center">
                                         <FaMapMarkerAlt className="text-muted me-2" />
-                                        <span>
-                                            {basic?.districtName || basic?.cityName || basic?.regionName || basic?.countryName}
-                                        </span>
+                                        <span>{basic?.districtName || basic?.cityName || basic?.regionName || basic?.countryName}</span>
                                     </div>
 
                                     <div className="d-flex align-items-center">
@@ -111,13 +101,14 @@ export default function CollectionDetails({ collection, hotels, slug }) {
                                         <span>{hotelsData.length} Hotels</span>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </section>
 
                     {/* Main Content */}
                     <div className="container">
+                        {/* Hotels Grid - Similar to property listings */}
+
                         {hotelsData.length > 0 ? (
                             <div className="d-flex flex-column gap-4">
                                 {hotelsData.map((hotel) => (
@@ -147,29 +138,25 @@ export default function CollectionDetails({ collection, hotels, slug }) {
                                                         {hotel.hotelType || 'Apartment Hotel'}
                                                     </span>
                                                     <img
-                                                        src={hotel.photo || "/image/property-img.webp"}
+                                                        src={hotel?.photo || '/public/image/property-img.webp'}
                                                         className="d-block w-100 rounded-4"
                                                         style={{ height: '340px', objectFit: 'cover' }}
                                                         alt={hotel.hotelName}
-                                                    />                                                </div>
+                                                    />{' '}
+                                                </div>
                                             </div>
 
                                             {/* Hotel Info */}
                                             <div className="col-md-8">
                                                 {/* TITLE + STARS */}
                                                 <div className="d-flex align-items-center mb-2">
-                                                    <Link
-                                                        href={`/${hotel.urlName?.toLowerCase().replace(/\s+/g, '-')}`}
-                                                        className="property-grid-title font-size-18 my-auto me-3 text-decoration-none text-primary hotel-name-link"
-                                                    >
-                                                        {hotel.hotelName}
-                                                    </Link>
+                                                    <h4 className="property-grid-title font-size-18 my-auto me-3">{hotel.hotelName}</h4>
                                                     <div className="text-warning">
                                                         {[...Array(5)].map((_, i) => (
                                                             <MdOutlineStarPurple500
                                                                 key={i}
                                                                 size={18}
-                                                                color={i < hotel.stars ? "#f0831e" : "#ddd"}
+                                                                color={i < hotel.stars ? '#f0831e' : '#ddd'}
                                                             />
                                                         ))}
                                                     </div>
@@ -181,15 +168,18 @@ export default function CollectionDetails({ collection, hotels, slug }) {
 
                                                     {hotel.hotelFacilities && (
                                                         <>
-                                                            {hotel.hotelFacilities.split(',').slice(0, 5).map((facility, idx) => (
-                                                                <span
-                                                                    key={idx}
-                                                                    className="badge bg-light text-dark border me-1 mb-1"
-                                                                    style={{ fontSize: '11px' }}
-                                                                >
-                                                                    {facility.trim()}
-                                                                </span>
-                                                            ))}
+                                                            {hotel.hotelFacilities
+                                                                .split(',')
+                                                                .slice(0, 5)
+                                                                .map((facility, idx) => (
+                                                                    <span
+                                                                        key={idx}
+                                                                        className="badge bg-light text-dark border me-1 mb-1"
+                                                                        style={{ fontSize: '11px' }}
+                                                                    >
+                                                                        {facility.trim()}
+                                                                    </span>
+                                                                ))}
                                                             {hotel.hotelFacilities.split(',').length > 5 && (
                                                                 <span className="rating" style={{ fontSize: '11px' }}>
                                                                     +{hotel.hotelFacilities.split(',').length - 5} more
@@ -219,11 +209,7 @@ export default function CollectionDetails({ collection, hotels, slug }) {
                                                         {hotel.hotelDescription.length > 200
                                                             ? `${hotel.hotelDescription.slice(0, 200)}... `
                                                             : hotel.hotelDescription}
-                                                        {hotel.hotelDescription.length > 200 && (
-                                                            <span className="rating">
-                                                                more
-                                                            </span>
-                                                        )}
+                                                        {hotel.hotelDescription.length > 200 && <span className="rating">more</span>}
                                                     </p>
                                                 )}
 
@@ -248,26 +234,36 @@ export default function CollectionDetails({ collection, hotels, slug }) {
                                                     <div className="col-12 col-md-6 d-flex mb-3 mb-md-0">
                                                         <div className="my-auto d-flex">
                                                             <div className="rating-box d-flex me-2">
-                                                                <span className="m-auto">{hotel.reviewScore === 0 ? 'N/A' : hotel.reviewScore}</span>
+                                                                <span className="m-auto">
+                                                                    {hotel.reviewScore === 0 ? 'N/A' : hotel.reviewScore}
+                                                                </span>
                                                             </div>
 
                                                             <div className="my-auto">
-                                                                <p className="small-para-14-px font-weight-bold mb-1">{getRatingText(hotel.reviewScore)}</p>
+                                                                <p className="small-para-14-px font-weight-bold mb-1">
+                                                                    {getRatingText(hotel.reviewScore)}
+                                                                </p>
 
-                                                                <p className="para-12px mb-0">{hotel.reviewCount ? `${hotel.reviewCount.toLocaleString()} verified reviews` : '0 verified reviews'}</p>
+                                                                <p className="para-12px mb-0">
+                                                                    {hotel.reviewCount
+                                                                        ? `${hotel.reviewCount.toLocaleString()} verified reviews`
+                                                                        : '0 verified reviews'}
+                                                                </p>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <Link
-                                                        href={`${hotel.url}`}
-                                                        className="theme-button-blue rounded w-100 d-block text-center text-decoration-none"
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        See Availability
-                                                        <i className="fa-solid fa-arrow-right ms-2"></i>
-                                                    </Link>
+                                                    <div className="col-12 col-md-6 d-flex">
+                                                        <Link
+                                                            className="theme-button-blue rounded w-100 d-block text-center"
+                                                            href={`${hotel.url}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            See Availability
+                                                            <i className="fa-solid fa-arrow-right ms-2"></i>
+                                                        </Link>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -301,7 +297,6 @@ function CollectionDetailsSkeleton() {
             <div className="d-flex flex-column gap-4">
                 {[...Array(3)].map((_, i) => (
                     <div key={i} className="card border-0 rounded-4 mb-4 p-4" style={{ boxShadow: '0 4px 18px rgba(0,0,0,0.08)' }}>
-
                         <div className="row g-3">
                             {/* Left: Image Skeleton */}
                             <div className="col-md-4">
@@ -314,15 +309,25 @@ function CollectionDetailsSkeleton() {
                                     <div className="skeleton-title me-3" style={{ width: '60%', height: '24px' }}></div>
                                     <div className="d-flex gap-1">
                                         {[...Array(5)].map((_, j) => (
-                                            <div key={j} className="skeleton-star" style={{ width: '18px', height: '18px', borderRadius: '4px' }}></div>
+                                            <div
+                                                key={j}
+                                                className="skeleton-star"
+                                                style={{ width: '18px', height: '18px', borderRadius: '4px' }}
+                                            ></div>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div className="d-flex align-items-center mb-2">
                                     <div className="skeleton-text me-2" style={{ width: '80px', height: '16px' }}></div>
-                                    <div className="skeleton-image me-2" style={{ width: '24px', height: '24px', borderRadius: '4px' }}></div>
-                                    <div className="skeleton-image me-2" style={{ width: '24px', height: '24px', borderRadius: '4px' }}></div>
+                                    <div
+                                        className="skeleton-image me-2"
+                                        style={{ width: '24px', height: '24px', borderRadius: '4px' }}
+                                    ></div>
+                                    <div
+                                        className="skeleton-image me-2"
+                                        style={{ width: '24px', height: '24px', borderRadius: '4px' }}
+                                    ></div>
                                     <div className="skeleton-image" style={{ width: '24px', height: '24px', borderRadius: '4px' }}></div>
                                 </div>
 
@@ -333,7 +338,10 @@ function CollectionDetailsSkeleton() {
                                 <div className="row">
                                     <div className="col-md-6">
                                         <div className="d-flex">
-                                            <div className="skeleton-image me-2" style={{ width: '40px', height: '40px', borderRadius: '4px' }}></div>
+                                            <div
+                                                className="skeleton-image me-2"
+                                                style={{ width: '40px', height: '40px', borderRadius: '4px' }}
+                                            ></div>
                                             <div>
                                                 <div className="skeleton-text mb-1" style={{ width: '80px', height: '14px' }}></div>
                                                 <div className="skeleton-text" style={{ width: '100px', height: '12px' }}></div>
@@ -341,11 +349,13 @@ function CollectionDetailsSkeleton() {
                                         </div>
                                     </div>
                                     <div className="col-md-6">
-                                        <div className="skeleton-button" style={{ width: '100%', height: '40px', borderRadius: '4px' }}></div>
+                                        <div
+                                            className="skeleton-button"
+                                            style={{ width: '100%', height: '40px', borderRadius: '4px' }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 ))}
