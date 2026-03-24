@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
-import { FaMapMarkerAlt } from 'react-icons/fa';
 
 export default function CountryBrandHotelList({ hotels = [] }) {
     const defaultImage = '/image/property-img.webp';
@@ -25,15 +24,23 @@ export default function CountryBrandHotelList({ hotels = [] }) {
         return timestamp ? `${photo}${sep}t=${timestamp}` : photo;
     };
 
-    function getRatingText(score) {
-        if (!score) return 'No reviews yet';
-        if (score >= 9) return 'Exceptional';
-        if (score >= 8) return 'Excellent';
-        if (score >= 7) return 'Very good';
-        if (score >= 6) return 'Good';
-        if (score >= 5) return 'Pleasant';
-        return 'Review score needed';
-    }
+    const getRatingText = (score) => {
+        const value = Number(score);
+
+        if (!value) return 'Not rated';
+        if (value >= 9) return 'Exceptional';
+        if (value >= 8) return 'Excellent';
+        if (value >= 7) return 'Very good';
+        if (value >= 6) return 'Good';
+        return 'Pleasant';
+    };
+
+    const getHotelTypeLabel = (hotel) => {
+        if (hotel.hotelType) return hotel.hotelType;
+        if (hotel.stars >= 4) return 'Premium Stay';
+        if (hotel.stars >= 1) return 'Hotel';
+        return 'Property';
+    };
 
     if (!hotels.length) {
         return (
@@ -42,7 +49,6 @@ export default function CountryBrandHotelList({ hotels = [] }) {
             </div>
         );
     }
-    console.log(hotels);
 
     return (
         <div className="container">
@@ -72,7 +78,7 @@ export default function CountryBrandHotelList({ hotels = [] }) {
                                                 zIndex: 2
                                             }}
                                         >
-                                            {hotel.hotelType || 'Apartment Hotel'}
+                                            {getHotelTypeLabel(hotel)}
                                         </span>
                                         <img
                                             src={getImageUrl(hotel?.photo)}
@@ -114,7 +120,9 @@ export default function CountryBrandHotelList({ hotels = [] }) {
                                                 </div>
 
                                                 <div className="my-auto">
-                                                    <p className="small-para-14-px font-weight-bold mb-1">{hotel.ratingText}</p>
+                                                    <p className="small-para-14-px font-weight-bold mb-1">
+                                                        {hotel.ratingText || getRatingText(hotel.reviewScore)}
+                                                    </p>
 
                                                     <p className="para-12px mb-0">
                                                         {hotel.reviewCount
