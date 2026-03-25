@@ -4,8 +4,8 @@ import CountryDetails from '@/components/common/country/CountryDetails';
 import RegionDetails from '@/components/common/region/RegionDetails';
 import CollectionDetailsWrapper from '@/components/common/collections/CollectionDetailsWrapper';
 import CountryBrandDetails from '@/components/common/country/CountryBrandDetails';
-import HotelDetails from '@/components/common/hotel/HotelDetails';
 import CityDetails from '@/components/common/city/CityDetails';
+import HotelDetailsWrapper from '@/components/common/hotel/HotelDetailsWrapper';
 
 export default async function DynamicPage({ params }) {
     const { slug } = await params;
@@ -42,7 +42,7 @@ export default async function DynamicPage({ params }) {
 
     // HOTEL PAGE (CityHotel)
     if (slugArray.length === 2 && data.entityType === 'Hotel') {
-        return <HotelDetails city={slugArray[0]} hotel={slugArray[1]} />;
+        return <HotelDetailsWrapper city={slugArray[0]} hotel={slugArray[1]} />;
     }
 
     if (slugArray.length === 1 && data.entityType === 'City') {
