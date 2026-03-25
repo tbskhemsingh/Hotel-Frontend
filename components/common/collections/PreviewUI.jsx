@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCollectionById, getPreviewHotels } from '@/lib/api/admin/collectionapi';
+import { getCollectionById, getHotelsByCollection } from '@/lib/api/admin/collectionapi';
 import { ADMIN_ROUTES } from '@/lib/route';
+
+const extractHotelArray = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.hotels)) return payload.hotels;
+    if (Array.isArray(payload?.collectionPreviewHotels)) return payload.collectionPreviewHotels;
+    return [];
+};
 
 export default function PreviewUI({ initialData, id }) {
     const [collection, setCollection] = useState(initialData);
@@ -16,12 +24,10 @@ export default function PreviewUI({ initialData, id }) {
             if (!data) {
                 const res = await getCollectionById(id);
                 data = res?.data;
-                console.log(data);
             }
 
-            const previewRes = await getPreviewHotels(id);
-            const previewHotels = previewRes?.data || [];
-            console.log(previewRes);
+            const previewRes = await getHotelsByCollection(id);
+            const previewHotels = extractHotelArray(previewRes?.data);
             setCollection({
                 ...(data || {}),
                 collectionPreviewHotels: previewHotels
@@ -82,7 +88,11 @@ export default function PreviewUI({ initialData, id }) {
 
                         <div className="col-md-6">
                             <small className="fw-semibold">GeoNode</small>
-                            <div className="text-muted">{basic?.countryName || basic?.cityName || basic?.regionName}</div>
+                            <div className="text-muted">
+                                {basic?.cities?.length
+                                    ? basic.cities.map((city) => city.cityName).join(', ')
+                                    : basic?.countryName || basic?.cityName || basic?.regionName}
+                            </div>
                         </div>
 
                         <div className="col-md-6">

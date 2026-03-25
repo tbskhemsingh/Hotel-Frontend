@@ -3,6 +3,13 @@ import { getHotelsByCollection } from '@/lib/api/public/hotelapi';
 import CollectionDetails from './CollectionDetails';
 import { notFound } from 'next/navigation';
 
+const extractHotelArray = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.hotels)) return payload.hotels;
+    return [];
+};
+
 export default async function CollectionDetailsWrapper({ slug }) {
     // Fetch collection and hotels data on server
     const collectionRes = await getCollectionByUrl(slug);
@@ -12,11 +19,14 @@ export default async function CollectionDetailsWrapper({ slug }) {
         return notFound();
     }
 
+    const basicCollection = Array.isArray(collection.basicCollection) ? collection.basicCollection[0] || {} : collection.basicCollection || {};
     let hotels = [];
-    if (collection?.basicCollection?.collectionId) {
-        const hotelsRes = await getHotelsByCollection(collection.basicCollection.collectionId);
-        hotels = hotelsRes?.data || [];
+    const collectionId = basicCollection?.collectionId ?? collection?.basicCollection?.collectionId ?? null;
+
+    if (collectionId) {
+        const hotelsRes = await getHotelsByCollection(collectionId);
+        hotels = extractHotelArray(hotelsRes?.data);
     }
 
-    return <CollectionDetails collection={collection} hotels={hotels} slug={slug} />;
+    return <CollectionDetails collection={{ ...collection, basicCollection }} hotels={hotels} slug={slug} />;
 }
