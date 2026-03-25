@@ -134,31 +134,29 @@ export default function CountryBrandHotelList({ hotels = [] }) {
                                         </div>
 
                                         {/* FACILITIES */}
-                                        {/* <div className="d-flex align-items-center flex-wrap gap-1 mb-2">
-                                        <p className="small-para-14-px font-weight-bold my-auto me-2">Facilities:</p>
-
-                                        {hotel.hotelFacilities && (
-                                            <>
-                                                {hotel.hotelFacilities
-                                                    .split('|')
-                                                    .slice(0, 5)
-                                                    .map((facility, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            className="badge bg-light text-dark border me-1 mb-1"
-                                                            style={{ fontSize: '11px' }}
-                                                        >
-                                                            {facility.trim()}
+                                        <div className="d-flex align-items-center flex-wrap gap-1 mb-2">
+                                            {hotel.hotelFacilities && (
+                                                <>
+                                                    {hotel.hotelFacilities
+                                                        .split('|')
+                                                        .slice(0, 5)
+                                                        .map((facility, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="badge bg-light text-dark border me-1 mb-1"
+                                                                style={{ fontSize: '11px' }}
+                                                            >
+                                                                {facility.trim()}
+                                                            </span>
+                                                        ))}
+                                                    {hotel.hotelFacilities.split('|').length > 5 && (
+                                                        <span className="rating" style={{ fontSize: '11px' }}>
+                                                            +{hotel.hotelFacilities.split('|').length - 5} more
                                                         </span>
-                                                    ))}
-                                                {hotel.hotelFacilities.split('|').length > 5 && (
-                                                    <span className="rating" style={{ fontSize: '11px' }}>
-                                                        +{hotel.hotelFacilities.split('|').length - 5} more
-                                                    </span>
-                                                )}
-                                            </>
-                                        )}
-                                    </div> */}
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
 
                                         {/* ADDRESS */}
                                         <p className="small-para-14-px text-black mb-2">

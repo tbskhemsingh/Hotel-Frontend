@@ -4,10 +4,9 @@ import Link from 'next/link';
 import CountryBrandHotelList from '../hotel/CountryBrandHotelList';
 
 function toSlug(value = '') {
-    return value
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, '-');
+    if (!value) return '';
+
+    return value.toString().trim().toLowerCase().replace(/\s+/g, '-');
 }
 
 export default async function CityDetails({ params }) {
@@ -16,11 +15,11 @@ export default async function CityDetails({ params }) {
     const hotels = citySlug ? await getCityHotels(citySlug) : [];
     const hasData = hotels && hotels.length > 0;
     const firstHotel = hasData ? hotels[0] : null;
-    const country = firstHotel?.countryName;
+    // const country = firstHotel?.countryName;
     // const region = firstHotel?.regionName;
     const city = firstHotel?.cityName;
     const content = firstHotel?.content;
-    const countrySlug = toSlug(country);
+    // const countrySlug = toSlug(country);
     // const regionSlug = toSlug(region);
     const citySlugPath = toSlug(city);
 
@@ -29,18 +28,20 @@ export default async function CityDetails({ params }) {
             <CountryHeroSection />
 
             {hasData && (
-                <div className="breadcrumb-section py-3">
+                <div className="py-2">
                     <div className="container">
                         <div className="d-flex align-items-center small">
                             <Link href="/destinations" className="text-dark text-decoration-none">
                                 All Countries
                             </Link>
 
-                            <span className="mx-2">&bull;</span>
+                            <span className="mx-2 text-muted">•</span>
 
-                            <Link href={`/${countrySlug}`} className="text-dark text-decoration-none">
+                            {/* <span className="mx-2">&bull;</span> */}
+
+                            {/* <Link href={`/${countrySlug}`} className="text-dark text-decoration-none">
                                 {country}
-                            </Link>
+                            </Link> */}
 
                             {/* <span className="mx-2">&bull;</span> */}
 
