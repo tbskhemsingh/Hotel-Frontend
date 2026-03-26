@@ -5,16 +5,43 @@ import Link from 'next/link';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { FaMapMarkerAlt, FaHotel } from 'react-icons/fa';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
+import { getHotelsByCollection, getHotelRates } from '@/lib/api/public/hotelapi';
+import { countryToCurrency } from '@/lib/utils';
 
-export default function CollectionDetails({ collection, hotels, hotelRates }) {
+export default function CollectionDetails({ collection, hotels, hotelRates, totalCount, currentPage, pageSize, collectionId }) {
     const basic = collection?.basicCollection;
     const content = collection?.collectionContent;
-    const hotelsData = hotels || [];
-    const ratesData = hotelRates || [];
 
+    // Pagination state
+    const [loading, setLoading] = useState(false);
+    const [allHotels, setAllHotels] = useState(hotels || []);
+    const [allRates, setAllRates] = useState(hotelRates || []);
+    const [page, setPage] = useState(currentPage || 1);
+    const [hasMore, setHasMore] = useState((hotels?.length || 0) < (totalCount || 0));
+    
     // Helper function to get rate for a hotel by bookingId
     const getHotelRate = (bookingId) => {
-        return ratesData.find(rate => rate.id === bookingId);
+        return allRates.find(rate => rate.id === bookingId);
+    };
+
+    // Helper to format original price with currency
+    const formatOriginalPrice = (currentPriceStr, originalPrice) => {
+        if (!currentPriceStr || !originalPrice) return null;
+
+        // Extract currency prefix (e.g., "AUD$", "USD$")
+        const match = currentPriceStr.match(/^([A-Z]+\$)/);
+        if (match) {
+            const currency = match[1];
+            const formattedNum = originalPrice.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+            return `${currency}${formattedNum}`;
+        }
+        return `$${originalPrice.toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        })}`;
     };
 
     // Default image path
@@ -29,7 +56,6 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
     }, []);
 
     const handleImageError = (e) => {
-        // Only set default if not already showing default
         if (!e.target.src.includes(defaultImage)) {
             e.target.src = defaultImage;
         }
@@ -45,7 +71,6 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
     function decodeHtml(html) {
         if (!html) return '';
 
-        // Handle HTML entities without using document (SSR compatible)
         const entities = {
             '&amp;': '&',
             '&lt;': '<',
@@ -69,6 +94,55 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
         return decoded;
     }
 
+    // Load more hotels handler
+    const loadMoreHotels = async () => {
+        if (loading || !hasMore) return;
+
+        setLoading(true);
+        const nextPage = page + 1;
+
+        try {
+            const hotelsRes = await getHotelsByCollection(collectionId, nextPage, pageSize);
+            // Handle new API response structure: data.hotelData and data.totalCount
+            const newHotels = hotelsRes?.data?.hotelData || hotelsRes?.data || [];
+
+            if (newHotels.length > 0) {
+                const countryCode = newHotels[0]?.countryCode;
+                const currency = countryCode ? countryToCurrency(countryCode) : 'USD';
+
+                const bookingIds = newHotels.map(hotel => hotel.bookingId).filter(Boolean);
+
+                let newRates = [];
+                if (bookingIds.length > 0) {
+                    const ratesPayload = {
+                        bookingIds: bookingIds,
+                        currency: currency,
+                        rooms: 1,
+                        adults: 2,
+                        childs: 0,
+                        device: 'desktop',
+                        checkIn: null,
+                        checkOut: null
+                    };
+                    const ratesRes = await getHotelRates(ratesPayload);
+                    newRates = ratesRes?.data || [];
+                }
+
+                setAllHotels(prev => [...prev, ...newHotels]);
+                setAllRates(prev => [...prev, ...newRates]);
+                setPage(nextPage);
+                // Calculate if there are more hotels to load using current allHotels length
+                const currentTotal = allHotels.length + newHotels.length;
+                setHasMore(currentTotal < totalCount);
+            } else {
+                setHasMore(false);
+            }
+        } catch (error) {
+            console.error('Error loading more hotels:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <>
@@ -83,7 +157,6 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                 </div>
             ) : (
                 <>
-                    {/* Breadcrumb - Similar to CountryIntro */}
                     <div className="py-2">
                         <div className="container">
                             <div className="d-flex align-items-center small">
@@ -96,7 +169,6 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                         </div>
                     </div>
 
-                    {/* Hero Section - Similar styling to CountryHeroSection but simplified */}
                     <section className="container py-5">
                         <div className="row align-items-center">
                             <div className="col-lg-8">
@@ -119,20 +191,17 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
 
                                     <div className="d-flex align-items-center">
                                         <FaHotel className="text-muted me-2" />
-                                        <span>{hotelsData.length} Hotels</span>
+                                        <span>{allHotels.length} Hotels</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    {/* Main Content */}
                     <div className="container">
-                        {/* Hotels Grid - Similar to property listings */}
-
-                        {hotelsData.length > 0 ? (
+                        {allHotels.length > 0 ? (
                             <div className="d-flex flex-column gap-4">
-                                {hotelsData.map((hotel) => (
+                                {allHotels.map((hotel) => (
                                     <div
                                         key={hotel.hotelId}
                                         className="card border-0 rounded-4 mb-4 p-4"
@@ -141,32 +210,37 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                         }}
                                     >
                                         <div className="row g-3">
-                                            {/* Image */}
                                             <div className="col-md-4">
                                                 <Link href={`${hotel.url}`} target="_blank" className="text-decoration-none">
                                                     <div className="position-relative">
-                                                        {/* BREAKFAST BADGE - shown on image top-left with green color */}
                                                         {(() => {
                                                             const rate = getHotelRate(hotel.bookingId);
                                                             const badges = rate?.badges || [];
-                                                            const breakfastBadge = badges.find(b =>
-                                                                b.toLowerCase().includes('breakfast')
+                                                            // Image badge: show badges that are NOT free cancellation or pay at property
+                                                            const imageBadges = badges.filter(b => 
+                                                                !b.toLowerCase().includes('free cancellation') && 
+                                                                !b.toLowerCase().includes('pay at')
                                                             );
-                                                            if (breakfastBadge) {
+                                                            if (imageBadges.length > 0) {
                                                                 return (
-                                                                    <span
-                                                                        className="position-absolute text-white px-3 py-1"
-                                                                        style={{
-                                                                            top: '12px',
-                                                                            left: '12px',
-                                                                            background: '#28a745',
-                                                                            borderRadius: '20px',
-                                                                            fontSize: '12px',
-                                                                            zIndex: 2
-                                                                        }}
-                                                                    >
-                                                                        {breakfastBadge}
-                                                                    </span>
+                                                                    <>
+                                                                        {imageBadges.map((badge, idx) => (
+                                                                            <span
+                                                                                key={idx}
+                                                                                className="position-absolute text-white px-3 py-1"
+                                                                                style={{
+                                                                                    top: idx === 0 ? '12px' : `${12 + (idx * 30)}px`,
+                                                                                    left: '12px',
+                                                                                    background: '#28a745',
+                                                                                    borderRadius: '20px',
+                                                                                    fontSize: '12px',
+                                                                                    zIndex: 2
+                                                                                }}
+                                                                            >
+                                                                                {badge}
+                                                                            </span>
+                                                                        ))}
+                                                                    </>
                                                                 );
                                                             }
                                                             return null;
@@ -174,22 +248,20 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                         <img
                                                             src={getImageUrl(hotel?.photo)}
                                                             className="d-block w-100 rounded-4"
-                                                            style={{ height: '240px', objectFit: 'cover' }}
+                                                            style={{ height: '290px', objectFit: 'cover' }}
                                                             alt={hotel.hotelName}
                                                             onError={handleImageError}
-                                                        />{' '}
+                                                        />
                                                     </div>
                                                 </Link>
                                             </div>
 
-                                            {/* Hotel Info */}
                                             <div className="col-md-8">
                                                 <div
                                                     className="text-decoration-none"
                                                     onClick={() => window.location.href = hotel.urlName}
                                                     style={{ cursor: 'pointer' }}
                                                 >
-                                                    {/* TITLE + STARS + RATING */}
                                                     <div className="d-flex align-items-center justify-content-between mb-2">
                                                         <div className="d-flex align-items-center">
                                                             <h4 className="property-grid-title font-size-18 my-auto me-3">{hotel.hotelName}</h4>
@@ -204,7 +276,6 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                             </div>
                                                         </div>
 
-                                                        {/* RATING - moved to right side */}
                                                         <div className="d-flex align-items-center">
                                                             <div className="rating-box d-flex me-2">
                                                                 <span className="m-auto">
@@ -226,8 +297,7 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                         </div>
                                                     </div>
 
-                                                    {/* FACILITIES */}
-                                                    <div className="d-flex align-items-center flex-wrap gap-1 mb-2">
+                                                    <div className="d-flex align-items-center flex-wrap gap-1 mb-2" style={{ maxHeight: '60px', overflow: 'hidden' }}>
                                                         {hotel.hotelFacilities && (
                                                             <>
                                                                 {hotel.hotelFacilities
@@ -237,7 +307,15 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                                         <span
                                                                             key={idx}
                                                                             className="badge bg-light text-dark border me-1 mb-1"
-                                                                            style={{ fontSize: '11px' }}
+                                                                            style={{ 
+                                                                                fontSize: '11px',
+                                                                                whiteSpace: 'nowrap',
+                                                                                maxWidth: '150px',
+                                                                                overflow: 'hidden',
+                                                                                textOverflow: 'ellipsis',
+                                                                                display: 'inline-block'
+                                                                            }}
+                                                                            title={facility.trim()}
                                                                         >
                                                                             {facility.trim()}
                                                                         </span>
@@ -251,14 +329,11 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                         )}
                                                     </div>
 
-                                                    {/* ADDRESS */}
                                                     <p className="small-para-14-px text-black mb-2">
-                                                        {/* <i className="fa-solid fa-map me-1"></i> */}
                                                         <FaMapMarkerAlt className="me-1 text-muted" />
                                                         {hotel.hotelAddress || 'Address not available'}
                                                     </p>
 
-                                                    {/* DISTANCE */}
                                                     {hotel.distanceFromAirport && (
                                                         <p className="small-para-14-px text-black mb-3">
                                                             <i className="fa-solid fa-plane-up me-1"></i>
@@ -280,7 +355,6 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                         </p>
                                                     )} */}
 
-                                                    {/* PAYMENT OPTION */}
                                                     <div className="d-flex align-items-center justify-content-between mb-2">
                                                         <div>
                                                             <p className="para text-primary mb-0">
@@ -288,18 +362,18 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                                 Book Now Pay Later!
                                                             </p>
 
-                                                            {/* BADGES - from rate data */}
                                                             {(() => {
                                                                 const rate = getHotelRate(hotel.bookingId);
                                                                 const badges = rate?.badges || [];
 
-                                                                const otherBadges = badges.filter(b =>
-                                                                    !b.toLowerCase().includes('breakfast')
+                                                                const infoBadges = badges.filter(b => 
+                                                                    b.toLowerCase().includes('free cancellation') || 
+                                                                    b.toLowerCase().includes('pay at')
                                                                 );
-                                                                if (otherBadges.length > 0) {
+                                                                if (infoBadges.length > 0) {
                                                                     return (
                                                                         <div className="mb-2">
-                                                                            {otherBadges.map((badge, idx) => (
+                                                                            {infoBadges.map((badge, idx) => (
                                                                                 <p key={idx} className="para-12px mb-1 text-theme-green">
                                                                                     <span
                                                                                         className="me-2 text-theme-green"
@@ -316,15 +390,31 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                             })()}
                                                         </div>
 
-                                                        {/* PRICE BLOCK - positioned above button */}
                                                         {(() => {
                                                             const rate = getHotelRate(hotel.bookingId);
                                                             if (rate?.price) {
+                                                                const dealInfo = rate?.deal_info || {};
+                                                                const originalPrice = dealInfo?.public_price;
+                                                                const discountPercentage = dealInfo?.discount_percentage;
+                                                                const formattedOriginal = formatOriginalPrice(rate.price.book, originalPrice);
+
                                                                 return (
-                                                                    <div className="price-block p-1 rounded mb-3" >
+                                                                    <div className="price-block p-1 rounded mb-3">
                                                                         <p className="para-12px text-muted mb-1 text-end">
                                                                             1 night, 2 adults
                                                                         </p>
+                                                                        {discountPercentage > 0 && (
+                                                                            <div className="text-end mb-1">
+                                                                                <span className="badge bg-danger" style={{ fontSize: '11px' }}>
+                                                                                    {discountPercentage}% OFF
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                        {formattedOriginal && originalPrice > rate.price.total && (
+                                                                            <p className="para-12px text-muted mb-0 text-end" style={{ textDecoration: 'line-through' }}>
+                                                                                {formattedOriginal}
+                                                                            </p>
+                                                                        )}
                                                                         <div className="d-flex align-items-baseline text-end">
                                                                             <span className="text-theme-orange fw-bold" style={{ fontSize: '28px' }}>
                                                                                 {rate.price.book}
@@ -340,7 +430,6 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                                         })()}
                                                     </div>
 
-                                                    {/* BUTTON */}
                                                     <div className="row">
                                                         <div className="col-12 col-md-3 d-flex ms-auto">
                                                             <Link
@@ -360,6 +449,18 @@ export default function CollectionDetails({ collection, hotels, hotelRates }) {
                                         </div>
                                     </div>
                                 ))}
+
+                                {hasMore && (
+                                    <div className="text-center py-4">
+                                        <button
+                                            className="theme-button-orange rounded-1 px-5 py-2"
+                                            onClick={loadMoreHotels}
+                                            disabled={loading}
+                                        >
+                                            {loading ? 'Loading...' : 'Load More'}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="text-center py-5">
