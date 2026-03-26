@@ -133,7 +133,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         slugBase: '',
         districtId: null,
         status: 'Draft',
-        expiryDate: '',
         mode: 'Hybrid',
         maxHotels: '',
         changedBy: 'Admin',
@@ -525,7 +524,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             Type: formData.mode.toLowerCase(),
             Template: formData.template || null,
             Status: formData.status,
-            ExpiryDate: formData.expiryDate || null,
             MaxHotels: formData.maxHotels ? Number(formData.maxHotels) : null,
             DefaultSort: formData.defaultSort || 'StarRating DESC',
             UrlCityId: selectedSlugCity?.cityId ?? null
@@ -554,7 +552,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                     slug: formData.slug,
                     geoNodeId: formData.sourceId,
                     template: formData.template,
-                    expiryDate: formData.expiryDate,
                     maxHotels: formData.maxHotels,
                     status: formData.status,
                     cityIds: selectedCityIds,
@@ -822,7 +819,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 districtId: districtId || null,
 
                 template: basic.template || '',
-                expiryDate: basic.expiryDate ? basic.expiryDate.split('T')[0] : '',
                 maxHotels: basic.maxHotels ?? '',
                 status: basic.status?.toLowerCase() === 'published' ? 'Published' : 'Draft'
             }));
@@ -835,7 +831,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 slug: basic.slug || '',
                 sourceId: parsedSourceIds[0] || sourceId || null,
                 template: basic.template || '',
-                expiryDate: basic.expiryDate ? basic.expiryDate.split('T')[0] : '',
                 maxHotels: basic.maxHotels ?? '',
                 status: basic.status?.toLowerCase() === 'published' ? 'Published' : 'Draft',
                 cityIds: mappedCities.map((city) => city.cityId),
@@ -962,7 +957,6 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
             initialBasicData.slug !== formData.slug ||
             initialBasicData.sourceId !== formData.sourceId ||
             initialBasicData.template !== formData.template ||
-            initialBasicData.expiryDate !== formData.expiryDate ||
             Number(initialBasicData.maxHotels) !== Number(formData.maxHotels) ||
             currentCityIds !== initialCityIds ||
             (initialBasicData.urlCityId ?? null) !== (slugCityId ?? null)

@@ -539,29 +539,34 @@ export default function BasicsTab({
                     </div>
 
                     <div className="col-12 col-lg-6 mb-3 position-relative dropdown-wrapper">
-                        <label className="form-label">City</label>
+                        <div className="d-flex justify-content-between align-items-center gap-2 mb-1 flex-wrap">
+                            <label className="form-label mb-0">City</label>
 
-                        {selectedCities?.length > 0 && (
-                            <div className="d-flex flex-wrap gap-2 mb-2">
-                                {selectedCities.map((city) => (
-                                    <span key={city.cityId} className="badge text-bg-light border d-inline-flex align-items-center gap-2 py-2 px-3">
-                                        {city.name}
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm p-0 border-0 bg-transparent text-muted"
-                                            onClick={() => removeCity(city.cityId)}
-                                            aria-label={`Remove ${city.name}`}
+                            {selectedCities?.length > 0 && (
+                                <div className="d-flex flex-nowrap gap-2 justify-content-end overflow-auto city-chip-strip">
+                                    {selectedCities.map((city) => (
+                                        <span
+                                            key={city.cityId}
+                                            className="badge text-bg-light border d-inline-flex align-items-center gap-2 py-2 px-3 flex-shrink-0"
                                         >
-                                            &times;
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
-                        )}
+                                            {city.name}
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm p-0 border-0 bg-transparent text-muted"
+                                                onClick={() => removeCity(city.cityId)}
+                                                aria-label={`Remove ${city.name}`}
+                                            >
+                                                &times;
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
                         <input
                             type="text"
-                            className="form-control"
+                            className="form-control mt-0"
                             placeholder="Search City"
                             value={citySearch}
                             autoComplete="off"
@@ -696,19 +701,6 @@ export default function BasicsTab({
                         </select>
 
                         {errors.template && <div className="invalid-feedback d-block">{errors.template}</div>}
-                    </div>
-
-                    {/* Expiry Date */}
-                    <div className="col-12 col-lg-6 mb-3">
-                        <label className="form-label">Expiry Date</label>
-                        <input
-                            type="date"
-                            className="form-control"
-                            name="expiryDate"
-                            value={formData.expiryDate}
-                            onChange={handleChange}
-                            autoComplete="off"
-                        />
                     </div>
 
                     {/* Max Hotels */}

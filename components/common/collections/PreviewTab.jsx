@@ -63,9 +63,6 @@ export default function PreviewTab({
                     <strong>Status:</strong> {formData.status}
                 </p>
                 <p>
-                    <strong>Expiry Date:</strong> {formData.expiryDate || 'N/A'}
-                </p>
-                <p>
                     <strong>Max Hotels:</strong> {formData.maxHotels || 'Not Set'}
                 </p>
             </div>
