@@ -1,5 +1,6 @@
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import { getCityBrandHotels } from '@/lib/api/public/brandapi';
+import { getHotelRates } from '@/lib/api/public/hotelapi';
 import Link from 'next/link';
 import CityHotelList from '../city/CityHotelList';
 
@@ -26,6 +27,24 @@ export default async function CityBrandDetails({ params }) {
     const fullSlug = `/${city}/${brand}`;
 
     const hotels = await getCityBrandHotels(fullSlug);
+    let hotelRates = [];
+    const bookingIds = hotels?.map((hotel) => hotel.bookingID).filter(Boolean);
+
+    if (bookingIds.length > 0) {
+        const ratesRes = await getHotelRates({
+            bookingIds,
+            currency: 'USD',
+            rooms: 1,
+            adults: 2,
+            childs: 0,
+            device: 'desktop',
+            checkIn: null,
+            checkOut: null
+        });
+
+        hotelRates = ratesRes?.data || [];
+    }
+
     const formattedBrand = formatBrand(brand);
     const firstHotel = hotels?.[0] || {};
     const countryName = firstHotel.countryName || firstHotel.country || '';
@@ -41,29 +60,24 @@ export default async function CityBrandDetails({ params }) {
                         <Link href="/brands" className="text-dark text-decoration-none">
                             All Brands
                         </Link>
-
                         <span className="mx-2 text-muted">&bull;</span>
-
                         <Link href={`/brand/${brand}`} className="text-dark text-decoration-none text-capitalize">
                             {formattedBrand}
                         </Link>
-
-                        {countrySlug ? (
+                        {countrySlug && (
                             <>
                                 <span className="mx-2 text-muted">&bull;</span>
 
-                                <Link href={`/${countrySlug}/${brand}`} className="text-decoration-none text-primary text-capitalize">
+                                <Link href={`/${countrySlug}/${brand}`} className="text-dark text-decoration-none text-capitalize">
                                     {formattedBrand} {countrySlug}
                                 </Link>
                             </>
-                        ) : null}
-
+                        )}
                         <span className="mx-2 text-muted">&bull;</span>
-
                         <span className="text-primary text-capitalize">
                             {formattedBrand} {''}
                             {cityName}
-                        </span>
+                        </span>{' '}
                     </div>
                 </div>
             </div>
@@ -72,7 +86,7 @@ export default async function CityBrandDetails({ params }) {
                 <h3 className="mb-4 text-capitalize">
                     {formattedBrand} {cityName}
                 </h3>
-                <CityHotelList hotels={hotels} brand={brand} />
+                <CityHotelList hotels={hotels} brand={brand} hotelRates={hotelRates} />
             </section>
         </>
     );

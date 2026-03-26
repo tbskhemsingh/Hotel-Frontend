@@ -1,5 +1,6 @@
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
-import { getBrandHotels, getCountryBrandHotels } from '@/lib/api/public/brandapi';
+import { getCountryBrandHotels } from '@/lib/api/public/brandapi';
+import { getHotelRates } from '@/lib/api/public/hotelapi';
 import CountryBrandHotelList from '../hotel/CountryBrandHotelList';
 import Link from 'next/link';
 
@@ -19,6 +20,23 @@ export default async function CountryBrandDetails({ params }) {
     const fullSlug = `/${country}/${brand}`;
 
     const hotels = await getCountryBrandHotels(fullSlug);
+    let hotelRates = [];
+    const bookingIds = hotels?.map((hotel) => hotel.bookingID).filter(Boolean);
+
+    if (bookingIds.length > 0) {
+        const ratesRes = await getHotelRates({
+            bookingIds,
+            currency: 'USD',
+            rooms: 1,
+            adults: 2,
+            childs: 0,
+            device: 'desktop',
+            checkIn: null,
+            checkOut: null
+        });
+        hotelRates = ratesRes?.data || [];
+    }
+
     const formattedBrand = formatBrand(brand);
 
     return (
@@ -66,7 +84,7 @@ export default async function CountryBrandDetails({ params }) {
                         </div>
                     </div>
                 )} */}
-                <CountryBrandHotelList hotels={hotels} brand={brand} />
+                <CountryBrandHotelList hotels={hotels} brand={brand} hotelRates={hotelRates} />
             </section>
         </>
     );
