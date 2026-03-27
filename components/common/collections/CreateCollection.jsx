@@ -56,6 +56,30 @@ const extractHotelArray = (payload) => {
     return [];
 };
 
+const extractHotelPagination = (payload) => {
+    const source = payload?.data && typeof payload.data === 'object' ? payload.data : payload || {};
+
+    return {
+        pageNumber: source?.pageNumber ?? null,
+        pageSize: source?.pageSize ?? null,
+        totalCount: source?.totalCount ?? null,
+        totalPages: source?.totalPages ?? null,
+        hasNextPage: source?.hasNextPage ?? null
+    };
+};
+
+const mergeHotelsById = (existingHotels = [], nextHotels = []) => {
+    const hotelMap = new Map();
+
+    [...existingHotels, ...nextHotels].forEach((hotel) => {
+        if (hotel?.id && !hotelMap.has(hotel.id)) {
+            hotelMap.set(hotel.id, hotel);
+        }
+    });
+
+    return Array.from(hotelMap.values());
+};
+
 export default function CreateCollection({ collectionId: propCollectionId }) {
     const router = useRouter();
     const [collectionId, setCollectionId] = useState(propCollectionId || null);
@@ -120,6 +144,15 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
     const [selectedCity, setSelectedCity] = useState('');
     const [selectedHotels, setSelectedHotels] = useState([]);
     const hasInitializedCurationSelectionRef = useRef(false);
+    const [hotelPagination, setHotelPagination] = useState({
+        pageNumber: 1,
+        pageSize: 20,
+        totalCount: 0,
+        totalPages: 0,
+        hasNextPage: false
+    });
+    const [hotelLoadingMore, setHotelLoadingMore] = useState(false);
+    const hotelLoadMoreLockRef = useRef(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -244,11 +277,18 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
     useEffect(() => {
         const delay = setTimeout(() => {
-            loadHotels(hotelSearch);
+            if (activeTab !== 'Curation') return;
+
+            setHotelPagination((prev) => ({
+                ...prev,
+                pageNumber: 1,
+                hasNextPage: false
+            }));
+            loadHotels({ search: hotelSearch, pageNumber: 1, append: false });
         }, 400);
 
         return () => clearTimeout(delay);
-    }, [hotelSearch, selectedCity]);
+    }, [hotelSearch, selectedCity, activeTab, collectionId, formData.sourceId, formData.geoNodeType]);
 
     useEffect(() => {
         const loadCountries = async () => {
@@ -259,13 +299,19 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         loadCountries();
     }, []);
 
-    const loadHotels = async (search) => {
+    const loadHotels = async ({ search = '', pageNumber = 1, append = false } = {}) => {
         let results = [];
+        let pagination = {};
 
         if (collectionId) {
             try {
-                const previewRes = await getHotelsByCollection(collectionId);
+                const previewRes = await getHotelsByCollection(collectionId, {
+                    pageNumber,
+                    pageSize: 20,
+                    searchTerm: search || ''
+                });
                 results = extractHotelArray(previewRes?.data);
+                pagination = extractHotelPagination(previewRes);
             } catch (error) {
                 console.error('Failed to load preview hotels:', error);
             }
@@ -274,10 +320,13 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                 const res = await getHotelsByCity({
                     geoNodeType: formData.geoNodeType,
                     geoNodeId: formData.sourceId,
-                    searchTerm: search || ''
+                    searchTerm: search || '',
+                    pageNumber,
+                    pageSize: 20
                 });
 
                 results = extractHotelArray(res?.data);
+                pagination = extractHotelPagination(res);
             } catch (error) {
                 console.error('Failed to load hotels by geo-node:', error);
                 toast.error('Unable to load hotels for the selected geo-node');
@@ -286,15 +335,27 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
         const normalizedResults = results.map(normalizeGlobalHotel).filter((hotel) => hotel?.id);
 
-        setHotelList(() => {
-            const newHotelsById = new Map();
-            [...newlyAddedHotels, ...normalizedResults].forEach((hotel) => {
-                if (hotel?.id && !newHotelsById.has(hotel.id)) {
-                    newHotelsById.set(hotel.id, hotel);
-                }
-            });
+        setHotelList((prev) => {
+            const baseHotels = append ? prev : newlyAddedHotels;
+            return mergeHotelsById(baseHotels, normalizedResults);
+        });
 
-            return Array.from(newHotelsById.values());
+        const resolvedPageSize = pagination.pageSize ?? 20;
+        const resolvedPageNumber = pagination.pageNumber ?? pageNumber;
+        const resolvedTotalPages =
+            pagination.totalPages ??
+            (pagination.totalCount !== null && pagination.totalCount !== undefined
+                ? Math.ceil(Number(pagination.totalCount) / resolvedPageSize)
+                : null);
+
+        setHotelPagination({
+            pageNumber: resolvedPageNumber,
+            pageSize: resolvedPageSize,
+            totalCount: pagination.totalCount ?? 0,
+            totalPages: resolvedTotalPages ?? 0,
+            hasNextPage:
+                pagination.hasNextPage ??
+                (resolvedTotalPages ? resolvedPageNumber < resolvedTotalPages : normalizedResults.length === resolvedPageSize)
         });
         // setPinnedHotels(results);
 
@@ -307,7 +368,14 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
         if (activeTab !== 'Curation') return;
 
         const fetchInitialHotels = async () => {
-            await loadHotels('');
+            setHotelPagination({
+                pageNumber: 1,
+                pageSize: 20,
+                totalCount: 0,
+                totalPages: 0,
+                hasNextPage: false
+            });
+            await loadHotels({ search: hotelSearch, pageNumber: 1, append: false });
         };
 
         fetchInitialHotels();
@@ -320,14 +388,30 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
         const effectiveMaxHotels = Number(formData.maxHotels) || 20;
 
-        const initialSelection =
-            includedHotelIds.length > 0
-                ? includedHotelIds.filter((id) => hotelList.some((hotel) => hotel.id === id))
-                : hotelList.slice(0, effectiveMaxHotels).map((hotel) => hotel.id);
+        const initialSelection = includedHotelIds.length > 0 ? includedHotelIds : hotelList.slice(0, effectiveMaxHotels).map((hotel) => hotel.id);
 
         setSelectedHotels(initialSelection);
         hasInitializedCurationSelectionRef.current = true;
     }, [activeTab, hotelList, includedHotelIds, formData.maxHotels]);
+
+    const handleLoadMoreHotels = async () => {
+        if (hotelLoadMoreLockRef.current || hotelLoadingMore || !hotelPagination.hasNextPage) return;
+
+        const nextPage = (hotelPagination.pageNumber || 1) + 1;
+        hotelLoadMoreLockRef.current = true;
+        setHotelLoadingMore(true);
+
+        try {
+            await loadHotels({
+                search: hotelSearch,
+                pageNumber: nextPage,
+                append: true
+            });
+        } finally {
+            setHotelLoadingMore(false);
+            hotelLoadMoreLockRef.current = false;
+        }
+    };
 
     // ---------------- RULE FUNCTIONS ----------------
 
@@ -1229,6 +1313,9 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
                         newlyAddedHotels={newlyAddedHotels}
                         setNewlyAddedHotels={setNewlyAddedHotels}
                         onAddGlobalHotel={handleAddGlobalHotel}
+                        onLoadMoreHotels={handleLoadMoreHotels}
+                        hasMoreHotels={hotelPagination.hasNextPage}
+                        loadingMoreHotels={hotelLoadingMore}
                     />
                 )}
 
