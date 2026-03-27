@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
     getCitiesByCountryOrRegion,
     getHotelsByCity,
-    getHotelsByCollection,
+    getcollectionHotelsByMultipleNodes,
     upsertCollection,
     saveContent,
     saveRule,
@@ -305,7 +305,7 @@ export default function CreateCollection({ collectionId: propCollectionId }) {
 
         if (collectionId) {
             try {
-                const previewRes = await getHotelsByCollection(collectionId, {
+                const previewRes = await getcollectionHotelsByMultipleNodes(collectionId, {
                     pageNumber,
                     pageSize: 20,
                     searchTerm: search || ''

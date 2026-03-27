@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCollectionById, getHotelsByCollection } from '@/lib/api/admin/collectionapi';
+import { getCollectionById, getcollectionHotelsByMultipleNodes } from '@/lib/api/admin/collectionapi';
 import { ADMIN_ROUTES } from '@/lib/route';
 
 const normalizeSingleItem = (value) => (Array.isArray(value) ? value[0] || {} : value || {});
@@ -58,7 +58,7 @@ export default function PreviewUI({ initialData, id }) {
             const collectionRules = Array.isArray(data?.collectionRules) ? data.collectionRules : [];
             const collectionCuration = Array.isArray(data?.collectionCuration) ? data.collectionCuration : [];
             const collectionContent = normalizeSingleItem(data?.collectionContent);
-            const previewRes = await getHotelsByCollection(id);
+            const previewRes = await getcollectionHotelsByMultipleNodes(id);
             console.log('Preview hotels response:', previewRes);
             const previewHotels = extractHotelArray(previewRes?.data);
             setCollection({

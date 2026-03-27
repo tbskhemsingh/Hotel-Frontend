@@ -49,11 +49,11 @@ export default async function CityDetails({ params }) {
                 <div className="py-2">
                     <div className="container">
                         <div className="d-flex align-items-center small">
-                            {/* <Link href="/destinations" className="text-dark text-decoration-none">
-                                All COuntries
-                            </Link> */}
+                            <Link href="/destinations" className="text-dark text-decoration-none">
+                                All Countries
+                            </Link>
 
-                            {/* <span className="mx-2 text-muted">•</span> */}
+                            <span className="mx-2 text-muted">•</span>
 
                             {/* <span className="mx-2">&bull;</span> */}
 
@@ -67,7 +67,7 @@ export default async function CityDetails({ params }) {
                                 {region}
                             </Link> */}
 
-                            <span className="mx-2">&bull;</span>
+                            {/* <span className="mx-2">&bull;</span> */}
 
                             <Link className="text-primary" href={`/${citySlugPath}`}>
                                 {city}
