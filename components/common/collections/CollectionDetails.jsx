@@ -187,9 +187,9 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                     <div className="d-flex align-items-center">
                                         <FaMapMarkerAlt className="text-muted me-2" />
                                         <span>
-                                            {basic?.cities?.length
-                                                ? basic.cities.map((city) => city.cityName).join(', ')
-                                                : basic?.districtName || basic?.cityName || basic?.regionName || basic?.countryName}
+                                            {Array.isArray(basic) && basic.length > 0
+                                                ? basic.map((item) => item.cityName || item.regionName || item.countryName).filter(Boolean).join(', ')
+                                                : basic?.cityName || basic?.districtName || basic?.regionName || basic?.countryName}
                                         </span>
                                     </div>
 
