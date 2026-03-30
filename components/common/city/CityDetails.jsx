@@ -33,11 +33,11 @@ export default function CityDetails({ params }) {
         const initializeCity = async () => {
             try {
                 const { slug } = await params;
-                const slug0 = slug?.[0] || '';
-                setCitySlug(slug0);
+                const citySlug = slug?.[0] || '';
+                setCitySlug(citySlug);
 
-                if (slug0) {
-                    const data = await getCityHotels(slug0, 1, PAGE_SIZE);
+                if (citySlug) {
+                    const data = await getCityHotels(citySlug, 1, PAGE_SIZE);
 
                     if (data && data.length > 0) {
                         const firstHotel = data[0];
