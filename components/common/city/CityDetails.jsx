@@ -3,7 +3,6 @@ import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import CityHotelList from './CityHotelList';
 import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
 import { getCityHotels, getCitySidebar } from '@/lib/api/public/cityapi';
-import { getHotelRates } from '@/lib/api/public/hotelapi';
 
 function toSlug(value = '') {
     if (!value) return '';
@@ -75,56 +74,15 @@ export default async function CityDetails({ params }) {
     const cityName = formatCityName(citySlug);
 
     let hotels = [];
-    let hotelRates = [];
     let totalCount = 0;
     let sidebarData = {};
     let content = '';
     if (citySlug) {
         try {
-            let allHotels = [];
-            let pageNumber = 1;
-            let hasMore = true;
-
-            while (hasMore) {
-                const pageData = await getCityHotels(citySlug, pageNumber, PAGE_SIZE);
-
-                if (pageData?.length > 0) {
-                    allHotels = allHotels.concat(pageData);
-                    content = allHotels[0]?.content || '';
-
-                    // Get totalCount from first request
-                    if (pageNumber === 1) {
-                        totalCount = pageData[0]?.totalCount || pageData.length;
-                    }
-
-                    // Check if we have all hotels
-                    if (allHotels.length >= totalCount) {
-                        hasMore = false;
-                    } else {
-                        pageNumber++;
-                    }
-                } else {
-                    hasMore = false;
-                }
-            }
-
-            hotels = allHotels;
-
-            // Fetch rates for all hotels
-            const bookingIds = hotels.map((h) => h.bookingID).filter(Boolean);
-
-            if (bookingIds.length > 0) {
-                const ratesRes = await getHotelRates({
-                    bookingIds,
-                    currency: 'USD',
-                    rooms: 1,
-                    adults: 2,
-                    childs: 0,
-                    device: 'desktop'
-                });
-
-                hotelRates = ratesRes?.data || [];
-            }
+            const pageData = await getCityHotels(citySlug, 1, PAGE_SIZE);
+            hotels = pageData || [];
+            content = hotels[0]?.content || '';
+            totalCount = hotels[0]?.totalCount || hotels.length;
 
             // Fetch sidebar data
             if (hotels.length > 0) {
@@ -142,8 +100,6 @@ export default async function CityDetails({ params }) {
             console.error('Error fetching hotels:', error);
         }
     }
-
-    const hasMoreInitial = false;
 
     // Build sidebar sections
     const sidebarSections = [
@@ -217,9 +173,10 @@ export default async function CityDetails({ params }) {
                     <div className="col-lg-9 order-1 order-lg-2">
                         <CityHotelList
                             hotels={hotels}
-                            initialRates={hotelRates}
-                            hasMoreInitial={hasMoreInitial}
                             totalCount={totalCount}
+                            currentPage={1}
+                            pageSize={PAGE_SIZE}
+                            citySlug={citySlug}
                             content={content}
                         />
                     </div>

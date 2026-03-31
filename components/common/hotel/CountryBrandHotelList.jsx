@@ -9,17 +9,6 @@ import { getUserCurrency } from '@/lib/getUserCurrency';
 
 export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [] }) {
     const defaultImage = '/image/property-img.webp';
-    const maxVisibleFacilities = 3;
-    const maxFacilityChars = 60;
-    const facilityBadgeStyle = {
-        fontSize: '11px',
-        maxWidth: '160px',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        display: 'inline-block',
-        flexShrink: 0
-    };
     const [timestamp, setTimestamp] = useState('');
     const [currency, setCurrency] = useState(null);
     const [allRates, setAllRates] = useState(hotelRates || []);
@@ -111,31 +100,6 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         return 'Pleasant';
     };
 
-    const getVisibleFacilities = (facilities) => {
-        const visible = [];
-        let usedChars = 0;
-
-        for (const facility of facilities) {
-            if (visible.length >= maxVisibleFacilities) {
-                break;
-            }
-
-            const nextChars = usedChars + facility.length;
-            if (visible.length > 0 && nextChars > maxFacilityChars) {
-                break;
-            }
-
-            visible.push(facility);
-            usedChars = nextChars;
-        }
-
-        if (!visible.length && facilities.length > 0) {
-            visible.push(facilities[0]);
-        }
-
-        return visible;
-    };
-
     if (!hotels.length) {
         return (
             <div className="text-center py-5">
@@ -211,12 +175,10 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                             );
                             const facilities = hotel.hotelFacilities
                                 ? hotel.hotelFacilities
-                                    .split('|')
-                                    .map((facility) => facility.trim())
-                                    .filter(Boolean)
+                                      .split('|')
+                                      .map((facility) => facility.trim())
+                                      .filter(Boolean)
                                 : [];
-                            const visibleFacilities = getVisibleFacilities(facilities);
-                            const hiddenFacilitiesCount = Math.max(facilities.length - visibleFacilities.length, 0);
 
                             return (
                                 <div
@@ -305,23 +267,32 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                 </div>
 
                                                 <div className="d-flex align-items-center flex-wrap gap-1 mb-2" style={{ maxHeight: '60px', overflow: 'hidden' }}>
-                                                    {facilities.length > 0 && (
+                                                    {hotel.hotelFacilities && (
                                                         <>
-                                                            {visibleFacilities.map((facility, idx) => (
+                                                            {hotel.hotelFacilities
+                                                                .split('|')
+                                                                .slice(0, 5)
+                                                                .map((facility, idx) => (
                                                                 <span
                                                                     key={idx}
                                                                     className="badge bg-light text-dark border me-1 mb-1"
-                                                                    style={facilityBadgeStyle}
-                                                                    title={facility}
+                                                                    style={{
+                                                                        fontSize: '11px',
+                                                                        whiteSpace: 'nowrap',
+                                                                        maxWidth: '150px',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        display: 'inline-block'
+                                                                    }}
+                                                                    title={facility.trim()}
                                                                 >
-                                                                    {facility}
+                                                                    {facility.trim()}
                                                                 </span>
                                                             ))}
-
-                                                            {hiddenFacilitiesCount > 0 && (
-                                                                <span className="rating text-nowrap" style={{ fontSize: '11px', flexShrink: 0 }}>
-                                                                    +{hiddenFacilitiesCount} more
-                                                                </span>
+                                                            {hotel.hotelFacilities.split('|').length > 5 && (
+                                                                <Link href={`${hotel.urlName}`} className="rating" style={{ fontSize: '11px' }}>
+                                                                    +{hotel.hotelFacilities.split('|').length - 5} more
+                                                                </Link>
                                                             )}
                                                         </>
                                                     )}
@@ -398,7 +369,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                 <div className="row">
                                                     <div className="col-12 col-md-4 col-lg-3 ms-auto">
                                                         <Link
-                                                            className="theme-button-blue rounded-4 w-100 d-block text-center p-2"
+                                                            className="theme-button-blue rounded-4 w-100 d-inline-flex align-items-center justify-content-center gap-1 text-center text-nowrap p-2"
                                                             href={`${hotel.url}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
