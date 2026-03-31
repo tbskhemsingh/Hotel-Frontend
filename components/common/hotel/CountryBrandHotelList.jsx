@@ -7,16 +7,16 @@ import { FaMapMarkerAlt } from 'react-icons/fa';
 import { getHotelRates } from '@/lib/api/public/hotelapi';
 import { getUserCurrency } from '@/lib/getUserCurrency';
 
+const ITEMS_PER_PAGE = 10;
+
 export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [] }) {
     const defaultImage = '/image/property-img.webp';
-    const [timestamp, setTimestamp] = useState('');
     const [currency, setCurrency] = useState(null);
     const [allRates, setAllRates] = useState(hotelRates || []);
+    const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+    const [loading, setLoading] = useState(false);
     const normalizedBrand = String(brand || '').replace(/^\/+|\/+$/g, '');
-
-    useEffect(() => {
-        setTimestamp(Date.now().toString());
-    }, []);
+    const hasMore = displayCount < hotels.length;
 
     useEffect(() => {
         async function initCurrency() {
@@ -29,28 +29,6 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
 
     const getBookingId = (hotel) => hotel?.bookingId ?? hotel?.bookingID ?? hotel?.BookingId ?? null;
 
-    const fetchRatesForHotels = async (hotelsToRate, selectedCurrency) => {
-        const bookingIds = hotelsToRate.map(getBookingId).filter(Boolean);
-
-        if (!bookingIds.length || !selectedCurrency) {
-            return [];
-        }
-
-        const ratesPayload = {
-            bookingIds,
-            currency: selectedCurrency,
-            rooms: 1,
-            adults: 2,
-            childs: 0,
-            device: 'desktop',
-            checkIn: null,
-            checkOut: null
-        };
-
-        const ratesRes = await getHotelRates(ratesPayload);
-        return ratesRes?.data || [];
-    };
-
     useEffect(() => {
         if (!currency || !hotels.length) return;
 
@@ -58,7 +36,26 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
 
         async function syncRates() {
             try {
-                const refreshedRates = await fetchRatesForHotels(hotels, currency);
+                const bookingIds = hotels.map(getBookingId).filter(Boolean);
+
+                if (!bookingIds.length) {
+                    if (!cancelled) {
+                        setAllRates([]);
+                    }
+                    return;
+                }
+
+                const ratesRes = await getHotelRates({
+                    bookingIds,
+                    currency,
+                    rooms: 1,
+                    adults: 2,
+                    childs: 0,
+                    device: 'desktop',
+                    checkIn: null,
+                    checkOut: null
+                });
+                const refreshedRates = ratesRes?.data || [];
 
                 if (!cancelled) {
                     setAllRates(refreshedRates);
@@ -83,8 +80,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
 
     const getImageUrl = (photo) => {
         if (!photo) return defaultImage;
-        const sep = photo.includes('?') ? '&' : '?';
-        return timestamp ? `${photo}${sep}t=${timestamp}` : photo;
+        return photo;
     };
 
     const getHotelRate = (bookingId) => allRates.find((rate) => String(rate?.id) === String(bookingId));
@@ -107,23 +103,6 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
             </div>
         );
     }
-
-    const groupedHotels = Object.values(
-        hotels.reduce((acc, hotel) => {
-            const key = hotel.cityName;
-
-            if (!acc[key]) {
-                acc[key] = {
-                    cityName: hotel.cityName,
-                    cityUrlName: hotel.cityUrlName,
-                    hotels: []
-                };
-            }
-
-            acc[key].hotels.push(hotel);
-            return acc;
-        }, {})
-    );
 
     const getCityBrandPath = (cityUrlName) => {
         const normalizedCity = String(cityUrlName || '').replace(/^\/+|\/+$/g, '');
@@ -149,6 +128,36 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
             maximumFractionDigits: 2
         })}`;
     };
+
+    const loadMoreHotels = () => {
+        if (loading || !hasMore) return;
+
+        setLoading(true);
+
+        setTimeout(() => {
+            setDisplayCount((prev) => Math.min(prev + ITEMS_PER_PAGE, hotels.length));
+            setLoading(false);
+        }, 300);
+    };
+
+    const visibleHotels = hotels.slice(0, displayCount);
+    const groupedHotels = Object.values(
+        visibleHotels.reduce((acc, hotel) => {
+            const key = hotel.cityName;
+
+            if (!acc[key]) {
+                acc[key] = {
+                    cityName: hotel.cityName,
+                    cityUrlName: hotel.cityUrlName,
+                    hotels: []
+                };
+            }
+
+            acc[key].hotels.push(hotel);
+            return acc;
+        }, {})
+    );
+
     return (
         <div className="container">
             <div className="d-flex flex-column gap-4">
@@ -389,6 +398,13 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                     </div>
                 ))}
             </div>
+            {hasMore && (
+                <div className="text-center mt-4">
+                    <button onClick={loadMoreHotels} disabled={loading} className="theme-button-orange rounded-1 px-5 py-2">
+                        {loading ? 'Loading...' : 'Load More'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
