@@ -7,19 +7,9 @@ import { FaMapMarkerAlt } from 'react-icons/fa';
 import { getHotelRates } from '@/lib/api/public/hotelapi';
 import { getUserCurrency } from '@/lib/getUserCurrency';
 
-export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [] }) {
+export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [], currentPage = 1, hasMore = false, pageCookieName = '' }) {
     const defaultImage = '/image/property-img.webp';
-    const maxVisibleFacilities = 3;
-    const maxFacilityChars = 60;
-    const facilityBadgeStyle = {
-        fontSize: '11px',
-        maxWidth: '160px',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        display: 'inline-block',
-        flexShrink: 0
-    };
+    const [loadingMore, setLoadingMore] = useState(false);
     const [timestamp, setTimestamp] = useState('');
     const [currency, setCurrency] = useState(null);
     const [allRates, setAllRates] = useState(hotelRates || []);
@@ -111,31 +101,6 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         return 'Pleasant';
     };
 
-    const getVisibleFacilities = (facilities) => {
-        const visible = [];
-        let usedChars = 0;
-
-        for (const facility of facilities) {
-            if (visible.length >= maxVisibleFacilities) {
-                break;
-            }
-
-            const nextChars = usedChars + facility.length;
-            if (visible.length > 0 && nextChars > maxFacilityChars) {
-                break;
-            }
-
-            visible.push(facility);
-            usedChars = nextChars;
-        }
-
-        if (!visible.length && facilities.length > 0) {
-            visible.push(facilities[0]);
-        }
-
-        return visible;
-    };
-
     if (!hotels.length) {
         return (
             <div className="text-center py-5">
@@ -185,6 +150,15 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
             maximumFractionDigits: 2
         })}`;
     };
+
+    const loadMoreHotels = () => {
+        if (!hasMore || !pageCookieName) return;
+
+        setLoadingMore(true);
+        document.cookie = `${pageCookieName}=${currentPage + 1}; path=/; SameSite=Lax`;
+        window.location.reload();
+    };
+
     return (
         <div className="container">
             <div className="d-flex flex-column gap-4">
@@ -211,12 +185,10 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                             );
                             const facilities = hotel.hotelFacilities
                                 ? hotel.hotelFacilities
-                                    .split('|')
-                                    .map((facility) => facility.trim())
-                                    .filter(Boolean)
+                                      .split('|')
+                                      .map((facility) => facility.trim())
+                                      .filter(Boolean)
                                 : [];
-                            const visibleFacilities = getVisibleFacilities(facilities);
-                            const hiddenFacilitiesCount = Math.max(facilities.length - visibleFacilities.length, 0);
 
                             return (
                                 <div
@@ -304,24 +276,35 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                     </div>
                                                 </div>
 
-                                                <div className="d-flex align-items-center flex-wrap gap-1 mb-2" style={{ maxHeight: '60px', overflow: 'hidden' }}>
-                                                    {facilities.length > 0 && (
+                                                <div className="d-flex align-items-center flex-nowrap mb-2" style={{ overflow: 'hidden', columnGap: '4px', whiteSpace: 'nowrap' }}>
+                                                    {hotel.hotelFacilities && (
                                                         <>
-                                                            {visibleFacilities.map((facility, idx) => (
+                                                            {hotel.hotelFacilities
+                                                                .split('|')
+                                                                .slice(0, 5)
+                                                                .map((facility, idx) => (
                                                                 <span
                                                                     key={idx}
                                                                     className="badge bg-light text-dark border me-1 mb-1"
-                                                                    style={facilityBadgeStyle}
-                                                                    title={facility}
+                                                                    style={{
+                                                                        fontSize: '11px',
+                                                                        lineHeight: '1.2',
+                                                                        whiteSpace: 'nowrap',
+                                                                        maxWidth: '135px',
+                                                                        overflow: 'hidden',
+                                                                        textOverflow: 'ellipsis',
+                                                                        display: 'inline-block',
+                                                                        padding: '4px 8px'
+                                                                    }}
+                                                                    title={facility.trim()}
                                                                 >
-                                                                    {facility}
+                                                                    {facility.trim()}
                                                                 </span>
                                                             ))}
-
-                                                            {hiddenFacilitiesCount > 0 && (
-                                                                <span className="rating text-nowrap" style={{ fontSize: '11px', flexShrink: 0 }}>
-                                                                    +{hiddenFacilitiesCount} more
-                                                                </span>
+                                                            {hotel.hotelFacilities.split('|').length > 5 && (
+                                                                <Link href={`${hotel.urlName}`} className="rating" style={{ fontSize: '11px', lineHeight: '1.2' }}>
+                                                                    +{hotel.hotelFacilities.split('|').length - 5} more
+                                                                </Link>
                                                             )}
                                                         </>
                                                     )}
@@ -368,10 +351,18 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                         if (rate?.price) {
                                                             const dealInfo = rate?.deal_info || {};
                                                             const originalPrice = dealInfo?.public_price;
+                                                            const discountPercentage = dealInfo?.discount_percentage;
                                                             const formattedOriginal = formatOriginalPrice(rate.price.book, originalPrice);
                                                             return (
                                                                 <div className="price-block p-1 rounded mb-3">
                                                                     <p className="para-12px text-muted mb-1 text-end">1 night, 2 adults</p>
+                                                                    {/* {discountPercentage > 0 && (
+                                                                        <div className="text-end mb-1">
+                                                                            <span className="badge bg-danger" style={{ fontSize: '11px' }}>
+                                                                                {discountPercentage}% OFF
+                                                                            </span>
+                                                                        </div>
+                                                                    )} */}
                                                                     {formattedOriginal && originalPrice > rate.price.total && (
                                                                         <p
                                                                             className="para-12px mb-0 text-end"
@@ -418,6 +409,13 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                     </div>
                 ))}
             </div>
+            {hasMore && (
+                <div className="text-center py-4">
+                    <button onClick={loadMoreHotels} disabled={loadingMore} className="theme-button-orange rounded-1 px-5 py-2">
+                        {loadingMore ? 'Loading...' : 'Load More'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

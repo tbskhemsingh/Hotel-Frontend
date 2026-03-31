@@ -39,6 +39,13 @@ export default function CollectionList({ initialCollections, initialCountries })
 
     const totalPages = Math.ceil(totalRecords / pageSize);
 
+    const getPublicCollectionPath = (slug) => {
+        const normalizedSlug = String(slug || '')
+            .trim()
+            .replace(/^\/+/, '');
+        return normalizedSlug ? `/${normalizedSlug}` : null;
+    };
+
     const getFinalGeoSelection = () => {
         if (selectedCity) {
             return { geoNodeType: 'City', sourceId: selectedCity };
@@ -429,7 +436,9 @@ export default function CollectionList({ initialCollections, initialCountries })
                                     </td>
                                     <td>{item.type}</td>
                                     <td>
-                                        <span className={`badge rounded-pill ${item.status === 'Published' ? 'bg-success' : 'bg-secondary'}`}>
+                                        <span
+                                            className={`badge rounded-pill ${item.status === 'Published' ? 'bg-success' : 'bg-secondary'}`}
+                                        >
                                             {item.status}
                                         </span>{' '}
                                     </td>
@@ -438,25 +447,40 @@ export default function CollectionList({ initialCollections, initialCountries })
                                     <td>
                                         <div className="d-flex gap-2">
                                             <button
-                                                className="btn btn-sm btn-outline-secondary me-2"
+                                                className="btn btn-sm btn-outline-primary me-2"
                                                 onClick={() => router.push(`${ADMIN_ROUTES.collections}/${item.collectionId}`)}
                                             >
                                                 Edit
                                             </button>
                                             <button
-                                                className="btn btn-sm btn-outline-secondary me-2"
+                                                className="btn btn-sm btn-outline-primary me-2"
                                                 onClick={() => handleClone(item.collectionId)}
                                             >
                                                 Clone
                                             </button>
                                             <button
-                                                className="btn btn-sm btn-outline-secondary me-2"
+                                                className="btn btn-sm btn-outline-primary me-2"
                                                 onClick={() => router.push(`${ADMIN_ROUTES.collections}/${item.collectionId}/preview`)}
                                             >
                                                 Preview
                                             </button>
                                             <button
-                                                className="btn btn-sm btn-outline-secondary"
+                                                className="btn btn-sm btn-outline-primary me-2"
+                                                onClick={() => {
+                                                    const publicPath = getPublicCollectionPath(item.slug);
+
+                                                    if (!publicPath) {
+                                                        toast.error('Collection slug not available');
+                                                        return;
+                                                    }
+
+                                                    router.push(publicPath);
+                                                }}
+                                            >
+                                                View Live
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-primary"
                                                 onClick={() => {
                                                     setCollectionToDelete(item.collectionId);
                                                     setShowDeleteModal(true);

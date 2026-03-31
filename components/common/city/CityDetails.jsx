@@ -1,9 +1,9 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import CityHotelList from './CityHotelList';
 import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
 import { getCityHotels, getCitySidebar } from '@/lib/api/public/cityapi';
-import { getHotelRates } from '@/lib/api/public/hotelapi';
 
 function toSlug(value = '') {
     if (!value) return '';
@@ -107,64 +107,44 @@ function formatPropertyTypeHeader(cityName) {
 
 const PAGE_SIZE = 10;
 
+function getCityPageCookieName(citySlug = '') {
+    return `city_page_${toSlug(citySlug).replace(/[^a-z0-9_-]/g, '_')}`;
+}
+
+function parsePageNumber(value) {
+    const page = Number(value);
+    return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
 export default async function CityDetails({ params }) {
     const { slug } = await params;
     const citySlug = slug?.[0] || '';
 
     const citySlugPath = toSlug(citySlug);
     const cityName = formatCityName(citySlug);
+    const cookieStore = await cookies();
+    const pageCookieName = getCityPageCookieName(citySlug);
+    const currentPage = parsePageNumber(cookieStore.get(pageCookieName)?.value);
 
     let hotels = [];
-    let hotelRates = [];
     let totalCount = 0;
     let sidebarData = {};
     let content = '';
     if (citySlug) {
         try {
-            let allHotels = [];
-            let pageNumber = 1;
-            let hasMore = true;
-
-            while (hasMore) {
+            for (let pageNumber = 1; pageNumber <= currentPage; pageNumber++) {
                 const pageData = await getCityHotels(citySlug, pageNumber, PAGE_SIZE);
+                const nextHotels = pageData || [];
 
-                if (pageData?.length > 0) {
-                    allHotels = allHotels.concat(pageData);
-                    content = allHotels[0]?.content || '';
-
-                    // Get totalCount from first request
-                    if (pageNumber === 1) {
-                        totalCount = pageData[0]?.totalCount || pageData.length;
-                    }
-
-                    // Check if we have all hotels
-                    if (allHotels.length >= totalCount) {
-                        hasMore = false;
-                    } else {
-                        pageNumber++;
-                    }
-                } else {
-                    hasMore = false;
+                if (!nextHotels.length) {
+                    break;
                 }
+
+                hotels = hotels.concat(nextHotels);
             }
 
-            hotels = allHotels;
-
-            // Fetch rates for all hotels
-            const bookingIds = hotels.map((h) => h.bookingID).filter(Boolean);
-
-            if (bookingIds.length > 0) {
-                const ratesRes = await getHotelRates({
-                    bookingIds,
-                    currency: 'USD',
-                    rooms: 1,
-                    adults: 2,
-                    childs: 0,
-                    device: 'desktop'
-                });
-
-                hotelRates = ratesRes?.data || [];
-            }
+            content = hotels[0]?.content || '';
+            totalCount = hotels[0]?.totalCount || hotels.length;
 
             // Fetch sidebar data
             if (hotels.length > 0) {
@@ -182,8 +162,6 @@ export default async function CityDetails({ params }) {
             console.error('Error fetching hotels:', error);
         }
     }
-
-    const hasMoreInitial = false;
 
     // Build sidebar sections
     const sidebarSections = [
@@ -280,9 +258,12 @@ export default async function CityDetails({ params }) {
                     <div className="col-lg-9 order-1 order-lg-2">
                         <CityHotelList
                             hotels={hotels}
-                            initialRates={hotelRates}
-                            hasMoreInitial={hasMoreInitial}
                             totalCount={totalCount}
+                            currentPage={currentPage}
+                            pageSize={PAGE_SIZE}
+                            citySlug={citySlug}
+                            citySlugPath={citySlugPath}
+                            pageCookieName={pageCookieName}
                             content={content}
                         />
                     </div>

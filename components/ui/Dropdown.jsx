@@ -60,7 +60,7 @@ export default function Dropdown({ id, title, items = [], parentId, defaultOpen 
                                                 className="property-count"
                                                 style={{ fontSize: '13px', marginLeft: '14px', lineHeight: '1.2' }}
                                             >
-                                                <Link href="/" className="text-decoration-none property-link" prefetch={false}>
+                                                <Link href={item.href} className="text-decoration-none property-link" prefetch={false}>
                                                     ({item.count} properties)
                                                 </Link>
                                             </div>
