@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { cookies } from 'next/headers';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import { getCountryBrandHotels } from '@/lib/api/public/brandapi';
 import Link from 'next/link';
@@ -23,52 +25,62 @@ function resolveTotalCount(hotelsData = []) {
     return hotelsData.length;
 }
 
+function toSlug(value = '') {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '-');
+}
+
+function getCountryBrandPageCookieName(countrySlug = '', brandSlug = '') {
+    const combined = `${toSlug(countrySlug)}_${toSlug(brandSlug)}`;
+    return `country_brand_page_${combined.replace(/[^a-z0-9_-]/g, '_')}`;
+}
+
+function parsePageNumber(value) {
+    const page = Number(value);
+    return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
 export default async function CountryBrandDetails({ params }) {
-    let hotels = [];
-    let totalCount = 0;
-    let country = '';
-    let brand = '';
+    const { slug: slugData } = await params;
+    const slug = slugData || [];
 
-    try {
-        const { slug: slugData } = await params;
-        const slug = slugData || [];
-
-        if (slug.length >= 2) {
-            country = capitalize(slug[0]);
-            brand = decodeURIComponent(slug[1]);
-
-            const fullSlug = `/${country}/${brand}`;
-            let allHotels = [];
-            let pageNumber = 1;
-            let hasMore = true;
-
-            while (hasMore) {
-                const pageData = await getCountryBrandHotels(fullSlug, pageNumber, PAGE_SIZE);
-
-                if (pageData?.length > 0) {
-                    allHotels = allHotels.concat(pageData);
-
-                    if (pageNumber === 1) {
-                        totalCount = resolveTotalCount(pageData);
-                    }
-
-                    if (allHotels.length >= totalCount || pageData.length < PAGE_SIZE) {
-                        hasMore = false;
-                    } else {
-                        pageNumber++;
-                    }
-                } else {
-                    hasMore = false;
-                }
-            }
-
-            hotels = allHotels;
-        }
-    } catch (error) {
-        console.error('Error initializing country brand details:', error);
+    if (!slug || slug.length < 2) {
+        return null;
     }
 
-    const formattedBrand = formatBrand(brand);
+    const countrySlug = slug[0];
+    const brandSlug = decodeURIComponent(slug[1]);
+    const countryName = capitalize(countrySlug);
+    const brandName = brandSlug;
+    const formattedBrand = formatBrand(brandName);
+    const fullSlug = `/${countryName}/${brandName}`;
+
+    const cookieStore = await cookies();
+    const pageCookieName = getCountryBrandPageCookieName(countrySlug, brandName);
+    const currentPage = parsePageNumber(cookieStore.get(pageCookieName)?.value);
+
+    let hotels = [];
+    let totalCount = 0;
+
+    try {
+        for (let pageNumber = 1; pageNumber <= currentPage; pageNumber++) {
+            const pageHotels = await getCountryBrandHotels(fullSlug, pageNumber, PAGE_SIZE);
+            const nextHotels = pageHotels || [];
+
+            if (!nextHotels.length) {
+                break;
+            }
+
+            hotels = hotels.concat(nextHotels);
+            totalCount = Math.max(totalCount, resolveTotalCount(nextHotels));
+        }
+    } catch (err) {
+        console.error('Error initializing country brand details:', err);
+    }
+
+    const hasMore = hotels.length < totalCount || hotels.length !== 0 && hotels.length % PAGE_SIZE === 0;
 
     return (
         <>
@@ -80,16 +92,16 @@ export default async function CountryBrandDetails({ params }) {
                             All Brands
                         </Link>
 
-                        <span className="mx-2 text-muted">&bull;</span>
+                        <span className="mx-2 text-muted">â€¢</span>
 
-                        <Link href={`/brand/${brand}`} className="text-dark text-decoration-none text-capitalize">
+                        <Link href={`/brand/${brandName}`} className="text-dark text-decoration-none text-capitalize">
                             {formattedBrand}
                         </Link>
 
-                        <span className="mx-2 text-muted">&bull;</span>
+                        <span className="mx-2 text-muted">â€¢</span>
 
-                        <Link href={`/${country}/${brand}`} className="text-decoration-none text-primary text-capitalize">
-                            {country}
+                        <Link href={`/${countryName}/${brandName}`} className=" text-decoration-none text-primary text-capitalize">
+                            {countryName}
                         </Link>
                     </div>
                 </div>
@@ -97,13 +109,19 @@ export default async function CountryBrandDetails({ params }) {
 
             <section className="container py-5">
                 <h3 className="mb-4 text-capitalize">
-                    {formattedBrand} {country}
+                    {formattedBrand} {countryName}
                 </h3>
                 {hotels.length > 0 ? (
-                    <CountryBrandHotelList hotels={hotels} brand={brand} totalCount={totalCount} />
+                    <CountryBrandHotelList
+                        hotels={hotels}
+                        brand={brandName}
+                        currentPage={currentPage}
+                        hasMore={hasMore}
+                        pageCookieName={pageCookieName}
+                    />
                 ) : (
                     <div className="text-center py-5">
-                        <p className="text-muted">No hotels available for this brand in {country}.</p>
+                        <p className="text-muted">No hotels available for this brand in {countryName}.</p>
                     </div>
                 )}
             </section>
