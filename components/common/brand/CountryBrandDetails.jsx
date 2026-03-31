@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import { getCountryBrandHotels } from '@/lib/api/public/brandapi';
-import { getHotelRates } from '@/lib/api/public/hotelapi';
 import CountryBrandHotelList from '../hotel/CountryBrandHotelList';
 import Link from 'next/link';
 
@@ -17,11 +16,19 @@ function formatBrand(text) {
 
 const PAGE_SIZE = 10;
 
+function resolveTotalCount(hotelsData = []) {
+    const reportedTotal = hotelsData?.[0]?.totalCount;
+
+    if (Number.isFinite(Number(reportedTotal)) && Number(reportedTotal) > 0) {
+        return Number(reportedTotal);
+    }
+
+    return hotelsData.length;
+}
+
 export default function CountryBrandDetails({ params }) {
     const [slug, setSlug] = useState(null);
     const [hotels, setHotels] = useState([]);
-    const [hotelRates, setHotelRates] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
@@ -48,33 +55,19 @@ export default function CountryBrandDetails({ params }) {
                     const hotelsData = await getCountryBrandHotels(fullSlug, 1, PAGE_SIZE);
 
                     if (hotelsData && hotelsData.length > 0) {
-                        const total = hotelsData[0].totalCount || hotelsData.length;
+                        const total = resolveTotalCount(hotelsData);
                         setHotels(hotelsData);
                         setTotalCount(total);
-                        setHasMore(hotelsData.length < total);
-
-                        // Fetch rates for initial hotels
-                        const bookingIds = hotelsData.map((hotel) => hotel.bookingID).filter(Boolean);
-                        if (bookingIds.length > 0) {
-                            const ratesRes = await getHotelRates({
-                                bookingIds,
-                                currency: 'USD',
-                                rooms: 1,
-                                adults: 2,
-                                childs: 0,
-                                device: 'desktop',
-                                checkIn: null,
-                                checkOut: null
-                            });
-                            setHotelRates(ratesRes?.data || []);
-                        }
+                        setHasMore(total > hotelsData.length || hotelsData.length === PAGE_SIZE);
+                    } else {
+                        setHotels([]);
+                        setTotalCount(0);
+                        setHasMore(false);
                     }
                     setPage(1);
                 }
             } catch (err) {
                 console.error('Error initializing country brand details:', err);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -95,31 +88,15 @@ export default function CountryBrandDetails({ params }) {
             const newHotels = await getCountryBrandHotels(fullSlug, nextPage, PAGE_SIZE);
 
             if (newHotels && newHotels.length > 0) {
-                // Fetch rates for new hotels
-                const bookingIds = newHotels.map((hotel) => hotel.bookingID).filter(Boolean);
-                let newRates = [];
-
-                if (bookingIds.length > 0) {
-                    const ratesRes = await getHotelRates({
-                        bookingIds,
-                        currency: 'USD',
-                        rooms: 1,
-                        adults: 2,
-                        childs: 0,
-                        device: 'desktop',
-                        checkIn: null,
-                        checkOut: null
-                    });
-                    newRates = ratesRes?.data || [];
-                }
-
+                const currentTotal = hotels.length + newHotels.length;
                 setHotels((prev) => [...prev, ...newHotels]);
-                setHotelRates((prev) => [...prev, ...newRates]);
                 setPage(nextPage);
 
-                // Update hasMore based on total count
-                const currentTotal = hotels.length + newHotels.length;
-                setHasMore(currentTotal < totalCount);
+                const nextTotal = resolveTotalCount(newHotels);
+                const resolvedTotal = Math.max(totalCount, nextTotal);
+                setTotalCount(resolvedTotal);
+
+                setHasMore(currentTotal < resolvedTotal || newHotels.length === PAGE_SIZE);
             } else {
                 setHasMore(false);
             }
@@ -163,9 +140,9 @@ export default function CountryBrandDetails({ params }) {
                 </h3>
                 {hotels.length > 0 ? (
                     <>
-                        <CountryBrandHotelList hotels={hotels} brand={brand} hotelRates={hotelRates} />
+                        <CountryBrandHotelList hotels={hotels} brand={brand} />
                         {hasMore && (
-                            <div className="text-center mt-4">
+                            <div className="text-center py-4">
                                 <button onClick={loadMoreHotels} disabled={loadingMore} className="theme-button-orange rounded-1 px-5 py-2">
                                     {loadingMore ? 'Loading...' : 'Load More'}
                                 </button>
