@@ -870,18 +870,38 @@ input[type='range']:active::-webkit-slider-thumb {
     font-size: 12px;
     font-weight: 500;
 }
-.custom-filter-accordion .accordion-item {
-    border: none !important;
+.sidebar-filter-link {
+    color: #f97316;
+    font-size: 13px;
+    line-height: 1.25;
+    display: inline-block;
 }
-.custom-filter-accordion .accordion-button {
-    box-shadow: none !important;
-    background-color: #fff !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    color: #000 !important;
+.sidebar-filter-link:hover {
+    color: #f97316;
+    text-decoration: underline;
 }
-.custom-filter-accordion .accordion-button:not(.collapsed)::after {
-    filter: brightness(0);
+.filter-link-list {
+    list-style: disc;
+    margin: 0;
+    padding-left: 1rem;
+}
+.sidebar-filter-item {
+    margin-bottom: 0.4rem;
+}
+.sidebar-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #111827;
+}
+.sidebar-empty-state {
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.sidebar-show-more {
+    font-size: 13px;
+    color: #2f80ed;
 }
 .font-size-18 {
     font-size: 18px;
