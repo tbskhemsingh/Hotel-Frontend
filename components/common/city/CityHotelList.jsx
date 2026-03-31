@@ -7,14 +7,14 @@ import { MdOutlineStarPurple500 } from 'react-icons/md';
 export default function CityHotelList({ hotels, initialRates }) {
     const allHotels = hotels || []; // All hotels loaded from server
     const allRates = initialRates || [];
-    
+
     const ITEMS_PER_PAGE = 10;
     const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
     const [loading, setLoading] = useState(false);
-    
+
     // Calculate if there are more items to show
     const hasMore = displayCount < allHotels.length;
-    
+
     const defaultImage = '/image/property-img.webp';
     const maxVisibleFacilities = 3;
     const maxFacilityChars = 60;
@@ -32,7 +32,7 @@ export default function CityHotelList({ hotels, initialRates }) {
     // Show next batch of hotels that are already loaded
     const loadMoreHotels = () => {
         if (loading || !hasMore) return;
-        
+
         setLoading(true);
         // Simulate API delay for smooth UX
         setTimeout(() => {
@@ -218,7 +218,6 @@ export default function CityHotelList({ hotels, initialRates }) {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div className="d-flex align-items-center gap-1 mb-2 flex-nowrap" style={{ overflow: 'hidden' }}>
                                             {facilities.length > 0 && (
                                                 <>
@@ -334,6 +333,7 @@ export default function CityHotelList({ hotels, initialRates }) {
                     );
                 })}
             </div>
+
             {hasMore && (
                 <div className="text-center mt-4">
                     <button onClick={loadMoreHotels} disabled={loading} className="theme-button-orange rounded-1 px-5 py-2">

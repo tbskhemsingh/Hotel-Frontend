@@ -1,13 +1,26 @@
 
-
 import Link from 'next/link';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import CityHotelList from './CityHotelList';
-import { getCityHotels } from '@/lib/api/public/cityapi';
+import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
+import { getCityHotels, getCitySidebar } from '@/lib/api/public/cityapi';
 import { getHotelRates } from '@/lib/api/public/hotelapi';
 
+
 function toSlug(value = '') {
-    return value?.toString().trim().toLowerCase().replace(/\s+/g, '-') || '';
+    if (!value) return '';
+ 
+    return value.toString().trim().toLowerCase().replace(/\s+/g, '-');
+}
+function getFirstDefined(...values) {
+    for (const value of values) {
+        if (value !== undefined && value !== null && value !== '') return value;
+    }
+    return null;
+}
+
+function normalizeItems(items) {
+    return Array.isArray(items) ? items : [];
 }
 
 function formatCityName(slug = '') {
@@ -29,6 +42,7 @@ export default async function CityDetails({ params }) {
     let hotels = [];
     let hotelRates = [];
     let totalCount = 0;
+    let sidebarData = {};
 
     if (citySlug) {
         try {
@@ -75,12 +89,43 @@ export default async function CityDetails({ params }) {
 
                 hotelRates = ratesRes?.data || [];
             }
+
+            // Fetch sidebar data
+            if (hotels.length > 0) {
+                const firstHotel = hotels[0];
+                const cityId = getFirstDefined(firstHotel?.cityId, firstHotel?.cityID, firstHotel?.CityID);
+                const regionId = getFirstDefined(firstHotel?.regionId, firstHotel?.regionID, firstHotel?.RegionID);
+                
+                if (cityId && regionId) {
+                    const sidebar = await getCitySidebar(cityId, regionId);
+                    sidebarData = sidebar || {};
+                }
+            }
         } catch (error) {
             console.error('Error fetching hotels:', error);
         }
     }
 
-    const hasMoreInitial = false; 
+    const hasMoreInitial = false;
+
+    // Build sidebar sections
+    const sidebarSections = [
+        {
+            title: 'Rating',
+            items: normalizeItems(sidebarData?.rating || sidebarData?.ratings || sidebarData?.ratingItems),
+            maxVisible: 6
+        },
+        {
+            title: 'Property Type',
+            items: normalizeItems(sidebarData?.propertyTypes || sidebarData?.propertyType || sidebarData?.propertyTypeItems),
+            maxVisible: 5
+        },
+        {
+            title: 'Facilities',
+            items: normalizeItems(sidebarData?.hotelFacilities || sidebarData?.facilities || sidebarData?.facilityItems),
+            maxVisible: 5
+        }
+    ];
 
     return (
         <>
@@ -107,12 +152,22 @@ export default async function CityDetails({ params }) {
             <section className="container py-5">
                 <h2 className="mb-3">Hotel Accommodation in {cityName}</h2>
 
-                <CityHotelList
-                    hotels={hotels}
-                    initialRates={hotelRates}
-                    hasMoreInitial={hasMoreInitial}
-                    totalCount={totalCount}
-                />
+                <div className="row g-4 align-items-start">
+                    <div className="col-lg-9">
+                        <CityHotelList
+                            hotels={hotels}
+                            initialRates={hotelRates}
+                            hasMoreInitial={hasMoreInitial}
+                            totalCount={totalCount}
+                        />
+                    </div>
+
+                    <div className="col-lg-3">
+                        <div className="position-sticky" style={{ top: '16px' }}>
+                            <ListingSidebar title="Filters" sections={sidebarSections} />
+                        </div>
+                    </div>
+                </div>
             </section>
         </>
     );
