@@ -65,6 +65,46 @@ function formatCityName(slug = '') {
         .join(' ');
 }
 
+function formatSidebarLabel(label, cityName, sectionTitle = '') {
+    const value = String(label || '').trim();
+    if (!value) return value;
+
+    const city = String(cityName || '').trim();
+    const cityLower = city.toLowerCase();
+    const lower = value.toLowerCase();
+    const section = String(sectionTitle || '').toLowerCase();
+
+    if (city && lower.includes(cityLower)) {
+        return value;
+    }
+
+    if (section.includes('rating')) {
+        return city ? `${value} ${city} Hotels` : value;
+    }
+
+    if (section.includes('property type')) {
+        return value;
+    }
+
+    if (city) {
+        return `${city} Hotels with ${value}`;
+    }
+
+    return value;
+}
+
+function decorateSidebarItems(items, cityName, sectionTitle) {
+    return normalizeItems(items).map((item) => ({
+        ...item,
+        categoryName: formatSidebarLabel(item?.categoryName ?? item?.name ?? item?.label ?? '', cityName, sectionTitle)
+    }));
+}
+
+function formatPropertyTypeHeader(cityName) {
+    const city = String(cityName || '').trim();
+    return city ? `${city} Apartments, Suites and Family Hotels` : 'Property Type';
+}
+
 const PAGE_SIZE = 10;
 
 function getCityPageCookieName(citySlug = '') {
@@ -126,36 +166,59 @@ export default async function CityDetails({ params }) {
     // Build sidebar sections
     const sidebarSections = [
         {
+            sectionId: 'rating',
             title: 'Rating',
-            items: getSidebarItems(sidebarData, 'ratings', 'rating', 'ratingItems'),
+            items: decorateSidebarItems(getSidebarItems(sidebarData, 'ratings', 'rating', 'ratingItems'), cityName, 'Rating'),
             maxVisible: 6
         },
         {
+            sectionId: 'property-type',
             title: 'Property Type',
-            items: getSidebarItems(sidebarData, 'propertyTypes', 'propertyType', 'propertyTypeItems'),
-            maxVisible: 5
-        },
-        {
-            title: 'Facilities',
-            items: mergeUniqueItems(
-                getSidebarItems(sidebarData, 'roomFacilities', 'roomFacility', 'roomFacilityItems'),
-                getSidebarItems(sidebarData, 'hotelFacilities', 'facilityItems', 'facilities')
+            displayTitle: formatPropertyTypeHeader(cityName),
+            items: decorateSidebarItems(
+                getSidebarItems(sidebarData, 'propertyTypes', 'propertyType', 'propertyTypeItems'),
+                cityName,
+                'Property Type'
             ),
             maxVisible: 5
         },
         {
+            sectionId: 'facilities',
+            title: 'Facilities',
+            items: decorateSidebarItems(
+                mergeUniqueItems(
+                    getSidebarItems(sidebarData, 'roomFacilities', 'roomFacility', 'roomFacilityItems'),
+                    getSidebarItems(sidebarData, 'hotelFacilities', 'facilityItems', 'facilities')
+                ),
+                cityName,
+                'Facilities'
+            ),
+            maxVisible: 5
+        },
+        {
+            sectionId: 'city-cbd',
             title: 'City & CBD',
-            items: getSidebarItems(sidebarData, 'cityAndCbd', 'cityAndCBD', 'cityAndCbdItems'),
+            items: decorateSidebarItems(
+                getSidebarItems(sidebarData, 'cityAndCbd', 'cityAndCBD', 'cityAndCbdItems'),
+                cityName,
+                'City & CBD'
+            ),
             maxVisible: 5
         },
         {
+            sectionId: 'entertainment',
             title: 'Entertainment',
-            items: getSidebarItems(sidebarData, 'entertainment', 'entertainmentItems'),
+            items: decorateSidebarItems(getSidebarItems(sidebarData, 'entertainment', 'entertainmentItems'), cityName, 'Entertainment'),
             maxVisible: 5
         },
         {
+            sectionId: 'relaxation-exercise',
             title: 'Relaxation & Exercise',
-            items: getSidebarItems(sidebarData, 'relaxationAndExercise', 'relaxation', 'relaxationItems'),
+            items: decorateSidebarItems(
+                getSidebarItems(sidebarData, 'relaxationAndExercise', 'relaxation', 'relaxationItems'),
+                cityName,
+                'Relaxation & Exercise'
+            ),
             maxVisible: 5
         }
     ];

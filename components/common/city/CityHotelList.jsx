@@ -284,13 +284,13 @@ export default function CityHotelList({ hotels, totalCount = 0, currentPage = 1,
                                                         .split('|')
                                                         .map((facility) => facility.trim())
                                                         .filter(Boolean).length > 5 && (
-                                                        <Link href={`${hotel.urlName}`} className="rating" style={{ fontSize: '11px', lineHeight: '1.2' }}>
-                                                            +{hotelFacilitiesText
-                                                                .split('|')
-                                                                .map((facility) => facility.trim())
-                                                                .filter(Boolean).length - 5} more
-                                                        </Link>
-                                                    )}
+                                                            <Link href={`${hotel.urlName}`} className="rating" style={{ fontSize: '11px', lineHeight: '1.2' }}>
+                                                                +{hotelFacilitiesText
+                                                                    .split('|')
+                                                                    .map((facility) => facility.trim())
+                                                                    .filter(Boolean).length - 5} more
+                                                            </Link>
+                                                        )}
                                                 </>
                                             )}
                                         </div>
@@ -369,14 +369,14 @@ export default function CityHotelList({ hotels, totalCount = 0, currentPage = 1,
                                         <div className="row">
                                             <div className="col-12 col-md-4 col-lg-3 ms-auto">
                                                 <Link
-                                                    className="theme-button-blue rounded-4 w-100 d-block text-center p-2"
+                                                    className="theme-button-blue rounded-4 w-100 d-inline-flex align-items-center justify-content-center gap-1 text-center text-nowrap p-2"
                                                     href={`${hotel.url}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
                                                     See Availability
-                                                    <i className="fa-solid fa-arrow-right ms-2"></i>
+                                                    <i className="fa-solid fa-arrow-right"></i>
                                                 </Link>
                                             </div>
                                         </div>
