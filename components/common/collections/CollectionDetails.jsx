@@ -338,11 +338,11 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                                                     {hotel.ratingText}
                                                                 </p>
 
-                                                                    <p className="para-12px mb-0">
-                                                                        {hotel.reviewCount
+                                                                <p className="para-12px mb-0">
+                                                                    {hotel.reviewCount
                                                                         ? `${hotel.reviewCount.toLocaleString('en-US')} verified reviews`
                                                                         : '0 verified reviews'}
-                                                                    </p>
+                                                                </p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -512,11 +512,11 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                 {hasMore && (
                                     <div className="text-center py-4">
                                         <button
-                                            className="theme-button-orange rounded-1 px-5 py-2"
+                                            className="theme-button-blue rounded-1 px-5 py-2"
                                             onClick={loadMoreHotels}
                                             disabled={loading}
                                         >
-                                            {loading ? 'Loading...' : 'Load More'}
+                                            {loading ? 'Loading...' : 'Click to Load More'}
                                         </button>
                                     </div>
                                 )}
