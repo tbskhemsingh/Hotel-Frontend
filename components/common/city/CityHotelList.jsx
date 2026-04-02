@@ -7,7 +7,16 @@ import { FaMapMarkerAlt } from 'react-icons/fa';
 import { getHotelRates } from '@/lib/api/public/hotelapi';
 import { getUserCurrency } from '@/lib/getUserCurrency';
 
-export default function CityHotelList({ hotels, totalCount = 0, currentPage = 1, pageSize = 10, citySlugPath, pageCookieName, content }) {
+export default function CityHotelList({
+    hotels,
+    totalCount = 0,
+    currentPage = 1,
+    pageSize = 10,
+    citySlugPath,
+    pageCookieName,
+    pageIntentCookieName = '',
+    content
+}) {
     const [loading, setLoading] = useState(false);
     const [allHotels, setAllHotels] = useState(hotels || []);
     const [allRates, setAllRates] = useState([]);
@@ -126,10 +135,13 @@ export default function CityHotelList({ hotels, totalCount = 0, currentPage = 1,
     };
 
     const loadMoreHotels = () => {
-        if (!hasMore) return;
+        if (!hasMore || !pageCookieName) return;
 
         setLoading(true);
         document.cookie = `${pageCookieName}=${page + 1}; path=/; SameSite=Lax`;
+        if (pageIntentCookieName) {
+            document.cookie = `${pageIntentCookieName}=1; path=/; SameSite=Lax; Max-Age=20`;
+        }
         window.location.reload();
     };
 

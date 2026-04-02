@@ -16,6 +16,10 @@ function getRegionPageCookieName(countrySlug = '', regionSlug = '') {
     return `region_page_${toSlug(countrySlug)}_${toSlug(regionSlug)}`;
 }
 
+function getRegionPageIntentCookieName(countrySlug = '', regionSlug = '') {
+    return `region_page_intent_${toSlug(countrySlug)}_${toSlug(regionSlug)}`;
+}
+
 function parsePageNumber(value) {
     const page = Number(value);
     return Number.isInteger(page) && page > 0 ? page : 1;
@@ -49,7 +53,9 @@ export default async function RegionDetails({ params }) {
 
     const cookieStore = await cookies();
     const pageCookieName = getRegionPageCookieName(countrySlug, regionSlug);
-    const currentPage = parsePageNumber(cookieStore.get(pageCookieName)?.value);
+    const pageIntentCookieName = getRegionPageIntentCookieName(countrySlug, regionSlug);
+    const hasPaginationIntent = Boolean(cookieStore.get(pageIntentCookieName)?.value);
+    const currentPage = hasPaginationIntent ? parsePageNumber(cookieStore.get(pageCookieName)?.value) : 1;
 
     let hotels = [];
     let totalCount = 0;
@@ -107,6 +113,7 @@ export default async function RegionDetails({ params }) {
                             currentPage={currentPage}
                             pageSize={pageSize}
                             pageCookieName={pageCookieName}
+                            pageIntentCookieName={pageIntentCookieName}
                             content={description}
                         />
                     </div>
