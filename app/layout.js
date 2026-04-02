@@ -1,3 +1,4 @@
+'use client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@/public/assets/css/style.css';
 import '@/public/assets/css/media.css';

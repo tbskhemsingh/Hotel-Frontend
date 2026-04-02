@@ -8,7 +8,7 @@ import CityDetails from '@/components/common/city/CityDetails';
 import HotelDetailsWrapper from '@/components/common/hotel/HotelDetailsWrapper';
 import CityBrandDetails from '@/components/common/brand/CityBrandDetails';
 
-export default async function DynamicPage({ params, searchParams }) {
+export default async function DynamicPage({ params }) {
     const { slug } = await params;
     const slugArray = slug || [];
     const fullSlug = '/' + slugArray.join('/');
@@ -33,7 +33,7 @@ export default async function DynamicPage({ params, searchParams }) {
 
     //COUNTRYBRAND Page
     if (slugArray.length === 2 && data.entityType === 'CountryBrand') {
-        return <CountryBrandDetails country={slugArray[0]} params={params} searchParams={searchParams} />;
+        return <CountryBrandDetails country={slugArray[0]} params={params} />;
     }
 
     // COLLECTION PAGE

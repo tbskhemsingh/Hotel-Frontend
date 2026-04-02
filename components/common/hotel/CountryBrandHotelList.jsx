@@ -2,21 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import { getHotelRates } from '@/lib/api/public/hotelapi';
 import { getUserCurrency } from '@/lib/getUserCurrency';
 
-export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [], currentPage = 1, hasMore = false }) {
+export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [], currentPage = 1, hasMore = false, pageCookieName = '', pageIntentCookieName = '' }) {
     const defaultImage = '/image/property-img.webp';
     const [loadingMore, setLoadingMore] = useState(false);
     const [timestamp, setTimestamp] = useState('');
     const [currency, setCurrency] = useState(null);
     const [allRates, setAllRates] = useState(hotelRates || []);
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
     const normalizedBrand = String(brand || '').replace(/^\/+|\/+$/g, '');
 
     useEffect(() => {
@@ -159,12 +155,12 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
     };
 
     const loadMoreHotels = () => {
-        if (!hasMore) return;
+        if (!hasMore || !pageCookieName || !pageIntentCookieName) return;
 
         setLoadingMore(true);
-        const nextSearchParams = new URLSearchParams(searchParams?.toString() || '');
-        nextSearchParams.set('page', String(currentPage + 1));
-        router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
+        document.cookie = `${pageCookieName}=${currentPage + 1}; path=/; SameSite=Lax`;
+        document.cookie = `${pageIntentCookieName}=1; path=/; SameSite=Lax; Max-Age=20`;
+        window.location.reload();
     };
 
     const openMap = (lat, lng) => {
