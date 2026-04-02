@@ -16,7 +16,9 @@ export default function CityHotelList({
     citySlugPath,
     content,
     citySlug,
-    regionHotelsSource = []
+    regionHotelsSource = [],
+    pageIntentCookieName = '',
+    pageCookieName
 }) {
     const [loading, setLoading] = useState(false);
     const [allHotels, setAllHotels] = useState(hotels || []);
@@ -44,6 +46,12 @@ export default function CityHotelList({
 
         initCurrency();
     }, []);
+
+    useEffect(() => {
+        setAllHotels(hotels || []);
+        setPage(currentPage || 1);
+        setHasMore((hotels?.length || 0) < (totalCount || 0) || (hotels?.length || 0) === pageSize);
+    }, [hotels, totalCount, currentPage, pageSize]);
 
     const getBookingId = (hotel) => hotel?.bookingId ?? hotel?.bookingID ?? hotel?.BookingId ?? null;
 
@@ -144,20 +152,17 @@ export default function CityHotelList({
 
         setLoading(true);
 
-        if (Array.isArray(regionHotelsSource) && regionHotelsSource.length > 0) {
-            const currentCount = allHotels.length;
-            const nextHotels = regionHotelsSource.slice(currentCount, currentCount + pageSize);
+        const nextPage = page + 1;
 
-            if (!nextHotels.length) {
-                setHasMore(false);
+        if (pageIntentCookieName) {
+            if (!pageCookieName) {
                 setLoading(false);
                 return;
             }
 
-            setAllHotels((prev) => [...prev, ...nextHotels]);
-            setPage((prev) => prev + 1);
-            setHasMore(currentCount + nextHotels.length < regionHotelsSource.length);
-            setLoading(false);
+            document.cookie = `${pageCookieName}=${nextPage}; path=/; SameSite=Lax`;
+            document.cookie = `${pageIntentCookieName}=1; path=/; SameSite=Lax; Max-Age=20`;
+            window.location.reload();
             return;
         }
 
@@ -166,8 +171,6 @@ export default function CityHotelList({
             setLoading(false);
             return;
         }
-
-        const nextPage = page + 1;
 
         getCityHotels(citySlug, nextPage, pageSize)
             .then((nextHotels) => {
@@ -179,6 +182,10 @@ export default function CityHotelList({
                 setAllHotels((prev) => [...prev, ...nextHotels]);
                 setPage(nextPage);
                 setHasMore(nextHotels.length === pageSize);
+
+                if (pageCookieName) {
+                    document.cookie = `${pageCookieName}=${nextPage}; path=/; SameSite=Lax`;
+                }
             })
             .catch((error) => {
                 console.error('Error loading more hotels:', error);

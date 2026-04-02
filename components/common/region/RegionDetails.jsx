@@ -11,12 +11,17 @@ import { formatCountryName } from '@/lib/utils';
 import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
 import { buildSidebarSections } from '@/lib/mappers/sidebarMapper';
 
+const REGION_PAGE_SIZE = 10;
+
 function toSlug(value = '') {
     return value.toLowerCase().replace(/\s+/g, '-');
 }
 
 function getRegionPageCookieName(countrySlug = '', regionSlug = '') {
     return `region_page_${toSlug(countrySlug)}_${toSlug(regionSlug)}`;
+}
+function getRegionPageIntentCookieName(countrySlug = '', regionSlug = '') {
+    return `region_page_intent_${toSlug(countrySlug)}_${toSlug(regionSlug)}`;
 }
 
 function parsePageNumber(value) {
@@ -30,7 +35,7 @@ function getCitySlug(city = {}) {
         .replace(/^\/+/, '');
 }
 
-async function fetchAllHotelsFromCities(cities = [], hotelsPerPage = pageSize) {
+async function fetchAllHotelsFromCities(cities = [], hotelsPerPage = REGION_PAGE_SIZE) {
     const orderedCities = [...cities].sort((a, b) =>
         String(a?.cityName || '').localeCompare(String(b?.cityName || ''), undefined, {
             sensitivity: 'base'
@@ -71,8 +76,6 @@ async function fetchAllHotelsFromCities(cities = [], hotelsPerPage = pageSize) {
     return cityHotelBatches.flat();
 }
 
-const pageSize = 10;
-
 export default async function RegionDetails({ params, regionId }) {
     const { slug } = await params;
 
@@ -111,9 +114,12 @@ export default async function RegionDetails({ params, regionId }) {
     });
 
     const cookieStore = await cookies();
-    const pageCookieName = getRegionPageCookieName(countrySlug, regionSlug);
-    const currentPage = parsePageNumber(cookieStore.get(pageCookieName)?.value);
-    const requestedCount = currentPage * pageSize;
+    const regionPageCookieName = getRegionPageCookieName(countrySlug, regionSlug);
+    const pageIntentCookieName = getRegionPageIntentCookieName(countrySlug, regionSlug);
+    const hasPaginationIntent = Boolean(cookieStore.get(pageIntentCookieName)?.value);
+    const currentPage = hasPaginationIntent ? parsePageNumber(cookieStore.get(regionPageCookieName)?.value) : 1;
+
+    const requestedCount = currentPage * REGION_PAGE_SIZE;
 
     let hotels = [];
     let totalCount = cities.reduce((sum, city) => sum + Number(city?.hotelCount || 0), 0);
@@ -121,7 +127,7 @@ export default async function RegionDetails({ params, regionId }) {
 
     try {
         for (let pageNumber = 1; pageNumber <= currentPage; pageNumber++) {
-            const res = await getRegionHotels(urlName, pageNumber, pageSize);
+            const res = await getRegionHotels(urlName, pageNumber, REGION_PAGE_SIZE);
 
             const nextHotels = res?.hotelData || [];
 
@@ -132,7 +138,7 @@ export default async function RegionDetails({ params, regionId }) {
         }
 
         if (!hotels.length && cities.length > 0) {
-            fallbackRegionHotels = await fetchAllHotelsFromCities(cities, pageSize);
+            fallbackRegionHotels = await fetchAllHotelsFromCities(cities, REGION_PAGE_SIZE);
             totalCount = fallbackRegionHotels.length;
             hotels = fallbackRegionHotels.slice(0, requestedCount);
         }
@@ -176,7 +182,9 @@ export default async function RegionDetails({ params, regionId }) {
                             hotels={hotels}
                             totalCount={totalCount}
                             currentPage={currentPage}
-                            pageSize={pageSize}
+                            pageSize={REGION_PAGE_SIZE}
+                            pageCookieName={regionPageCookieName}
+                            pageIntentCookieName={pageIntentCookieName}
                             regionHotelsSource={fallbackRegionHotels}
                             content={description}
                         />

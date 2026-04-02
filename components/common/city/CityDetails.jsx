@@ -155,6 +155,7 @@ export default async function CityDetails({ params }) {
                             totalCount={totalCount}
                             currentPage={currentPage}
                             pageSize={PAGE_SIZE}
+                            pageCookieName={pageCookieName}
                             citySlug={citySlug}
                             citySlugPath={citySlugPath}
                             content={content}
