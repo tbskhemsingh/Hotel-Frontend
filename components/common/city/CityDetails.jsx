@@ -6,7 +6,7 @@ import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
 import { getCityHotels } from '@/lib/api/public/cityapi';
 import { getCountriesApi } from '@/lib/api/public/countryapi';
 import { getSidebarData } from '@/lib/api/sidebarapi';
-import { buildSidebarSections } from '@/lib/mappers/sidebarMapper';
+import { buildCategorySidebarSections } from '@/lib/api/public/cityCategoryapi';
 
 function toSlug(value = '') {
     if (!value) return '';
@@ -108,9 +108,9 @@ export default async function CityDetails({ params }) {
         }
     }
 
-    const sidebarSections = buildSidebarSections(sidebarData, {
-        contextName: cityName,
-        propertyTypeHeader: cityName ? `${cityName} Apartments, Suites and Family Hotels` : 'Property Type'
+    const sidebarSections = buildCategorySidebarSections(sidebarData, {
+        citySlug: citySlugPath,
+        cityName
     });
 
     return (

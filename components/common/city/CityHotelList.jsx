@@ -16,7 +16,8 @@ export default function CityHotelList({
     citySlugPath,
     content,
     citySlug,
-    regionHotelsSource = []
+    regionHotelsSource = [],
+    fetchMoreHotels = null
 }) {
     const [loading, setLoading] = useState(false);
     const [allHotels, setAllHotels] = useState(hotels || []);
@@ -158,6 +159,30 @@ export default function CityHotelList({
             setPage((prev) => prev + 1);
             setHasMore(currentCount + nextHotels.length < regionHotelsSource.length);
             setLoading(false);
+            return;
+        }
+
+        if (typeof fetchMoreHotels === 'function') {
+            const nextPage = page + 1;
+
+            fetchMoreHotels({ pageNumber: nextPage, pageSize })
+                .then((nextHotels) => {
+                    if (!nextHotels.length) {
+                        setHasMore(false);
+                        return;
+                    }
+
+                    setAllHotels((prev) => [...prev, ...nextHotels]);
+                    setPage(nextPage);
+                    setHasMore(nextHotels.length === pageSize);
+                })
+                .catch((error) => {
+                    console.error('Error loading more hotels:', error);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+
             return;
         }
 
