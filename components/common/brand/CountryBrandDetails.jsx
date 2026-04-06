@@ -81,6 +81,7 @@ export default async function CountryBrandDetails({ params }) {
     let hotels = [];
     let totalCount = 0;
     let sidebarData = {};
+    let lastFetchedPageSize = 0;
 
     try {
         let countryId = null;
@@ -111,6 +112,7 @@ export default async function CountryBrandDetails({ params }) {
             }
 
             hotels = hotels.concat(nextHotels);
+            lastFetchedPageSize = nextHotels.length;
         }
 
         if (countryId) {
@@ -122,7 +124,9 @@ export default async function CountryBrandDetails({ params }) {
     }
 
     const displayCountryName = getFirstDefined(hotels[0]?.countryName, hotels[0]?.CountryName) || countryName;
-    const hasMore = hotels.length < totalCount || (hotels.length !== 0 && hotels.length % PAGE_SIZE === 0);
+    const hasReliableTotalCount = Number.isFinite(Number(totalCount)) && Number(totalCount) > 0;
+    const hasFullLastPage = lastFetchedPageSize === PAGE_SIZE;
+    const hasMore = hasFullLastPage && (!hasReliableTotalCount || hotels.length < Number(totalCount));
     const sidebarSections = buildListingSidebarSections(sidebarData, displayCountryName);
 
     return (

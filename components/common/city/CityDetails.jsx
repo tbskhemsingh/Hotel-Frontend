@@ -8,6 +8,7 @@ import { getCountriesApi } from '@/lib/api/public/countryapi';
 import { getSidebarData } from '@/lib/api/sidebarapi';
 import { buildCategorySidebarSections } from '@/lib/api/public/cityCategoryapi';
 
+// Utility functions
 function toSlug(value = '') {
     if (!value) return '';
     return value.toString().trim().toLowerCase().replace(/\s+/g, '-');
