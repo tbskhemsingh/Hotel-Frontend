@@ -149,7 +149,21 @@ export default async function RegionDetails({ params, regionId }) {
     return (
         <>
             <CountryHeroSection />
-
+            <section className="mobile-actions d-lg-none">
+                <div className="container px-0">
+                    <div className="mobile-actions__bottom">
+                        <button type="button" className="mobile-actions__link">
+                            Sort
+                        </button>
+                        <button type="button" className="mobile-actions__link">
+                            Filter
+                        </button>
+                        <button type="button" className="mobile-actions__link">
+                            Map
+                        </button>
+                    </div>
+                </div>
+            </section>
             <div className="py-2">
                 <div className="container">
                     <div className="d-flex align-items-center small">

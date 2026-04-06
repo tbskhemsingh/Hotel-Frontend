@@ -91,7 +91,11 @@ export default async function CountryBrandDetails({ params }) {
 
         if (!countryId) {
             const countrySlugInfo = await resolveSlug(`/${countrySlug}`);
-            countryId = getFirstDefined(countrySlugInfo?.data?.countryId, countrySlugInfo?.data?.countryID, countrySlugInfo?.data?.entityID);
+            countryId = getFirstDefined(
+                countrySlugInfo?.data?.countryId,
+                countrySlugInfo?.data?.countryID,
+                countrySlugInfo?.data?.entityID
+            );
         }
 
         for (let pageNumber = 1; pageNumber <= currentPage; pageNumber++) {
@@ -112,9 +116,7 @@ export default async function CountryBrandDetails({ params }) {
         }
 
         const firstHotel = hotels[0];
-        countryId =
-            countryId ||
-            getFirstDefined(firstHotel?.countryId, firstHotel?.countryID, firstHotel?.CountryID);
+        countryId = countryId || getFirstDefined(firstHotel?.countryId, firstHotel?.countryID, firstHotel?.CountryID);
 
         if (countryId) {
             const sidebar = await getCitySidebar({ countryId });
@@ -133,6 +135,21 @@ export default async function CountryBrandDetails({ params }) {
     return (
         <>
             <CountryHeroSection />
+            <section className="mobile-actions d-lg-none">
+                <div className="container px-0">
+                    <div className="mobile-actions__bottom">
+                        <button type="button" className="mobile-actions__link">
+                            Sort
+                        </button>
+                        <button type="button" className="mobile-actions__link">
+                            Filter
+                        </button>
+                        <button type="button" className="mobile-actions__link">
+                            Map
+                        </button>
+                    </div>
+                </div>
+            </section>
             <div className="breadcrumb-section">
                 <div className="container">
                     <div className="d-flex align-items-center small">
@@ -167,20 +184,22 @@ export default async function CountryBrandDetails({ params }) {
                     </div>
 
                     <div className="col-lg-9 order-1 order-lg-2">
-                        {hotels.length > 0 ? (
-                            <CountryBrandHotelList
-                                hotels={hotels}
-                                brand={brandName}
-                                currentPage={currentPage}
-                                hasMore={hasMore}
-                                pageCookieName={pageCookieName}
-                                pageIntentCookieName={pageIntentCookieName}
-                            />
-                        ) : (
-                            <div className="text-center py-5">
-                                <p className="text-muted">No hotels available for this brand in {displayCountryName}.</p>
-                            </div>
-                        )}
+                        <div id="country-brand-hotel-list">
+                            {hotels.length > 0 ? (
+                                <CountryBrandHotelList
+                                    hotels={hotels}
+                                    brand={brandName}
+                                    currentPage={currentPage}
+                                    hasMore={hasMore}
+                                    pageCookieName={pageCookieName}
+                                    pageIntentCookieName={pageIntentCookieName}
+                                />
+                            ) : (
+                                <div className="text-center py-5">
+                                    <p className="text-muted">No hotels available for this brand in {displayCountryName}.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </section>
