@@ -10,6 +10,7 @@ import CityHotelList from '../city/CityHotelList';
 import { formatCountryName } from '@/lib/utils';
 import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
 import { buildSidebarSections } from '@/lib/mappers/sidebarMapper';
+import MobileFilterDrawer from '@/components/ui/MobileFilterDrawer';
 
 const REGION_PAGE_SIZE = 10;
 
@@ -155,16 +156,37 @@ export default async function RegionDetails({ params, regionId }) {
                         <button type="button" className="mobile-actions__link">
                             Sort
                         </button>
-                        <button type="button" className="mobile-actions__link">
-                            Filter
-                        </button>
+                        <MobileFilterDrawer sidebarSections={sidebarSections} />
                         <button type="button" className="mobile-actions__link">
                             Map
                         </button>
                     </div>
                 </div>
             </section>
-            <div className="py-2">
+            <div className="py-2 py-lg-3">
+                <div className="container">
+                    <nav aria-label="breadcrumb" className="mb-0">
+                        <ol className="breadcrumb mb-0">
+                            <li className="breadcrumb-item small-para-14-px">
+                                <Link href="/destinations" className="text-dark text-decoration-none">
+                                    All Countries
+                                </Link>
+                            </li>
+
+                            <li className="breadcrumb-item small-para-14-px">
+                                <Link href={`/${countrySlug}`} className="text-dark text-decoration-none">
+                                    {countryName}
+                                </Link>
+                            </li>
+
+                            <li className="breadcrumb-item small-para-14-px active" aria-current="page">
+                                {regionName}
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            {/* <div className="py-2">
                 <div className="container">
                     <div className="d-flex align-items-center small">
                         <Link href="/destinations" className="text-dark text-decoration-none">
@@ -178,18 +200,15 @@ export default async function RegionDetails({ params, regionId }) {
                         <span className="text-primary">{regionName}</span>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
-            <section className="container py-4">
-                <div className="row">
+            <section className="container py-2">
+                <div className="row g-4 align-items-start">
                     <Dropdown id="regions" parentId="countryAccordion" title="Cities" items={cityItems} defaultOpen />
-
                     <hr className="my-5" />
-
-                    <div className="col-lg-3">
+                    <div className="col-lg-3 d-none d-lg-block">
                         <ListingSidebar title="Filters" sections={sidebarSections} />
                     </div>
-
                     <div className="col-lg-9">
                         <h2 className="text-center fw-bold mb-4">Featured Properties in {regionName}</h2>
                         <CityHotelList
