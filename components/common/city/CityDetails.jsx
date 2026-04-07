@@ -3,12 +3,13 @@ import { cookies } from 'next/headers';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
 import CityHotelList from './CityHotelList';
 import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
-import { getCityHotels } from '@/lib/api/public/cityapi';
+import { getHotelList } from '@/lib/api/public/hotelapi';
 import { getCountriesApi } from '@/lib/api/public/countryapi';
 import { getSidebarData } from '@/lib/api/sidebarapi';
-import { buildSidebarSections } from '@/lib/mappers/sidebarMapper';
 import MobileFilterDrawer from '@/components/ui/MobileFilterDrawer';
+import { buildCategorySidebarSections } from '@/lib/api/public/cityCategoryapi';
 
+// Utility functions
 function toSlug(value = '') {
     if (!value) return '';
     return value.toString().trim().toLowerCase().replace(/\s+/g, '-');
@@ -64,18 +65,26 @@ export default async function CityDetails({ params }) {
     if (citySlug) {
         try {
             for (let pageNumber = 1; pageNumber <= currentPage; pageNumber++) {
-                const pageData = await getCityHotels(citySlug, pageNumber, PAGE_SIZE);
-                const nextHotels = pageData || [];
+                const pageResponse = await getHotelList(citySlug, pageNumber, PAGE_SIZE);
+                const nextHotels = pageResponse?.hotels || [];
 
                 if (!nextHotels.length) {
                     break;
                 }
 
+                if (pageNumber === 1) {
+                    totalCount = pageResponse?.totalCount || nextHotels.length;
+                    content = nextHotels[0]?.content || '';
+                    
+                    // Extract IDs from API response (not from first hotel)
+                    const apiCityId = pageResponse?.cityId;
+                    if (apiCityId !== null && apiCityId !== undefined) {
+                        sidebarData = await getSidebarData({ cityId: apiCityId });
+                    }
+                }
+
                 hotels = hotels.concat(nextHotels);
             }
-
-            content = hotels[0]?.content || '';
-            totalCount = hotels[0]?.totalCount || hotels.length;
 
             if (hotels.length > 0) {
                 const firstHotel = hotels[0];
@@ -97,21 +106,15 @@ export default async function CityDetails({ params }) {
                         }
                     }
                 }
-
-                const cityId = getFirstDefined(firstHotel?.cityId, firstHotel?.cityID, firstHotel?.CityID);
-
-                if (cityId) {
-                    sidebarData = await getSidebarData({ cityId });
-                }
             }
         } catch (error) {
             console.error('Error fetching hotels:', error);
         }
     }
 
-    const sidebarSections = buildSidebarSections(sidebarData, {
-        contextName: cityName,
-        propertyTypeHeader: cityName ? `${cityName} Apartments, Suites and Family Hotels` : 'Property Type'
+    const sidebarSections = buildCategorySidebarSections(sidebarData, {
+        citySlug: citySlugPath,
+        cityName
     });
 
     return (

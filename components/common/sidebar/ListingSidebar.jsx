@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
  
 function normalizeLabel(item) {
@@ -7,21 +8,99 @@ function normalizeLabel(item) {
 }
  
 function normalizeKey(item, label) {
-    return String(item?.categoryID ?? item?.id ?? item?.value ?? label).trim();
+    return String(item?.categoryId ?? item?.id ?? item?.value ?? label).trim();
 }
 
 function normalizeHref(item, label) {
+    if (item?.href) {
+        if (typeof item.href === 'string') return item.href;
+
+        const pathname = item.href?.pathname || '';
+        const query = item.href?.query || {};
+
+        if (pathname && pathname.includes('[city]') && pathname.includes('[category]')) {
+            const city = query.city || '';
+            const category = query.category || '';
+            const categoryId = query.categoryId;
+            const search = new URLSearchParams();
+
+            if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
+                search.set('categoryId', String(categoryId));
+            }
+
+            return `/city/${encodeURIComponent(city)}/${encodeURIComponent(category)}${search.toString() ? `?${search.toString()}` : ''}`;
+        }
+
+        return pathname || '#';
+    }
+
     const raw = item?.categoryUrlName || item?.urlName || label;
     if (!raw) return '#';
     return `#${String(raw).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 }
 
-function LinkRow({ label, href }) {
+function LinkRow({ label, href, isActive = false, onClick = null, item = null }) {
+    const className = [
+        'sidebar-filter-link d-flex align-items-start gap-2 w-100 text-start',
+        isActive ? 'active fw-semibold' : ''
+    ]
+        .filter(Boolean)
+        .join(' ');
+
+    const storeSelectionContext = () => {
+        if (typeof window === 'undefined') return;
+
+        try {
+            const categoryId = item?.categoryId ?? item?.CategoryId ?? item?.id ?? null;
+            const regionId = item?.regionId ?? item?.RegionId ?? null;
+
+            if (categoryId || regionId) {
+                const payload = JSON.stringify({
+                    categoryId,
+                    regionId,
+                    href
+                });
+                sessionStorage.setItem('listingCategoryContext', payload);
+                document.cookie = `listingCategoryContext=${encodeURIComponent(payload)}; path=/; max-age=120; SameSite=Lax`;
+            }
+        } catch (error) {
+            console.error('Unable to store listing context:', error);
+        }
+    };
+
     return (
         <li className="sidebar-filter-item">
-            <a href={href} className="sidebar-filter-link d-flex align-items-start gap-2">
+            <Link
+                href={href}
+                className={className}
+                onMouseDown={storeSelectionContext}
+                onClick={(event) => {
+                    if (typeof onClick === 'function') {
+                        event.preventDefault();
+                        storeSelectionContext();
+                        onClick(event);
+                        return;
+                    }
+                    storeSelectionContext();
+                }}
+                onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        storeSelectionContext();
+                    }
+                }}
+                style={
+                    isActive
+                        ? {
+                              background: 'rgba(240, 131, 30, 0.12)',
+                              color: '#c55f00',
+                              borderRadius: '10px',
+                              padding: '8px 10px'
+                          }
+                        : { padding: '8px 10px' }
+                }
+            >
                 <span className="sidebar-filter-text">{label}</span>
-            </a>
+            </Link>
         </li>
     );
 }
@@ -102,8 +181,18 @@ function SectionBlock({ title, items = [], maxVisible = 5, defaultOpen = true, e
                             const label = normalizeLabel(item);
                             const key = normalizeKey(item, label);
                             const href = normalizeHref(item, label);
+                            const isActive = Boolean(item?.isActive);
 
-                            return <LinkRow key={key || label} label={label} href={href} />;
+                            return (
+                                <LinkRow
+                                    key={key || label}
+                                    label={label}
+                                    href={href}
+                                    isActive={isActive}
+                                    onClick={item?.onClick}
+                                    item={item}
+                                />
+                            );
                         })}
                     </ul>
                 ) : (

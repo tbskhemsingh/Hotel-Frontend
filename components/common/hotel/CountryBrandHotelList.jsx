@@ -33,7 +33,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         initCurrency();
     }, []);
 
-    const getBookingId = (hotel) => hotel?.bookingId ?? hotel?.bookingID ?? hotel?.BookingId ?? null;
+    const getBookingId = (hotel) => hotel?.bookingId ?? null;
 
     const fetchRatesForHotels = async (hotelsToRate, selectedCurrency) => {
         const bookingIds = hotelsToRate.map(getBookingId).filter(Boolean);
@@ -195,7 +195,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         <div className="container">
             <div className="d-flex flex-column gap-3">
                 {groupedHotels.map((city) => (
-                    <div key={city.cityName}>
+                    <div key={city.cityName} className="d-flex flex-column gap-3">
                         <Link href={getCityBrandPath(city.cityUrlName)} className="text-decoration-none">
                             <h5 className="text-warning city-hover">
                                 {formattedBrand} {city.cityName}
