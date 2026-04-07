@@ -27,6 +27,7 @@ export default function CityHotelList({
     const [currency, setCurrency] = useState(null);
     const [timestamp, setTimestamp] = useState('');
     const loadMoreTriggerRef = useRef(null);
+    const loadRequestInFlightRef = useRef(false);
 
     const defaultImage = '/image/property-img.webp';
     const getFirstDefined = (...values) => {
@@ -185,14 +186,16 @@ export default function CityHotelList({
     };
 
     const loadMoreHotels = () => {
-        if (!hasMore) return;
+        if (loadRequestInFlightRef.current || !hasMore) return;
 
+        loadRequestInFlightRef.current = true;
         setLoading(true);
 
         const nextPage = page + 1;
 
         if (pageIntentCookieName) {
             if (!pageCookieName) {
+                loadRequestInFlightRef.current = false;
                 setLoading(false);
                 return;
             }
@@ -206,6 +209,7 @@ export default function CityHotelList({
         if (!citySlug) {
             setHasMore(false);
             setLoading(false);
+            loadRequestInFlightRef.current = false;
             return;
         }
 
@@ -229,6 +233,7 @@ export default function CityHotelList({
                 console.error('Error loading more hotels:', error);
             })
             .finally(() => {
+                loadRequestInFlightRef.current = false;
                 setLoading(false);
             });
     };

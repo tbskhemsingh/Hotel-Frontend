@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { FaMapMarkerAlt } from 'react-icons/fa';
-import { getHotelRates } from '@/lib/api/public/hotelapi';
+import { getHotelList, getHotelRates } from '@/lib/api/public/hotelapi';
 import { getUserCurrency } from '@/lib/getUserCurrency';
 
 export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [], currentPage = 1, hasMore = false, pageCookieName = '', pageIntentCookieName = '' }) {
@@ -13,8 +13,17 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
     const [timestamp, setTimestamp] = useState('');
     const [currency, setCurrency] = useState(null);
     const [allRates, setAllRates] = useState(hotelRates || []);
+    const [allHotels, setAllHotels] = useState(hotels || []);
+    const [page, setPage] = useState(currentPage || 1);
+    const [localHasMore, setLocalHasMore] = useState(hasMore);
     const loadMoreTriggerRef = useRef(null);
     const normalizedBrand = String(brand || '').replace(/^\/+|\/+$/g, '');
+
+    useEffect(() => {
+        setAllHotels(hotels || []);
+        setPage(currentPage || 1);
+        setLocalHasMore(hasMore);
+    }, [hotels, currentPage, hasMore]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -58,13 +67,13 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
     };
 
     useEffect(() => {
-        if (!currency || !hotels.length) return;
+        if (!currency || !allHotels.length) return;
 
         let cancelled = false;
 
         async function syncRates() {
             try {
-                const refreshedRates = await fetchRatesForHotels(hotels, currency);
+                const refreshedRates = await fetchRatesForHotels(allHotels, currency);
 
                 if (!cancelled) {
                     setAllRates(refreshedRates);
@@ -79,7 +88,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         return () => {
             cancelled = true;
         };
-    }, [currency, hotels]);
+    }, [currency, allHotels]);
 
     const handleImageError = (e) => {
         if (!e.target.src.includes(defaultImage)) {
@@ -106,22 +115,92 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         return 'Pleasant';
     };
 
+    const getHotelKey = (hotel, index) => {
+        const bookingId = hotel?.bookingId;
+        const rawKey = bookingId ?? hotel?.hotelId ?? hotel?.hotelID ?? hotel?.id ?? hotel?.urlName ?? hotel?.url;
+        return rawKey ? `${rawKey}-${index}` : `hotel-${index}`;
+    };
+
+    const dedupeHotels = (list) => {
+        const seen = new Set();
+        const result = [];
+        list.forEach((hotel) => {
+            const id = hotel?.bookingId ?? hotel?.hotelId ?? hotel?.hotelID ?? hotel?.id;
+            const key = id !== undefined && id !== null && id !== '' ? String(id) : null;
+            if (key && seen.has(key)) return;
+            if (key) seen.add(key);
+            result.push(hotel);
+        });
+        return result;
+    };
+
     const loadMoreHotels = () => {
-        if (!hasMore || !pageCookieName || !pageIntentCookieName) return;
+        if (!localHasMore || loadingMore || !pageCookieName || !pageIntentCookieName) return;
 
         setLoadingMore(true);
-        document.cookie = `${pageCookieName}=${currentPage + 1}; path=/; SameSite=Lax`;
+        const nextPage = page + 1;
+
+        document.cookie = `${pageCookieName}=${nextPage}; path=/; SameSite=Lax`;
         document.cookie = `${pageIntentCookieName}=1; path=/; SameSite=Lax; Max-Age=20`;
         window.location.reload();
     };
 
+    const getCountryBrandSlug = () => {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        if (pathParts.length >= 2) {
+            return `${pathParts[0]}/${pathParts[1]}`;
+        }
+        return null;
+    };
+
+    const fetchMoreHotels = () => {
+        if (!localHasMore || loadingMore) return;
+
+        const brandSlug = getCountryBrandSlug();
+        if (!brandSlug) {
+            setLocalHasMore(false);
+            return;
+        }
+
+        setLoadingMore(true);
+        const nextPage = page + 1;
+        const pageSize = 10;
+
+        getHotelList(brandSlug, nextPage, pageSize)
+            .then((response) => {
+                const nextHotels = response?.hotels || [];
+                if (!nextHotels.length) {
+                    setLocalHasMore(false);
+                    return;
+                }
+
+                setAllHotels((prev) => dedupeHotels([...prev, ...nextHotels]));
+                setPage(nextPage);
+                setLocalHasMore(nextHotels.length === pageSize);
+
+                if (pageCookieName) {
+                    document.cookie = `${pageCookieName}=${nextPage}; path=/; SameSite=Lax`;
+                }
+            })
+            .catch((error) => {
+                console.error('Error loading more hotels:', error);
+            })
+            .finally(() => {
+                setLoadingMore(false);
+            });
+    };
+
     useEffect(() => {
-        if (!hasMore || loadingMore || !loadMoreTriggerRef.current) return;
+        if (!localHasMore || loadingMore || !loadMoreTriggerRef.current) return;
 
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
-                    loadMoreHotels();
+                    if (pageIntentCookieName) {
+                        loadMoreHotels();
+                    } else {
+                        fetchMoreHotels();
+                    }
                 }
             },
             { rootMargin: '300px 0px' }
@@ -130,9 +209,9 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         observer.observe(loadMoreTriggerRef.current);
 
         return () => observer.disconnect();
-    }, [hasMore, loadingMore, currentPage, pageCookieName, pageIntentCookieName]);
+    }, [localHasMore, loadingMore, page, pageCookieName, pageIntentCookieName]);
 
-    if (!hotels.length) {
+    if (!allHotels.length) {
         return (
             <div className="text-center py-5">
                 <p className="text-muted">No hotels available.</p>
@@ -141,7 +220,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
     }
 
     const groupedHotels = Object.values(
-        hotels.reduce((acc, hotel) => {
+        allHotels.reduce((acc, hotel) => {
             const key = hotel.cityName;
 
             if (!acc[key]) {
@@ -458,7 +537,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                     </div>
                 ))}
             </div>
-            {hasMore && (
+            {localHasMore && (
                 <div ref={loadMoreTriggerRef} className="text-center py-4">
                     <p className="text-muted mb-0">{loadingMore ? 'Loading more...' : 'Loading more...'}</p>
                 </div>

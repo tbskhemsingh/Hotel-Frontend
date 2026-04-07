@@ -252,6 +252,7 @@ export default async function RegionDetails({ params, regionId }) {
                             totalCount={totalCount}
                             currentPage={currentPage}
                             pageSize={REGION_PAGE_SIZE}
+                            citySlug={urlName}
                             pageCookieName={regionPageCookieName}
                             pageIntentCookieName={pageIntentCookieName}
                             regionHotelsSource={fallbackRegionHotels}

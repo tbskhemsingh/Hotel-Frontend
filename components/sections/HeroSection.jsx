@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import { addMonths, format } from 'date-fns';
 import 'react-datepicker/dist/react-datepicker.css';
-import { LuCalendarRange } from 'react-icons/lu';
 import '../../public/assets/css/DatePicker.css';
 import { globalSearchapi } from '@/lib/api/public/globalsearchapi';
 import { useRouter } from 'next/navigation';
@@ -379,7 +378,6 @@ export default function HeroSection() {
                                                     }}
                                                     style={{ cursor: 'pointer' }}
                                                 >
-                                                    {/* <LuCalendarRange /> */}
                                                 </span>
                                             </div>
                                         </div>

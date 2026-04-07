@@ -77,7 +77,6 @@ export default async function CityBrandDetails({ params }) {
             if (pageNumber === 1) {
                 totalCount = pageResponse?.totalCount || 0;
 
-                // Extract cityId from API response
                 const apiCityId = pageResponse?.cityId;
                 if (apiCityId !== null && apiCityId !== undefined) {
                     sidebarData = await getSidebarData({ cityId: apiCityId });

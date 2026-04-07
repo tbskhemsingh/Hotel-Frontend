@@ -110,7 +110,6 @@ export default async function CountryBrandDetails({ params }) {
             if (pageNumber === 1) {
                 totalCount = pageResponse?.totalCount || 0;
 
-                // Extract countryId from API response if not already resolved
                 if (!countryId) {
                     countryId = pageResponse?.countryId;
                 }

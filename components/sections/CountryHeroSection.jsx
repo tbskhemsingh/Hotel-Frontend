@@ -3,7 +3,6 @@
 import { addMonths, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
-import { LuCalendarRange } from 'react-icons/lu';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../../public/assets/css/DatePicker.css';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
@@ -285,7 +284,6 @@ function CountryHeroSection({}) {
                                                     }}
                                                     style={{ cursor: 'pointer' }}
                                                 >
-                                                    {/* <LuCalendarRange /> */}
                                                 </span>
                                             </div>
                                         </div>
