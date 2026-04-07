@@ -53,11 +53,13 @@ function LinkRow({ label, href, isActive = false, onClick = null, item = null })
         try {
             const categoryId = item?.categoryId ?? item?.CategoryId ?? item?.id ?? null;
             const regionId = item?.regionId ?? item?.RegionId ?? null;
+            const countrySlug = item?.countrySlug ?? item?.country ?? null;
 
-            if (categoryId || regionId) {
+            if (categoryId || regionId || countrySlug) {
                 const payload = JSON.stringify({
                     categoryId,
                     regionId,
+                    countrySlug,
                     href
                 });
                 sessionStorage.setItem('listingCategoryContext', payload);
