@@ -76,7 +76,7 @@ export default async function CityBrandDetails({ params }) {
 
             if (pageNumber === 1) {
                 totalCount = pageResponse?.totalCount || 0;
-                
+
                 // Extract cityId from API response
                 const apiCityId = pageResponse?.cityId;
                 if (apiCityId !== null && apiCityId !== undefined) {
@@ -138,38 +138,16 @@ export default async function CityBrandDetails({ params }) {
                                 </li>
                             )}
 
-                            <li className="breadcrumb-item small-para-14-px active" aria-current="page">
-                                {formattedBrand} {cityName}
+                            <li className="breadcrumb-item small-para-14-px active text-capitalize">
+                                <Link href={`/${toSlug(cityName)}/${toSlug(brandName)}`} className="text-decoration-none">
+                                    {formattedBrand} {cityName}
+                                </Link>
                             </li>
                         </ol>
                     </nav>
                 </div>
             </div>
-            {/* <div className="breadcrumb-section">
-                <div className="container">
-                    <div className="d-flex align-items-center small">
-                        <Link href="/brands" className="text-dark text-decoration-none">
-                            All Brands
-                        </Link>
-                        <span className="mx-2 text-muted">&bull;</span>
-                        <Link href={`/brand/${brandName}`} className="text-dark text-decoration-none text-capitalize">
-                            {formattedBrand}
-                        </Link>
-                        {countrySlug && (
-                            <>
-                                <span className="mx-2 text-muted">&bull;</span>
-                                <Link href={`/${countrySlug}/${brandName}`} className="text-dark text-decoration-none text-capitalize">
-                                    {formattedBrand} {countrySlug}
-                                </Link>
-                            </>
-                        )}
-                        <span className="mx-2 text-muted">&bull;</span>
-                        <span className="text-primary text-capitalize">
-                            {formattedBrand} {cityName}
-                        </span>
-                    </div>
-                </div>
-            </div> */}
+            
 
             <section className="container py-2">
                 <h3 className="mb-4 text-capitalize">

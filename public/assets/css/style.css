@@ -2885,7 +2885,7 @@ a.text-sky-blue:hover {
 }
 
 .small-para-14-px a {
-    color: #0077C0;
+    color: #0077c0;
     text-decoration: none !important;
 }
 
@@ -2901,5 +2901,8 @@ a.text-sky-blue:hover {
     color: #f0831e !important;
 }
 .breadcrumb-item.active {
-    color: #0077C0; /* muted like ref */
+    color: #0077c0; /* muted like ref */
+}
+.breadcrumb-item.active a {
+    color: #0077c0;
 }

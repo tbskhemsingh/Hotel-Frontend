@@ -132,7 +132,6 @@ export default async function RegionDetails({ params, regionId }) {
             if (!nextHotels.length) break;
 
             if (pageNumber === 1) {
-                // Extract regionId from API response
                 if (pageResponse?.regionId) {
                     resolvedRegionId = pageResponse.regionId;
                 }
@@ -225,28 +224,15 @@ export default async function RegionDetails({ params, regionId }) {
                                 </Link>
                             </li>
 
-                            <li className="breadcrumb-item small-para-14-px active" aria-current="page">
-                                {regionName}
+                            <li className="breadcrumb-item small-para-14-px active text-capitalize">
+                                <Link href={`/${countrySlug}/${regionSlug}`} className="text-decoration-none">
+                                    {regionName}
+                                </Link>
                             </li>
                         </ol>
                     </nav>
                 </div>
             </div>
-            {/* <div className="py-2">
-                <div className="container">
-                    <div className="d-flex align-items-center small">
-                        <Link href="/destinations" className="text-dark text-decoration-none">
-                            All Countries
-                        </Link>
-                        <span className="mx-2 text-muted">&bull;</span>
-                        <Link href={`/${countrySlug}`} className="text-dark text-decoration-none">
-                            {countryName}
-                        </Link>
-                        <span className="mx-2 text-muted">&bull;</span>
-                        <span className="text-primary">{regionName}</span>
-                    </div>
-                </div>
-            </div> */}
 
             <section className="container py-2">
                 <div className="row g-4 align-items-start">

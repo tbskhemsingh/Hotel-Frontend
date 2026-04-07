@@ -92,7 +92,11 @@ export default async function CountryBrandDetails({ params }) {
 
         if (!countryId) {
             const countrySlugInfo = await resolveSlug(`/${countrySlug}`);
-            countryId = getFirstDefined(countrySlugInfo?.data?.countryId, countrySlugInfo?.data?.countryId, countrySlugInfo?.data?.entityId);
+            countryId = getFirstDefined(
+                countrySlugInfo?.data?.countryId,
+                countrySlugInfo?.data?.countryId,
+                countrySlugInfo?.data?.entityId
+            );
         }
 
         for (let pageNumber = 1; pageNumber <= currentPage; pageNumber++) {
@@ -162,8 +166,10 @@ export default async function CountryBrandDetails({ params }) {
                                 </Link>
                             </li>
 
-                            <li className="breadcrumb-item small-para-14-px active" aria-current="page">
-                                {displayCountryName}
+                            <li className="breadcrumb-item small-para-14-px active text-capitalize">
+                                <Link href={`/${countrySlug}/${brandName}`} className="text-decoration-none">
+                                    {displayCountryName}
+                                </Link>
                             </li>
                         </ol>
                     </nav>

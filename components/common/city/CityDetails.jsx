@@ -75,7 +75,7 @@ export default async function CityDetails({ params }) {
                 if (pageNumber === 1) {
                     totalCount = pageResponse?.totalCount || nextHotels.length;
                     content = nextHotels[0]?.content || '';
-                    
+
                     // Extract IDs from API response (not from first hotel)
                     const apiCityId = pageResponse?.cityId;
                     if (apiCityId !== null && apiCityId !== undefined) {
@@ -150,8 +150,10 @@ export default async function CityDetails({ params }) {
                                 </li>
                             )}
 
-                            <li className="breadcrumb-item small-para-14-px active" aria-current="page">
-                                {cityName}
+                            <li className="breadcrumb-item small-para-14-px active">
+                                <Link href={`/${citySlugPath}`} className="text-decoration-none">
+                                    {cityName}
+                                </Link>
                             </li>
                         </ol>
                     </nav>
@@ -162,7 +164,7 @@ export default async function CityDetails({ params }) {
                 {/* <h2 className="mb-3">Hotel Accommodation in {cityName}</h2> */}
 
                 <div className="row g-4 align-items-start">
-                        <div className="col-lg-3 d-none d-lg-block order-lg-1">
+                    <div className="col-lg-3 d-none d-lg-block order-lg-1">
                         <div className="position-sticky" style={{ top: '16px' }}>
                             <ListingSidebar title="Filters" sections={sidebarSections} />
                         </div>
