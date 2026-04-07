@@ -39,6 +39,10 @@ function getCityPageCookieName(citySlug = '') {
     return `city_page_${toSlug(citySlug).replace(/[^a-z0-9_-]/g, '_')}`;
 }
 
+function getCityPageIntentCookieName(citySlug = '') {
+    return `city_page_intent_${toSlug(citySlug).replace(/[^a-z0-9_-]/g, '_')}`;
+}
+
 function parsePageNumber(value) {
     const page = Number(value);
     return Number.isInteger(page) && page > 0 ? page : 1;
@@ -52,7 +56,9 @@ export default async function CityDetails({ params }) {
     const cityName = formatCityName(citySlug);
     const cookieStore = await cookies();
     const pageCookieName = getCityPageCookieName(citySlug);
-    const currentPage = parsePageNumber(cookieStore.get(pageCookieName)?.value);
+    const pageIntentCookieName = getCityPageIntentCookieName(citySlug);
+    const hasPaginationIntent = Boolean(cookieStore.get(pageIntentCookieName)?.value);
+    const currentPage = hasPaginationIntent ? parsePageNumber(cookieStore.get(pageCookieName)?.value) : 1;
 
     let hotels = [];
     let totalCount = 0;
@@ -173,6 +179,7 @@ export default async function CityDetails({ params }) {
                             currentPage={currentPage}
                             pageSize={PAGE_SIZE}
                             pageCookieName={pageCookieName}
+                            pageIntentCookieName={pageIntentCookieName}
                             citySlug={citySlug}
                             citySlugPath={citySlugPath}
                             content={content}
