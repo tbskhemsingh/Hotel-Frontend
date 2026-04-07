@@ -100,6 +100,21 @@ export default async function CityBrandDetails({ params }) {
     return (
         <>
             <CountryHeroSection />
+            <section className="mobile-actions d-lg-none">
+                <div className="container px-0">
+                    <div className="mobile-actions__bottom">
+                        <button type="button" className="mobile-actions__link">
+                            Sort
+                        </button>
+                        <button type="button" className="mobile-actions__link">
+                            Filter
+                        </button>
+                        <button type="button" className="mobile-actions__link">
+                            Map
+                        </button>
+                    </div>
+                </div>
+            </section>
             <div className="breadcrumb-section">
                 <div className="container">
                     <div className="d-flex align-items-center small">
