@@ -179,6 +179,9 @@ export default async function RegionDetails({ params, regionId }) {
             if (regionId !== null && regionId !== undefined && regionId !== '') {
                 query.set('regionId', String(regionId));
             }
+            if (countrySlug) {
+                query.set('country', String(countrySlug));
+            }
 
             const baseHref = `/${encodeURIComponent(normalizedRegionSlug)}/${encodeURIComponent(categorySlug)}`;
             const href = query.toString() ? `${baseHref}?${query.toString()}` : baseHref;
