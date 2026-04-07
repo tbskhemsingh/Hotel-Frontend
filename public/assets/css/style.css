@@ -2389,23 +2389,6 @@ a.text-sky-blue:hover {
     }
 }
 
-.custom-tabs .nav-link {
-    border: none;
-    color: #000 !important;
-    font-weight: 500;
-    padding: 12px 18px;
-}
-
-.custom-tabs .nav-link:hover {
-    color: #0071c2;
-}
-
-.custom-tabs .nav-link.active {
-    color: #0071c2;
-    border-bottom: 3px solid #0071c2;
-    background: transparent;
-}
-
 .write-review-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(250px, 0.9fr);
@@ -2911,5 +2894,125 @@ a.text-sky-blue:hover {
     overflow: hidden;
 }
 .breadcrumb-wrapper {
-    padding-right: 20px; 
+    padding-right: 20px;
+}
+/* HOTEL DETAIL MOBILE */
+@media (max-width: 767.98px) {
+    .hotel-detail-header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .hotel-detail-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0b1f3a;
+    }
+
+    .hotel-detail-address {
+        font-size: 12px;
+        color: #111;
+        line-height: 1.4;
+    }
+
+    .hotel-detail-review {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .hotel-detail-review > div:first-child {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .hotel-detail-price-btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .hotel-detail-section {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+    .hotel-detail-description {
+        font-size: 13px;
+        line-height: 1.5;
+        color: #4b596d;
+        .hotel-detail-location {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hotel-detail-map {
+            font-size: 12px;
+            color: #0077c0;
+        }
+    }
+}
+@media (max-width: 767.98px) {
+    #hotelCarousel {
+        height: 220px !important;
+    }
+
+    #hotelCarousel img {
+        border-radius: 12px !important;
+        object-fit: cover;
+    }
+
+    .hotel-detail-side-images {
+        display: none !important;
+    }
+}
+@media (max-width: 767.98px) {
+    .hotel-detail-price-btn a {
+        width: 100%;
+        text-align: center;
+        border-radius: 6px !important;
+        min-height: 46px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+}
+.custom-tabs .nav-link {
+    border: none;
+    color: #000 !important;
+    font-weight: 500;
+    padding: 12px 18px;
+}
+
+.custom-tabs .nav-link:hover {
+    color: #0071c2;
+}
+
+.custom-tabs .nav-link.active {
+    color: #0071c2;
+    border-bottom: 3px solid #0071c2;
+    background: transparent;
+}
+
+@media (max-width: 767.98px) {
+    .custom-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+    }
+
+    .custom-tabs .nav-item {
+        flex: 0 0 auto;
+    }
+
+    .custom-tabs .nav-link {
+        padding: 10px 14px;
+        font-size: 14px !important;
+    }
 }

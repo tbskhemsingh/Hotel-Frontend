@@ -309,7 +309,8 @@ export default function HotelDetails({ initialData }) {
 
                 {/* Image Gallery Skeleton */}
                 <div className="row g-2 mb-3">
-                    <div className="col-md-8">
+                    <div className="col-12 col-md-8">
+                        {' '}
                         <div className="skeleton-image rounded-4" style={{ height: '400px', width: '100%' }}></div>
                     </div>
                     <div className="col-md-4">
@@ -433,12 +434,11 @@ export default function HotelDetails({ initialData }) {
 
             {/* Hotel Header Info - Above Images */}
             <section className="container py-3">
-                <div className="d-flex align-items-start flex-column flex-md-row mb-3">
+                <div className="d-flex align-items-start flex-column flex-md-row mb-3 hotel-detail-header">
+                    {' '}
                     <div className="me-auto">
                         <div className="d-flex align-items-center mb-2">
-                            <h1 className="fw-bold mb-0 me-3" style={{ fontSize: '28px' }}>
-                                {hotelInfo.hotelName}
-                            </h1>
+                            <h4 className="fw-600 mb-0 me-3 hotel-detail-title"> {hotelInfo.hotelName}</h4>
                             <div className="text-warning d-flex align-items-center me-3">
                                 {[...Array(5)].map((_, i) => (
                                     <MdOutlineStarPurple500 key={i} size={18} color={i < hotelInfo.stars ? '#f0831e' : '#ddd'} />
@@ -456,18 +456,18 @@ export default function HotelDetails({ initialData }) {
                                 {hotelInfo.hotelType || 'Apartment Hotel'}
                             </span>
                         </div>
-                        <div className="d-flex align-items-center mb-2">
-                            {/* Address with Map Icon */}
-                            <p className="mb-1 me-3">{hotelInfo.address}</p>
+                        <div className="hotel-detail-location mb-2">
+                            <p className="mb-1 hotel-detail-address">{hotelInfo.address}</p>
 
-                            {/* View Map and Nearby Hotels */}
-                            <FaMapMarkerAlt className="mb-1 me-1" />
-                            <p className="mb-1 me-3">View on map and nearby hotels</p>
+                            <div className="d-flex align-items-center gap-1 hotel-detail-map">
+                                <FaMapMarkerAlt />
+                                <p className="mb-0">View on map and nearby hotels</p>
+                            </div>
                         </div>
                     </div>
-
                     {/* Review Score Box */}
-                    <div className="d-flex align-items-center mb-2">
+                    <div className="hotel-detail-review mb-2">
+                        {' '}
                         <div className="d-flex align-items-start mt-3 mt-md-0 me-3">
                             <div
                                 className="d-flex flex-column align-items-center justify-content-center p-2"
@@ -480,18 +480,6 @@ export default function HotelDetails({ initialData }) {
                                 <span className="text-muted small">{hotelInfo.reviewCount} verified reviews</span>
                             </div>
                         </div>
-
-                        {/* See Rooms & Prices Button */}
-                        <div className="mt-3 mt-md-0">
-                            <Link
-                                href={hotelInfo.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="theme-button-blue rounded d-block text-center py-2 px-4"
-                            >
-                                See Rooms & Prices
-                            </Link>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -500,7 +488,8 @@ export default function HotelDetails({ initialData }) {
             <section className="container py-3">
                 <div className="row g-2">
                     {/* Main image with carousel */}
-                    <div className="col-md-8">
+                    <div className="col-12 col-md-8">
+                        {' '}
                         <div
                             id="hotelCarousel"
                             className="carousel slide rounded-4 overflow-hidden"
@@ -548,7 +537,8 @@ export default function HotelDetails({ initialData }) {
                     </div>
 
                     {/* Side images grid */}
-                    <div className="col-md-4">
+                    <div className="col-md-4 hotel-detail-side-images">
+                        {' '}
                         <div className="row g-2 h-100">
                             {hotelPhotos.slice(0, 4).map((photo, idx) => (
                                 <div key={idx} className="col-6">
@@ -574,6 +564,16 @@ export default function HotelDetails({ initialData }) {
                             ))}
                         </div>
                     </div>
+                </div>
+                <div className="mt-3 mt-md-0 hotel-detail-price-btn">
+                    <Link
+                        href={hotelInfo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="theme-button-blue rounded d-flex align-items-center justify-content-center py-2 px-4"
+                    >
+                        See Rooms & Prices
+                    </Link>
                 </div>
 
                 {/* View all photos button */}
@@ -650,7 +650,11 @@ export default function HotelDetails({ initialData }) {
                             <div className="tab-content">
                                 {/* Description */}
                                 <div className="mb-4">
-                                    <p className="text-muted" style={{ lineHeight: '1.8', whiteSpace: 'pre-line' }}>
+                                    <p
+                                        className="text-muted hotel-detail-description"
+                                        style={{ lineHeight: '1.8', whiteSpace: 'pre-line' }}
+                                    >
+                                        {' '}
                                         {hotelInfo.description}
                                     </p>
                                 </div>
