@@ -42,9 +42,6 @@ function getCityPageCookieName(citySlug = '') {
     return `city_page_${toSlug(citySlug).replace(/[^a-z0-9_-]/g, '_')}`;
 }
 
-function getCityPageIntentCookieName(citySlug = '') {
-    return `city_page_intent_${toSlug(citySlug).replace(/[^a-z0-9_-]/g, '_')}`;
-}
 
 function parsePageNumber(value) {
     const page = Number(value);
@@ -191,7 +188,6 @@ export default async function CityDetails({ params }) {
                             pageIntentCookieName={pageIntentCookieName}
                             citySlug={citySlug}
                             citySlugPath={citySlugPath}
-                            pageIntentCookieName={pageIntentCookieName}
                             content={content}
                         />
                     </div>

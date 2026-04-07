@@ -2337,6 +2337,7 @@ a.text-sky-blue:hover {
         min-height: 46px;
         font-size: 15px;
         font-weight: 600;
+        width: 100%;
     }
     .collection-hotel-cta-col .hotel-availability-button i {
         display: none;

@@ -345,7 +345,7 @@ export default function CityHotelList({
                                                 {/* <div className="d-flex flex-wrap align-items-center mb-2 mb-md-0 collection-hotel-title-row"> */}
                                                 <Link
                                                     href={`${hotel.urlName}`}
-                                                    className="property-grid-title font-size-16 font-size-md-18 my-auto me-2 me-md-3"
+                                                    className="property-grid-title font-size-16 font-size-md-18 my-auto me-2 me-md-3 hotel-name-link"
                                                     // className="property-grid-title font-size-16 font-size-md-18 my-auto me-2 me-md-3 hotel-name-link collection-hotel-title"
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
@@ -502,21 +502,19 @@ export default function CityHotelList({
                                                 );
                                             })()}
                                         </div>
-
-                                        <div className="row collection-hotel-cta-row">
-                                            <div className="col-12 col-md-4 col-lg-3 ms-auto collection-hotel-cta-col">
-                                                <Link
-                                                    className="theme-button-blue rounded-4 w-100 d-inline-flex align-items-center justify-content-center gap-2 p-2 hotel-availability-button"
-                                                    href={`${hotel.url}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <span>See Availability</span>
-                                                    <i className="fa-solid fa-arrow-right ms-2"></i>
-                                                </Link>
-                                            </div>
+                                        <div className="d-flex justify-content-end mt-3 collection-hotel-cta-row collection-hotel-cta-col">
+                                            <Link
+                                                className="theme-button-blue rounded-4 d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 hotel-availability-button"
+                                                href={`${hotel.url}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <span>See Availability</span>
+                                                <i className="fa-solid fa-arrow-right ms-2"></i>
+                                            </Link>
                                         </div>
+                                        
                                     </div>
                                 </div>
                             </div>
