@@ -382,7 +382,10 @@ export default function CountryBrandHotelList({
                                                     </div>
 
                                                     <div className="d-flex align-items-center collection-hotel-review-row">
-                                                        <div className="rating-box d-flex me-2 collection-hotel-rating-box">
+                                                        <div
+                                                            className="rating-box d-flex me-2 collection-hotel-rating-box"
+                                                            style={{ borderRadius: '10px 10px 10px 0px' }}
+                                                        >
                                                             <span className="m-auto">
                                                                 {hotel.reviewScore === 0 ? 'N/A' : hotel.reviewScore}
                                                             </span>
@@ -439,17 +442,20 @@ export default function CountryBrandHotelList({
                                                     )}
                                                 </div>
 
-                                                <p
-                                                    className="small-para-14-px mb-2 hotel-address-link collection-hotel-address"
-                                                    style={{ cursor: 'pointer' }}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        openMap(hotel.latitude, hotel.longitude);
-                                                    }}
-                                                >
-                                                    <FaMapMarkerAlt className="me-1 hotel-address-icon" />
-                                                    {hotel.hotelAddress || hotel.address || 'Address not available'}
-                                                </p>
+                                            
+                                                {(hotel.hotelAddress || hotel.address) && (
+                                                    <p
+                                                        className="small-para-14-px mb-2 hotel-address-link collection-hotel-address"
+                                                        style={{ cursor: 'pointer' }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            openMap(hotel.latitude, hotel.longitude);
+                                                        }}
+                                                    >
+                                                        <FaMapMarkerAlt className="me-1 hotel-address-icon" />
+                                                        {hotel.hotelAddress || hotel.address}
+                                                    </p>
+                                                )}
 
                                                 {hotel.distanceFromAirport && (
                                                     <p className="small-para-14-px text-black mb-3">

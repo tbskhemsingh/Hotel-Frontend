@@ -196,7 +196,16 @@ export default function HotelDetails({ initialData }) {
 
     // Default image path
     const defaultImage = '/image/property-img.webp';
-    const modalPhotos = [hotelInfo?.mainPhoto || defaultImage, ...hotelPhotos.map((p) => p.photo)].filter(Boolean);
+    const isValidPhotoUrl = (url) => {
+        if (typeof url !== 'string') return false;
+        const normalized = url.trim().toLowerCase();
+        return normalized !== '' && normalized !== 'null' && normalized !== 'undefined';
+    };
+    const validHotelPhotos = hotelPhotos.filter((photo) => isValidPhotoUrl(photo?.photo));
+    const mainPhoto = isValidPhotoUrl(hotelInfo?.mainPhoto) ? hotelInfo.mainPhoto : defaultImage;
+    const allPhotos = [mainPhoto, ...validHotelPhotos.map((photo) => photo.photo)];
+    const carouselPhotos = validHotelPhotos.slice(0, 4);
+    const sidePreviewPhotos = validHotelPhotos.slice(0, 2);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -206,14 +215,14 @@ export default function HotelDetails({ initialData }) {
     }, []);
 
     useEffect(() => {
-        if (!showPhotoModal || modalPhotos.length <= 1) return undefined;
+        if (!showPhotoModal || allPhotos.length <= 1) return undefined;
 
         const autoSlide = setInterval(() => {
-            setCurrentPhotoIndex((prev) => (prev + 1) % modalPhotos.length);
+            setCurrentPhotoIndex((prev) => (prev + 1) % allPhotos.length);
         }, 3000);
 
         return () => clearInterval(autoSlide);
-    }, [showPhotoModal, modalPhotos.length]);
+    }, [showPhotoModal, allPhotos.length]);
 
     // Generate cache-busted URL
     const getImageUrl = (photo) => {
@@ -388,12 +397,6 @@ export default function HotelDetails({ initialData }) {
 
     const hotelFacilities = hotelData.hotelFacilities || [];
     const hotelReviews = hotelData.hotelReviews || [];
-
-    // Get main photo
-    const mainPhoto = hotelInfo.mainPhoto || defaultImage;
-
-    // All photos for modal (only include photos that are not null/undefined)
-    const allPhotos = [mainPhoto, ...hotelPhotos.map((p) => p.photo)].filter(Boolean);
     function toSlug(value = '') {
         return value.toLowerCase().replace(/\s+/g, '-');
     }
@@ -542,7 +545,7 @@ export default function HotelDetails({ initialData }) {
                         >
                             <div className="carousel-indicators">
                                 <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="0" className="active"></button>
-                                {hotelPhotos.slice(0, 4).map((_, idx) => (
+                                {carouselPhotos.map((_, idx) => (
                                     <button key={idx} type="button" data-bs-target="#hotelCarousel" data-bs-slide-to={idx + 1}></button>
                                 ))}
                             </div>
@@ -556,7 +559,7 @@ export default function HotelDetails({ initialData }) {
                                         onError={handleImageError}
                                     />
                                 </div>
-                                {hotelPhotos.slice(0, 4).map((photo, idx) => (
+                                {carouselPhotos.map((photo, idx) => (
                                     <div key={idx} className="carousel-item h-100">
                                         <img
                                             src={getImageUrl(photo.photo)}
@@ -585,7 +588,7 @@ export default function HotelDetails({ initialData }) {
                     <div className="col-lg-4 d-none d-lg-block hotel-detail-side-images">
                         {' '}
                         <div className="row g-2 h-100">
-                            {hotelPhotos.slice(0, 2).map((photo, idx) => (
+                            {sidePreviewPhotos.map((photo, idx) => (
                                 <div key={idx} className="col-12 mb-2">
                                     <div
                                         className="rounded-4 overflow-hidden position-relative photo-hover-container"
@@ -600,7 +603,7 @@ export default function HotelDetails({ initialData }) {
                                         />
 
                                         {/* ✅ ONLY ON LAST IMAGE */}
-                                        {idx === 1 && (
+                                        {allPhotos.length > 1 && idx === sidePreviewPhotos.length - 1 && (
                                             <div className="side-view-photos-btn">
                                                 <button
                                                     onClick={(e) => {

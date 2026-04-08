@@ -395,7 +395,7 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                                         <div className="d-flex flex-wrap align-items-center mb-2 mb-md-0 collection-hotel-title-row">
                                                             <Link
                                                                 href={`${hotel.urlName}`}
-                                                                className="font-size-16 font-size-md-18 my-auto me-2 me-md-3 hotel-name-link collection-hotel-title "
+                                                                className="font-size-16 font-size-md-18 my-auto me-2 me-md-3 hotel-name-link collection-hotel-title"
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
                                                                 {hotel.hotelName}
@@ -412,7 +412,10 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                                         </div>
 
                                                         <div className="d-flex align-items-center collection-hotel-review-row">
-                                                            <div className="rating-box d-flex me-2 collection-hotel-rating-box">
+                                                            <div
+                                                                className="rating-box d-flex me-2 collection-hotel-rating-box"
+                                                                style={{ borderRadius: '10px 10px 10px 0px' }}
+                                                            >
                                                                 <span className="m-auto">
                                                                     {hotel.reviewScore === 0 ? 'N/A' : hotel.reviewScore}
                                                                 </span>
@@ -472,7 +475,7 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                                         )}
                                                     </div>
 
-                                                    <p
+                                                    {/* <p
                                                         className="small-para-14-px mb-2 hotel-address-link collection-hotel-address"
                                                         style={{ cursor: 'pointer' }}
                                                         onClick={(e) => {
@@ -481,9 +484,21 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                                         }}
                                                     >
                                                         <FaMapMarkerAlt className="me-1 hotel-address-icon" />
-                                                        {hotel.hotelAddress || hotel.address || 'Address not available'}
-                                                    </p>
-
+                                                        {hotel.hotelAddress || hotel.address}
+                                                    </p> */}
+                                                    {(hotel.hotelAddress || hotel.address) && (
+                                                        <p
+                                                            className="small-para-14-px mb-2 hotel-address-link collection-hotel-address"
+                                                            style={{ cursor: 'pointer' }}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openMap(hotel.latitude, hotel.longitude);
+                                                            }}
+                                                        >
+                                                            <FaMapMarkerAlt className="me-1 hotel-address-icon" />
+                                                            {hotel.hotelAddress || hotel.address}
+                                                        </p>
+                                                    )}
                                                     {hotel.distanceFromAirport && (
                                                         <p className="small-para-14-px text-black mb-3">
                                                             <i className="fa-solid fa-plane-up me-1"></i>
