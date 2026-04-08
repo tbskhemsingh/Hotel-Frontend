@@ -464,7 +464,7 @@ function CountryHeroSection({}) {
                                 </div>
                             </div>
                             <div
-                                className={`col-6 col-md-3 col-lg-2 hero-search-col children-search-col country-children-search-col country-children-select-col${
+                                className={`col-3 col-md-3 col-lg-2 hero-search-col children-search-col country-children-search-col country-children-select-col${
                                     childrenCount === 0 ? ' country-children-select-col--empty' : ''
                                 }`}
                             >
@@ -482,7 +482,7 @@ function CountryHeroSection({}) {
                                 </select>
                             </div>
 
-                            <div className="col-3 col-md-2 col-lg-1 mb-0 mb-lg-0 hero-search-col filter-search-col country-filter-search-col">
+                            <div className="col-3 col-md-3 col-lg-2 mb-0 mb-lg-0 hero-search-col filter-search-col country-filter-search-col">
                                 <label className="custom-form-label text-white form-label-maring-bottom">Filter</label>
                                 <div
                                     className={`filter-button d-flex${showFilters ? ' active' : ''}`}
@@ -517,7 +517,7 @@ function CountryHeroSection({}) {
                                 </div>
                             )}
 
-                            <div className="col-9 col-md-5 col-lg-3 mb-0 mb-lg-0 hero-search-col submit-search-col country-submit-search-col">
+                            <div className="col-6 col-md-5 col-lg-3 mb-0 mb-lg-0 hero-search-col submit-search-col country-submit-search-col">
                                 <button
                                     type="submit"
                                     className="theme-button-orange rounded rounded rounded rounded rounded w-100 font-weight-bold-submit-search country-submit-search-button"
