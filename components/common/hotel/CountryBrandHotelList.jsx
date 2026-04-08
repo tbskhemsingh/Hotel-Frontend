@@ -442,7 +442,6 @@ export default function CountryBrandHotelList({
                                                     )}
                                                 </div>
 
-                                            
                                                 {(hotel.hotelAddress || hotel.address) && (
                                                     <p
                                                         className="small-para-14-px mb-2 hotel-address-link collection-hotel-address"
@@ -532,7 +531,7 @@ export default function CountryBrandHotelList({
 
                                                 <div className="d-flex justify-content-end mt-3 collection-hotel-cta-row collection-hotel-cta-col">
                                                     <Link
-                                                        className="theme-button-blue rounded-4 d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 hotel-availability-button"
+                                                        className="theme-button-blue rounded-4 d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 hotel-availability-button button-new"
                                                         href={`${hotel.url}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"

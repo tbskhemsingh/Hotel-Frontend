@@ -13,7 +13,7 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
     const content = collection?.collectionContent;
 
     function getBookingId(hotel) {
-        return hotel?.bookingId ??  hotel?.BookingId ?? null;
+        return hotel?.bookingId ?? hotel?.BookingId ?? null;
     }
 
     function getHotelIdentity(hotel) {
@@ -607,7 +607,7 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                                     <div className="row collection-hotel-cta-row">
                                                         <div className="col-12 col-md-4 col-lg-3 ms-auto collection-hotel-cta-col">
                                                             <Link
-                                                                className="theme-button-blue rounded-4 w-100 d-inline-flex align-items-center justify-content-center gap-2 p-2 hotel-availability-button"
+                                                                className="theme-button-blue rounded-4 d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 hotel-availability-button button-new"
                                                                 href={`${hotel.url}`}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
