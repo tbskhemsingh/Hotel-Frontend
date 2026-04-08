@@ -114,8 +114,7 @@ export default async function RegionDetails({ params, regionId }) {
     const cookieStore = await cookies();
     const regionPageCookieName = getRegionPageCookieName(countrySlug, regionSlug);
     const pageIntentCookieName = getRegionPageIntentCookieName(countrySlug, regionSlug);
-    const hasPaginationIntent = Boolean(cookieStore.get(pageIntentCookieName)?.value);
-    const currentPage = hasPaginationIntent ? parsePageNumber(cookieStore.get(regionPageCookieName)?.value) : 1;
+    const currentPage = parsePageNumber(cookieStore.get(regionPageCookieName)?.value);
 
     const requestedCount = currentPage * REGION_PAGE_SIZE;
 
@@ -252,6 +251,7 @@ export default async function RegionDetails({ params, regionId }) {
                             totalCount={totalCount}
                             currentPage={currentPage}
                             pageSize={REGION_PAGE_SIZE}
+                            citySlug={urlName}
                             pageCookieName={regionPageCookieName}
                             pageIntentCookieName={pageIntentCookieName}
                             regionHotelsSource={fallbackRegionHotels}

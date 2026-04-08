@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import { addMonths, format } from 'date-fns';
 import 'react-datepicker/dist/react-datepicker.css';
-import { LuCalendarRange } from 'react-icons/lu';
 import '../../public/assets/css/DatePicker.css';
 import { globalSearchapi } from '@/lib/api/public/globalsearchapi';
 import { useRouter } from 'next/navigation';
@@ -120,10 +119,31 @@ export default function HeroSection() {
         setShowDatePicker(true);
     };
 
-    const handleChildrenChange = (e) => {
-        const count = Number(e.target.value);
+    const updateChildrenCount = (nextCount) => {
+        const count = Math.max(0, Math.min(10, nextCount));
         setChildrenCount(count);
-        setChildrenAges(Array(count).fill(7));
+        setChildrenAges((prev) => {
+            if (count === 0) return [];
+            if (prev.length === count) return prev;
+            if (prev.length < count) {
+                return prev.concat(Array(count - prev.length).fill(7));
+            }
+            return prev.slice(0, count);
+        });
+    };
+
+    const handleChildrenChange = (e) => {
+        updateChildrenCount(Number(e.target.value));
+    };
+
+    const updateTempRooms = (nextCount) => {
+        const count = Math.max(1, Math.min(10, nextCount));
+        setTempRooms(count);
+    };
+
+    const updateTempGuests = (nextCount) => {
+        const count = Math.max(1, Math.min(10, nextCount));
+        setTempGuests(count);
     };
 
     const handleAgeChange = (index, value) => {
@@ -379,7 +399,6 @@ export default function HeroSection() {
                                                     }}
                                                     style={{ cursor: 'pointer' }}
                                                 >
-                                                    {/* <LuCalendarRange /> */}
                                                 </span>
                                             </div>
                                         </div>
@@ -531,6 +550,48 @@ export default function HeroSection() {
                                                 <option value="5">5+</option>
                                             </select>
                                         </div>
+                                        <div className="mb-3">
+                                            <label className="form-label custom-form-label">Children</label>
+                                            <div className="number number-in-dec">
+                                                <button
+                                                    type="button"
+                                                    className="minus"
+                                                    onClick={() => updateChildrenCount(childrenCount - 1)}
+                                                >
+                                                    -
+                                                </button>
+                                                <input type="text" className="para" value={childrenCount} readOnly />
+                                                <button
+                                                    type="button"
+                                                    className="plus"
+                                                    onClick={() => updateChildrenCount(childrenCount + 1)}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {childrenCount > 0 && (
+                                            <div className="mb-3">
+                                                <label className="form-label custom-form-label">Children Age</label>
+                                                <div className="row g-2">
+                                                    {childrenAges.map((age, index) => (
+                                                        <div key={index} className="col-4">
+                                                            <select
+                                                                className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
+                                                                value={age}
+                                                                onChange={(e) => handleAgeChange(index, e.target.value)}
+                                                            >
+                                                                {[...Array(18)].map((_, i) => (
+                                                                    <option key={i} value={i}>
+                                                                        {i}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         <button
                                             type="button"
                                             className="theme-button-orange rounded rounded rounded rounded w-100"
@@ -547,43 +608,69 @@ export default function HeroSection() {
                                     <div className="py-3 px-4 d-flex d-md-none flex-column ">
                                         <div className="number number-in-dec mx-auto mb-4">
                                             <p className="custom-form-label mb-2">Rooms</p>
-                                            <span className="minus" id="minusroom">
+                                            <button type="button" className="minus" onClick={() => updateTempRooms(tempRooms - 1)}>
                                                 -
-                                            </span>
-                                            <input type="text" className="para" defaultValue="1" />
-                                            <span className="plus" id="plusroom">
+                                            </button>
+                                            <input type="text" className="para" value={tempRooms} readOnly />
+                                            <button type="button" className="plus" onClick={() => updateTempRooms(tempRooms + 1)}>
                                                 +
-                                            </span>
+                                            </button>
                                         </div>
                                         <div className="number number-in-dec mx-auto mb-4">
                                             <p className="custom-form-label mb-2">Guests</p>
-                                            <span className="minus" id="minusguest">
+                                            <button type="button" className="minus" onClick={() => updateTempGuests(tempGuests - 1)}>
                                                 -
-                                            </span>
-                                            <input type="text" className="para" defaultValue="1" />
-                                            <span className="plus" id="plusguest">
+                                            </button>
+                                            <input type="text" className="para" value={tempGuests} readOnly />
+                                            <button type="button" className="plus" onClick={() => updateTempGuests(tempGuests + 1)}>
                                                 +
-                                            </span>
+                                            </button>
                                         </div>
+                                        <div className="number number-in-dec mx-auto mb-4">
+                                            <p className="custom-form-label mb-2">Children</p>
+                                            <button
+                                                type="button"
+                                                className="minus"
+                                                onClick={() => updateChildrenCount(childrenCount - 1)}
+                                            >
+                                                -
+                                            </button>
+                                            <input type="text" className="para" value={childrenCount} readOnly />
+                                            <button
+                                                type="button"
+                                                className="plus"
+                                                onClick={() => updateChildrenCount(childrenCount + 1)}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                        {childrenCount > 0 && (
+                                            <div className="mb-4">
+                                                <p className="custom-form-label mb-2 text-center">Children Age</p>
+                                                <div className="row g-2">
+                                                    {childrenAges.map((age, index) => (
+                                                        <div key={index} className="col-4">
+                                                            <select
+                                                                className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
+                                                                value={age}
+                                                                onChange={(e) => handleAgeChange(index, e.target.value)}
+                                                            >
+                                                                {[...Array(18)].map((_, i) => (
+                                                                    <option key={i} value={i}>
+                                                                        {i}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         <button type="button" className="theme-button-orange rounded rounded rounded rounded w-100">
                                             Apply
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="col-4 col-md-2 col-lg-1 mb-3 mb-lg-0 hero-search-col children-search-col">
-                                <label className="form-label custom-form-label text-white">Children</label>
-                                <select
-                                    className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
-                                    value={childrenCount}
-                                    onChange={handleChildrenChange}
-                                >
-                                    {[...Array(11)].map((_, i) => (
-                                        <option key={i} value={i}>
-                                            {i}
-                                        </option>
-                                    ))}
-                                </select>
                             </div>
                             <div className="col-3 col-md-1 col-lg-1 mb-0 mb-lg-0 hero-search-col filter-search-col">
                                 <label className="custom-form-label text-white form-label-maring-bottom">Filter</label>
@@ -601,29 +688,6 @@ export default function HeroSection() {
                                     See Deals Now
                                 </button>
                             </div>
-                            {childrenCount > 0 && (
-                                <div className="col-12 mb-3 mb-lg-0">
-                                    <label className="form-label custom-form-label text-white">Age</label>
-
-                                    <div className="row g-2">
-                                        {childrenAges.map((age, index) => (
-                                            <div key={index} className="col-4 col-md-2 col-lg-1">
-                                                <select
-                                                    className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
-                                                    value={age}
-                                                    onChange={(e) => handleAgeChange(index, e.target.value)}
-                                                >
-                                                    {[...Array(18)].map((_, i) => (
-                                                        <option key={i} value={i}>
-                                                            {i}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                         {showFilters && (
                             <div className="advaance-form-field-wrap mt-4 p-3 p-md-5" id="filterSection" ref={filterRef}>

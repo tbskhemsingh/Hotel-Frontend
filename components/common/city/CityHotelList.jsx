@@ -27,6 +27,7 @@ export default function CityHotelList({
     const [currency, setCurrency] = useState(null);
     const [timestamp, setTimestamp] = useState('');
     const loadMoreTriggerRef = useRef(null);
+    const loadRequestInFlightRef = useRef(false);
 
     const defaultImage = '/image/property-img.webp';
     const getFirstDefined = (...values) => {
@@ -34,6 +35,21 @@ export default function CityHotelList({
             if (value !== undefined && value !== null && value !== '') return value;
         }
         return null;
+    };
+
+    const getBookingId = (hotel) => hotel?.bookingId ?? null;
+
+    const dedupeHotels = (list) => {
+        const seen = new Set();
+        const result = [];
+        list.forEach((hotel) => {
+            const id = getBookingId(hotel) ?? hotel?.hotelId ?? hotel?.hotelID ?? hotel?.id;
+            const key = id !== undefined && id !== null && id !== '' ? String(id) : null;
+            if (key && seen.has(key)) return;
+            if (key) seen.add(key);
+            result.push(hotel);
+        });
+        return result;
     };
 
     useEffect(() => {
@@ -54,12 +70,15 @@ export default function CityHotelList({
     }, []);
 
     useEffect(() => {
-        setAllHotels(dedupeHotels(hotels || []));
-        setPage(currentPage || 1);
-        setHasMore((hotels?.length || 0) < (totalCount || 0) || (hotels?.length || 0) === pageSize);
+        const timer = window.setTimeout(() => {
+            setAllHotels(dedupeHotels(hotels || []));
+            setPage(currentPage || 1);
+            setHasMore((hotels?.length || 0) < (totalCount || 0) || (hotels?.length || 0) === pageSize);
+        }, 0);
+
+        return () => window.clearTimeout(timer);
     }, [hotels, totalCount, currentPage, pageSize]);
 
-    const getBookingId = (hotel) => hotel?.bookingId ?? null;
     const getReviewScore = (hotel) =>
         hotel?.reviewScore ?? hotel?.ReviewScore ?? hotel?.review_score ?? hotel?.ratingScore ?? hotel?.rating ?? hotel?.score ?? null;
     const getReviewCount = (hotel) =>
@@ -138,19 +157,6 @@ export default function CityHotelList({
         return rawKey ? `${rawKey}-${index}` : `hotel-${index}`;
     };
 
-    const dedupeHotels = (list) => {
-        const seen = new Set();
-        const result = [];
-        list.forEach((hotel) => {
-            const id = getBookingId(hotel) ?? hotel?.hotelId ?? hotel?.hotelID ?? hotel?.id;
-            const key = id !== undefined && id !== null && id !== '' ? String(id) : null;
-            if (key && seen.has(key)) return;
-            if (key) seen.add(key);
-            result.push(hotel);
-        });
-        return result;
-    };
-
     const getRatingText = (score) => {
         const value = Number(score);
 
@@ -184,14 +190,16 @@ export default function CityHotelList({
     };
 
     const loadMoreHotels = () => {
-        if (!hasMore) return;
+        if (loadRequestInFlightRef.current || !hasMore) return;
 
+        loadRequestInFlightRef.current = true;
         setLoading(true);
 
         const nextPage = page + 1;
 
         if (pageIntentCookieName) {
             if (!pageCookieName) {
+                loadRequestInFlightRef.current = false;
                 setLoading(false);
                 return;
             }
@@ -205,6 +213,7 @@ export default function CityHotelList({
         if (!citySlug) {
             setHasMore(false);
             setLoading(false);
+            loadRequestInFlightRef.current = false;
             return;
         }
 
@@ -228,6 +237,7 @@ export default function CityHotelList({
                 console.error('Error loading more hotels:', error);
             })
             .finally(() => {
+                loadRequestInFlightRef.current = false;
                 setLoading(false);
             });
     };

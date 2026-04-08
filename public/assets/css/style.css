@@ -287,6 +287,16 @@ a {
         line-height: 1;
         padding: 8px 20px;
     }
+    .main-hero-search-row .submit-search-col {
+        padding-left: 0;
+        justify-content: flex-start;
+    }
+    .main-hero-search-row .submit-search-col .font-weight-bold-submit-search {
+        width: 100%;
+        min-width: 0;
+        min-height: 52px;
+        white-space: nowrap;
+    }
     .country-hero {
         padding: 0 !important;
     }
@@ -460,6 +470,35 @@ a {
     .main-hero-search-row {
         column-gap: 10px;
         row-gap: 10px;
+    }
+
+    .main-hero-search-row {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        align-items: end;
+    }
+    .main-hero-search-row .hotel-search-col {
+        grid-column: span 6;
+    }
+    .main-hero-search-row .date-search-col {
+        grid-column: span 6;
+    }
+    .main-hero-search-row .rooms-search-col {
+        grid-column: span 6;
+    }
+    .main-hero-search-row .filter-search-col {
+        grid-column: span 1;
+    }
+    .main-hero-search-row .submit-search-col {
+        grid-column: span 5;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+    }
+    .main-hero-search-row .submit-search-col .font-weight-bold-submit-search {
+        width: 100%;
+        min-height: 56px;
+        white-space: nowrap;
     }
 }
 @media (min-width: 992px) and (max-width: 1199.98px) {
@@ -1789,6 +1828,16 @@ a.text-sky-blue:hover {
     vertical-align: middle;
     text-align: center;
     color: #fff;
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+.minus:focus,
+.plus:focus,
+.minus:active,
+.plus:active {
+    outline: none;
+    box-shadow: none;
 }
 .minus.alt,
 .plus.alt {
@@ -2799,6 +2848,57 @@ a.text-sky-blue:hover {
     .mobile-actions__link {
         min-height: 54px;
         font-size: 16px;
+    }
+
+    .main-hero-search-row .filter-search-col {
+        flex: 0 0 72px;
+        max-width: 72px;
+    }
+    .main-hero-search-row .submit-search-col {
+        flex: 1 1 auto;
+        max-width: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+    }
+    .main-hero-search-row .submit-search-col .font-weight-bold-submit-search {
+        width: 100%;
+        min-height: 52px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 360px) {
+    .main-hero-search-row {
+        row-gap: 10px;
+    }
+    .main-hero-search-row .filter-search-col {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+    }
+    .main-hero-search-row .filter-search-col .filter-button {
+        width: 52px;
+        height: 52px;
+    }
+    .main-hero-search-row .submit-search-col {
+        flex: 0 0 100%;
+        max-width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .main-hero-search-row .submit-search-col .font-weight-bold-submit-search {
+        width: 100%;
+        min-height: 52px;
+        padding: 10px 12px;
+        font-size: 16px;
+        text-align: center;
+        margin-top: 4px;
     }
 }
 
