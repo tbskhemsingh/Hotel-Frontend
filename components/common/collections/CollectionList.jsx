@@ -68,7 +68,6 @@ export default function CollectionList({ initialCollections, initialCountries })
                 setLoading(true);
 
                 const { geoNodeType, sourceId } = getFinalGeoSelection();
-
                 const res = await getCollectionList({
                     status: statusFilter || null,
                     geoNodeType,

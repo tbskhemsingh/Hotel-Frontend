@@ -1,11 +1,31 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import CountryHeroSection from '@/components/sections/CountryHeroSection';
-import { getCityBrandHotels } from '@/lib/api/public/brandapi';
+import { getHotelList } from '@/lib/api/public/hotelapi';
+import ListingSidebar from '@/components/common/sidebar/ListingSidebar';
+import { getSidebarData } from '@/lib/api/sidebarapi';
+import { buildSidebarSections } from '@/lib/mappers/sidebarMapper';
 import CityHotelList from '../city/CityHotelList';
+import MobileFilterDrawer from '@/components/ui/MobileFilterDrawer';
 
 function capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+}
+
+function safeDecodeURIComponent(value = '') {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return String(value || '');
+    }
+}
+
+function formatCityName(slug = '') {
+    return String(slug || '')
+        .split('-')
+        .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ''))
+        .filter(Boolean)
+        .join(' ');
 }
 
 function formatBrand(text) {
@@ -45,34 +65,42 @@ export default async function CityBrandDetails({ params }) {
     }
 
     const citySlug = slug[0];
-    const brandSlug = decodeURIComponent(slug[1]);
-    const cityName = capitalize(citySlug);
-    const brandName = brandSlug;
-    const formattedBrand = formatBrand(brandName);
-    const fullSlug = `/${cityName}/${brandName}`;
+    const brandSegment = String(slug[1] ?? '');
+    const decodedBrandSegment = safeDecodeURIComponent(brandSegment);
+    const brandName = decodedBrandSegment;
+    const cityName = formatCityName(citySlug) || capitalize(citySlug);
+    const formattedBrand = formatBrand(decodedBrandSegment);
+    const fullSlug = `${citySlug}/${brandSegment}`;
 
     const cookieStore = await cookies();
-    const pageCookieName = getCityBrandPageCookieName(citySlug, brandName);
-    const pageIntentCookieName = getCityBrandPageIntentCookieName(citySlug, brandName);
-    const hasPaginationIntent = Boolean(cookieStore.get(pageIntentCookieName)?.value);
-    const currentPage = hasPaginationIntent ? parsePageNumber(cookieStore.get(pageCookieName)?.value) : 1;
+    const pageCookieName = getCityBrandPageCookieName(citySlug, brandSegment);
+    const pageIntentCookieName = getCityBrandPageIntentCookieName(citySlug, brandSegment);
+    const currentPage = parsePageNumber(cookieStore.get(pageCookieName)?.value);
 
     let hotels = [];
     let totalCount = 0;
+    let sidebarData = {};
 
     try {
         for (let pageNumber = 1; pageNumber <= currentPage; pageNumber++) {
-            const pageHotels = await getCityBrandHotels(fullSlug, pageNumber, PAGE_SIZE);
-            const nextHotels = pageHotels || [];
+            const pageResponse = await getHotelList(fullSlug, pageNumber, PAGE_SIZE);
+            const nextHotels = pageResponse?.hotels || [];
 
             if (!nextHotels.length) {
                 break;
             }
 
+            if (pageNumber === 1) {
+                totalCount = pageResponse?.totalCount || 0;
+
+                const apiCityId = pageResponse?.cityId;
+                if (apiCityId !== null && apiCityId !== undefined) {
+                    sidebarData = await getSidebarData({ cityId: apiCityId });
+                }
+            }
+
             hotels = hotels.concat(nextHotels);
         }
-
-        totalCount = hotels[0]?.totalCount || hotels.length;
     } catch (err) {
         console.error('Error initializing city brand details:', err);
     }
@@ -80,56 +108,103 @@ export default async function CityBrandDetails({ params }) {
     const firstHotel = hotels?.[0] || {};
     const countryName = firstHotel.countryName || firstHotel.country || '';
     const countrySlug = firstHotel.countryUrlName || toSlug(countryName);
+    const sidebarSections = buildSidebarSections(sidebarData, {
+        contextName: cityName,
+        propertyTypeHeader: cityName ? `${cityName} Apartments, Suites and Family Hotels` : 'Property Type'
+    });
 
     return (
         <>
             <CountryHeroSection />
-            <div className="breadcrumb-section">
-                <div className="container">
-                    <div className="d-flex align-items-center small">
-                        <Link href="/brands" className="text-dark text-decoration-none">
-                            All Brands
-                        </Link>
-                        <span className="mx-2 text-muted">&bull;</span>
-                        <Link href={`/brand/${brandName}`} className="text-dark text-decoration-none text-capitalize">
-                            {formattedBrand}
-                        </Link>
-                        {countrySlug && (
-                            <>
-                                <span className="mx-2 text-muted">&bull;</span>
-                                <Link href={`/${countrySlug}/${brandName}`} className="text-dark text-decoration-none text-capitalize">
-                                    {formattedBrand} {countrySlug}
-                                </Link>
-                            </>
-                        )}
-                        <span className="mx-2 text-muted">&bull;</span>
-                        <span className="text-primary text-capitalize">
-                            {formattedBrand} {cityName}
-                        </span>
+            <section className="mobile-actions d-lg-none">
+                <div className="container px-0">
+                    <div className="mobile-actions__bottom">
+                        <button type="button" className="mobile-actions__link">
+                            Sort
+                        </button>
+                        <MobileFilterDrawer sidebarSections={sidebarSections} />
+                        <button type="button" className="mobile-actions__link">
+                            Map
+                        </button>
                     </div>
                 </div>
-            </div>
+            </section>
+            <div className="py-2 py-lg-3">
+                <div className="container">
+                    <nav aria-label="breadcrumb" className="mb-0">
+                        <ol className="breadcrumb mb-0">
+                            <li className="breadcrumb-item small-para-14-px">
+                                <Link href="/brands" className="text-dark text-decoration-none">
+                                    All Brands
+                                </Link>
+                            </li>
 
-            <section className="container py-5">
+                            <li className="breadcrumb-item small-para-14-px">
+                                <Link
+                                    href={`/brand/${encodeURIComponent(brandSegment)}`}
+                                    className="text-dark text-decoration-none text-capitalize"
+                                >
+                                    {formattedBrand}
+                                </Link>
+                            </li>
+
+                            {countrySlug && (
+                                <li className="breadcrumb-item small-para-14-px">
+                                    <Link
+                                        href={`/${encodeURIComponent(countrySlug)}/${encodeURIComponent(brandSegment)}`}
+                                        className="text-dark text-decoration-none text-capitalize"
+                                    >
+                                        {formattedBrand} {countrySlug}
+                                    </Link>
+                                </li>
+                            )}
+
+                            <li className="breadcrumb-item small-para-14-px active text-capitalize">
+                                <Link
+                                    href={`/${encodeURIComponent(citySlug)}/${encodeURIComponent(brandSegment)}`}
+                                    className="text-decoration-none"
+                                >
+                                    {formattedBrand} {cityName}
+                                </Link>
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            
+
+            <section className="container py-2">
                 <h3 className="mb-4 text-capitalize">
                     {formattedBrand} {cityName}
                 </h3>
-
-                {hotels.length > 0 ? (
-                    <CityHotelList
-                        hotels={hotels}
-                        totalCount={totalCount}
-                        currentPage={currentPage}
-                        pageSize={PAGE_SIZE}
-                        citySlugPath={`${toSlug(cityName)}/${toSlug(brandName)}`}
-                        pageCookieName={pageCookieName}
-                        pageIntentCookieName={pageIntentCookieName}
-                    />
-                ) : (
-                    <div className="text-center py-5">
-                        <p className="text-muted">No hotels available for this brand in {cityName}.</p>
+                <div className="row g-0 g-lg-4 align-items-start">
+                    <div className="col-lg-3 d-none d-lg-block order-lg-1">
+                        {' '}
+                        <div className="position-sticky" style={{ top: '16px' }}>
+                            <ListingSidebar title="Filters" sections={sidebarSections} />
+                        </div>
                     </div>
-                )}
+
+                    {/* <div className="col-lg-9 order-1 order-lg-2"> */}
+                    <div className="col-12 col-lg-9 order-1 order-lg-2">
+                        {hotels.length > 0 ? (
+                            <CityHotelList
+                                hotels={hotels}
+                                totalCount={totalCount}
+                                currentPage={currentPage}
+                                pageSize={PAGE_SIZE}
+                                citySlug={fullSlug}
+                                citySlugPath={fullSlug}
+                                pageCookieName={pageCookieName}
+                                pageIntentCookieName={pageIntentCookieName}
+                            />
+                        ) : (
+                            <div className="text-center py-5">
+                                <p className="text-muted">No hotels available for this brand in {cityName}.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </section>
         </>
     );

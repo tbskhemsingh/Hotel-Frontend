@@ -12,6 +12,8 @@ import * as yup from 'yup';
 export default function HotelDetails({ initialData }) {
     const hotelData = initialData;
     const loading = !initialData;
+    const hotelInfo = hotelData?.hotel;
+    const hotelPhotos = hotelData?.hotelPhotos || [];
     const [error, setError] = useState(null);
     const [showPhotoModal, setShowPhotoModal] = useState(false);
     const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -114,9 +116,7 @@ export default function HotelDetails({ initialData }) {
     const formatLastUpdated = (value) => {
         if (!value) return 'Unknown';
         const date = new Date(value);
-        return Number.isNaN(date.getTime())
-            ? 'Unknown'
-            : date.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+        return Number.isNaN(date.getTime()) ? 'Unknown' : date.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
     };
 
     const handlePolicyReload = () => {
@@ -126,7 +126,7 @@ export default function HotelDetails({ initialData }) {
     };
 
     const createReviewPayload = () => {
-        const hotelId = hotelInfo?.hotelId ?? hotelInfo?.id ?? hotelInfo?.HotelID ?? hotelInfo?.hotelID ?? null;
+        const hotelId = hotelInfo?.hotelId ?? hotelInfo?.id ?? null;
         const hotelAddress = hotelInfo?.address || hotelInfo?.hotelAddress || '';
         const thumbUrl = hotelInfo?.mainPhoto || hotelInfo?.thumbnail || hotelInfo?.thumbUrl || defaultImage;
         const hotelName = hotelInfo?.hotelName || hotelInfo?.name || '';
@@ -196,6 +196,7 @@ export default function HotelDetails({ initialData }) {
 
     // Default image path
     const defaultImage = '/image/property-img.webp';
+    const modalPhotos = [hotelInfo?.mainPhoto || defaultImage, ...hotelPhotos.map((p) => p.photo)].filter(Boolean);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -203,6 +204,16 @@ export default function HotelDetails({ initialData }) {
         }, 0);
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        if (!showPhotoModal || modalPhotos.length <= 1) return undefined;
+
+        const autoSlide = setInterval(() => {
+            setCurrentPhotoIndex((prev) => (prev + 1) % modalPhotos.length);
+        }, 3000);
+
+        return () => clearInterval(autoSlide);
+    }, [showPhotoModal, modalPhotos.length]);
 
     // Generate cache-busted URL
     const getImageUrl = (photo) => {
@@ -246,16 +257,13 @@ export default function HotelDetails({ initialData }) {
                     aria-label={`Rate ${value} star${value > 1 ? 's' : ''}`}
                     aria-pressed={rating === value}
                 >
-                    <MdOutlineStarPurple500
-                        size={28}
-                        color={value <= rating ? '#f0831e' : '#d8dde7'}
-                    />
+                    <MdOutlineStarPurple500 size={28} color={value <= rating ? '#f0831e' : '#d8dde7'} />
                 </button>
             ))}
         </div>
     );
 
-    if (error || !hotelData?.hotel) {
+    if (error || !hotelInfo) {
         return (
             <>
                 <CountryHeroSection />
@@ -288,7 +296,11 @@ export default function HotelDetails({ initialData }) {
                             <div className="skeleton-title me-3" style={{ width: '250px', height: '40px' }}></div>
                             <div className="d-flex gap-1">
                                 {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="skeleton-star" style={{ width: '18px', height: '18px', borderRadius: '4px' }}></div>
+                                    <div
+                                        key={i}
+                                        className="skeleton-star"
+                                        style={{ width: '18px', height: '18px', borderRadius: '4px' }}
+                                    ></div>
                                 ))}
                             </div>
                         </div>
@@ -310,21 +322,26 @@ export default function HotelDetails({ initialData }) {
 
                 {/* Image Gallery Skeleton */}
                 <div className="row g-2 mb-3">
-                    <div className="col-md-8">
-                        <div className="skeleton-image rounded-4" style={{ height: '400px', width: '100%' }}></div>
+                    <div className="col-12 col-lg-8">
+                        {' '}
+                        <div className="skeleton-image rounded-4" style={{ width: '100%' }}></div>
                     </div>
                     <div className="col-md-4">
                         <div className="row g-2 h-100">
-                            <div className="col-6">
+                            {/* <div className="col-6"> */}
+                            <div className="col-12">
                                 <div className="skeleton-image rounded-4" style={{ height: '190px', width: '100%' }}></div>
                             </div>
-                            <div className="col-6">
+                            {/* <div className="col-6"> */}
+                            <div className="col-12">
                                 <div className="skeleton-image rounded-4" style={{ height: '190px', width: '100%' }}></div>
                             </div>
-                            <div className="col-6">
+                            {/* <div className="col-6"> */}
+                            <div className="col-12">
                                 <div className="skeleton-image rounded-4" style={{ height: '190px', width: '100%' }}></div>
                             </div>
-                            <div className="col-6">
+                            {/* <div className="col-6"> */}
+                            <div className="col-12">
                                 <div className="skeleton-image rounded-4" style={{ height: '190px', width: '100%' }}></div>
                             </div>
                         </div>
@@ -355,7 +372,7 @@ export default function HotelDetails({ initialData }) {
         );
     }
 
-    if (error || !hotelData?.hotel) {
+    if (error || !hotelInfo) {
         return (
             <>
                 <CountryHeroSection />
@@ -369,8 +386,6 @@ export default function HotelDetails({ initialData }) {
         );
     }
 
-    const hotelInfo = hotelData.hotel;
-    const hotelPhotos = hotelData.hotelPhotos || [];
     const hotelFacilities = hotelData.hotelFacilities || [];
     const hotelReviews = hotelData.hotelReviews || [];
 
@@ -378,49 +393,77 @@ export default function HotelDetails({ initialData }) {
     const mainPhoto = hotelInfo.mainPhoto || defaultImage;
 
     // All photos for modal (only include photos that are not null/undefined)
-    const allPhotos = [mainPhoto, ...hotelPhotos.map(p => p.photo)].filter(Boolean);
+    const allPhotos = [mainPhoto, ...hotelPhotos.map((p) => p.photo)].filter(Boolean);
+    function toSlug(value = '') {
+        return value.toLowerCase().replace(/\s+/g, '-');
+    }
+    const openMap = (lat, lng) => {
+        if (!lat || !lng) return;
+        window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
+    };
 
     return (
         <>
             <CountryHeroSection />
 
             {/* Breadcrumb */}
-            <div className="py-2">
+
+            <div className="py-3">
                 <div className="container">
-                    <div className="d-flex align-items-center small">
-                        <Link href="/destinations" className="text-dark text-decoration-none">All Countries</Link>
-                        <span className="mx-2 text-muted">•</span>
-                        <Link href={`/${hotelInfo.countryUrl?.toLowerCase()}`} className="text-dark text-decoration-none">{hotelInfo.country}</Link>
-                        <span className="mx-2 text-muted">•</span>
-                        {hotelInfo.region && (
-                            <>
-                                <Link href={`${hotelInfo.regionUrl?.toLowerCase()}`} className="text-dark text-decoration-none">{hotelInfo.region}</Link>
-                                <span className="mx-2 text-muted">•</span>
-                            </>
-                        )}
-                        <Link href={`${hotelInfo.cityUrl?.toLowerCase()}`} className="text-dark text-decoration-none">{hotelInfo.city}</Link>
-                        <span className="mx-2 text-muted">•</span>
-                        <span className="fw-semibold text-decoration-none text-primary">{hotelInfo.hotelName}</span>
-                    </div>
+                    <nav aria-label="breadcrumb" className="mb-0">
+                        <ol className="breadcrumb mb-0">
+                            <li className="breadcrumb-item small-para-14-px">
+                                <Link href="/destinations" className="text-dark text-decoration-none">
+                                    All Countries
+                                </Link>
+                            </li>
+
+                            <li className="breadcrumb-item small-para-14-px">
+                                <Link href={`/${hotelInfo.countryUrl?.toLowerCase()}`} className="text-dark text-decoration-none">
+                                    {hotelInfo.country}
+                                </Link>
+                            </li>
+
+                            {hotelInfo.region && (
+                                <li className="breadcrumb-item small-para-14-px">
+                                    <Link href={`${hotelInfo.regionUrl?.toLowerCase()}`} className="text-dark text-decoration-none">
+                                        {hotelInfo.region}
+                                    </Link>
+                                </li>
+                            )}
+
+                            <li className="breadcrumb-item small-para-14-px">
+                                <Link href={`${hotelInfo.cityUrl?.toLowerCase()}`} className="text-dark text-decoration-none">
+                                    {hotelInfo.city}
+                                </Link>
+                            </li>
+
+                            {/* ✅ Clickable active */}
+                            <li className="breadcrumb-item small-para-14-px active">
+                                <Link
+                                    href={`${hotelInfo.cityUrl?.toLowerCase()}/${toSlug(hotelInfo.hotelName)}`}
+                                    className="text-decoration-none"
+                                >
+                                    {hotelInfo.hotelName}
+                                </Link>
+                            </li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
 
             {/* Hotel Header Info - Above Images */}
             <section className="container py-3">
-                <div className="d-flex align-items-start flex-column flex-md-row mb-3">
+                <div className="d-flex align-items-start flex-column flex-md-row mb-3 hotel-detail-header">
+                    {' '}
                     <div className="me-auto">
                         <div className="d-flex align-items-center mb-2">
-                            <h1 className="fw-bold mb-0 me-3" style={{ fontSize: '28px' }}>{hotelInfo.hotelName}</h1>
+                            <h4 className="fw-600 mb-0 me-3 fs-5 fw-bold hotel-detail-title"> {hotelInfo.hotelName}</h4>
                             <div className="text-warning d-flex align-items-center me-3">
                                 {[...Array(5)].map((_, i) => (
-                                    <MdOutlineStarPurple500
-                                        key={i}
-                                        size={18}
-                                        color={i < hotelInfo.stars ? "#f0831e" : "#ddd"}
-                                    />
+                                    <MdOutlineStarPurple500 key={i} size={18} color={i < hotelInfo.stars ? '#f0831e' : '#ddd'} />
                                 ))}
                             </div>
-                            {/* Hotel Type Tag */}
                             <span
                                 className="text-white px-3 py-1 mb-2 d-inline-block"
                                 style={{
@@ -432,46 +475,55 @@ export default function HotelDetails({ initialData }) {
                                 {hotelInfo.hotelType || 'Apartment Hotel'}
                             </span>
                         </div>
-                        <div className="d-flex align-items-center mb-2">
-                            {/* Address with Map Icon */}
-                            <p className="mb-1 me-3">
+                        <div className="hotel-detail-location mb-2">
+                            <p
+                                className="hotel-address-text mb-1"
+                                style={{ cursor: 'pointer' }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openMap(hotelInfo.latitude, hotelInfo.longitude);
+                                }}
+                            >
                                 {hotelInfo.address}
                             </p>
 
-                            {/* View Map and Nearby Hotels */}
-                            <FaMapMarkerAlt className="mb-1 me-1" />
-                            <p className="mb-1 me-3">
-                                View on map and nearby hotels
-                            </p>
+                            <div className="d-flex align-items-center gap-1 hotel-detail-map">
+                                <FaMapMarkerAlt />
+                                <p className="hotel-map-link mb-0">View on map and nearby hotels</p>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Review Score Box */}
-                    <div className="d-flex align-items-center mb-2">
+                    <div className="hotel-detail-review mb-2">
+                        {' '}
                         <div className="d-flex align-items-start mt-3 mt-md-0 me-3">
                             <div
                                 className="d-flex flex-column align-items-center justify-content-center p-2"
-                                style={{ background: '#003580', borderRadius: '12px 12px 12px 0', minWidth: '70px' }}
+                                style={{
+                                    background: '#003580',
+                                    borderRadius: '10px 10px 10px 0px',
+                                    width: '40px',
+                                    height: '40px',
+                                    fontSize: '12px'
+                                }}
                             >
-                                <span className="text-white fw-bold fs-4">{hotelInfo.reviewScore}</span>
+                                <span className="text-white  fs-9">{hotelInfo.reviewScore}</span>
                             </div>
                             <div className="ms-2 d-flex flex-column justify-content-center">
-                                <span className="fw-bold">{hotelInfo.reviewScore}</span>
+                                <span className="fw-bold">{hotelInfo.ratingText}</span>
                                 <span className="text-muted small">{hotelInfo.reviewCount} verified reviews</span>
                             </div>
                         </div>
-
-                        {/* See Rooms & Prices Button */}
-                        <div className="mt-3 mt-md-0">
-                            <Link
-                                href={hotelInfo.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="theme-button-blue rounded d-block text-center py-2 px-4"
-                            >
-                                See Rooms & Prices
-                            </Link>
-                        </div>
+                    </div>
+                    <div className="d-none d-md-flex align-items-center ms-auto hotel-detail-price-btn-desktop ">
+                        <Link
+                            href={hotelInfo.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="theme-button-blue d-flex align-items-center justify-content-center px-3"
+                            style={{ height: '48px', borderRadius: '6px' }}
+                        >
+                            See Rooms & Prices
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -480,22 +532,18 @@ export default function HotelDetails({ initialData }) {
             <section className="container py-3">
                 <div className="row g-2">
                     {/* Main image with carousel */}
-                    <div className="col-md-8">
+                    <div className="col-12 col-lg-8">
+                        {' '}
                         <div
                             id="hotelCarousel"
-                            className="carousel slide rounded-4 overflow-hidden"
+                            className="carousel slide rounded-4 overflow-hidden position-relative"
                             data-bs-ride="carousel"
                             style={{ height: '400px' }}
                         >
                             <div className="carousel-indicators">
                                 <button type="button" data-bs-target="#hotelCarousel" data-bs-slide-to="0" className="active"></button>
                                 {hotelPhotos.slice(0, 4).map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        type="button"
-                                        data-bs-target="#hotelCarousel"
-                                        data-bs-slide-to={idx + 1}
-                                    ></button>
+                                    <button key={idx} type="button" data-bs-target="#hotelCarousel" data-bs-slide-to={idx + 1}></button>
                                 ))}
                             </div>
                             <div className="carousel-inner h-100">
@@ -520,6 +568,7 @@ export default function HotelDetails({ initialData }) {
                                     </div>
                                 ))}
                             </div>
+
                             {/* Carousel controls */}
                             <button className="carousel-control-prev" type="button" data-bs-target="#hotelCarousel" data-bs-slide="prev">
                                 <span className="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
@@ -533,36 +582,57 @@ export default function HotelDetails({ initialData }) {
                     </div>
 
                     {/* Side images grid */}
-                    <div className="col-md-4">
+                    <div className="col-lg-4 d-none d-lg-block hotel-detail-side-images">
+                        {' '}
                         <div className="row g-2 h-100">
-                            {hotelPhotos.slice(0, 4).map((photo, idx) => (
-                                <div key={idx} className="col-6">
+                            {hotelPhotos.slice(0, 2).map((photo, idx) => (
+                                <div key={idx} className="col-12 mb-2">
                                     <div
                                         className="rounded-4 overflow-hidden position-relative photo-hover-container"
-                                        style={{ height: '100%', minHeight: '190px', cursor: 'pointer' }}
+                                        style={{ height: '190px', cursor: 'pointer' }}
                                         onClick={() => openPhotoModal(idx + 1)}
                                     >
                                         <img
                                             src={getImageUrl(photo.photo)}
                                             className="w-100 h-100"
                                             style={{ objectFit: 'cover' }}
-                                            alt={`${hotelInfo.hotelName} photo ${idx + 1}`}
-                                            onError={handleImageError}
+                                            alt="hotel"
                                         />
-                                        <div className="photo-hover-overlay d-flex align-items-center justify-content-center">
-                                            <span className="btn btn-light border rounded-pill px-3 py-1">
-                                                <FaCamera className="me-1" /> View
-                                            </span>
-                                        </div>
+
+                                        {/* ✅ ONLY ON LAST IMAGE */}
+                                        {idx === 1 && (
+                                            <div className="side-view-photos-btn">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openPhotoModal();
+                                                    }}
+                                                >
+                                                    View all photos ({allPhotos.length})
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </div>
+                <div className="mt-3 d-block d-md-none hotel-detail-price-btn">
+                    {' '}
+                    <Link
+                        href={hotelInfo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="theme-button-blue rounded d-flex align-items-center justify-content-center py-2 px-4"
+                    >
+                        See Rooms & Prices
+                    </Link>
+                </div>
 
                 {/* View all photos button */}
-                <div className="mt-2">
+                {/* <div className="mt-2 d-none d-lg-block">
+                    {' '}
                     <button
                         className="btn btn-light border rounded-pill px-4 py-2 shadow-sm view-photos-btn"
                         onClick={() => openPhotoModal()}
@@ -570,7 +640,7 @@ export default function HotelDetails({ initialData }) {
                         <FaCamera className="me-2" />
                         View all {allPhotos.length} photos
                     </button>
-                </div>
+                </div> */}
             </section>
 
             {/* Tabs Section */}
@@ -636,9 +706,10 @@ export default function HotelDetails({ initialData }) {
                                 {/* Description */}
                                 <div className="mb-4">
                                     <p
-                                        className="text-muted"
+                                        className="text-muted hotel-detail-description"
                                         style={{ lineHeight: '1.8', whiteSpace: 'pre-line' }}
                                     >
+                                        {' '}
                                         {hotelInfo.description}
                                     </p>
                                 </div>
@@ -653,9 +724,7 @@ export default function HotelDetails({ initialData }) {
                                             {hotelReviews.map((review, idx) => (
                                                 <div key={idx} className="col-12 mb-4">
                                                     <div className="border rounded-4 p-4 bg-white">
-
                                                         <div className="d-flex">
-
                                                             {/* Avatar */}
                                                             <div
                                                                 className="rounded-circle d-flex align-items-center justify-content-center me-3"
@@ -671,22 +740,17 @@ export default function HotelDetails({ initialData }) {
                                                                     flexShrink: 0
                                                                 }}
                                                             >
-                                                                {review.travellerName
-                                                                    ? review.travellerName.charAt(0).toUpperCase()
-                                                                    : 'S'}
+                                                                {review.travellerName ? review.travellerName.charAt(0).toUpperCase() : 'S'}
                                                             </div>
 
                                                             {/* Reviewer Info */}
-                                                            <div style={{ minWidth: "180px" }}>
-                                                                <p className="mb-1 fw-bold">{review.travellerName || "Guest"}</p>
-                                                                <p className="mb-0 text-muted small">
-                                                                    {review?.reviewType}
-                                                                </p>
+                                                            <div style={{ minWidth: '180px' }}>
+                                                                <p className="mb-1 fw-bold">{review.travellerName || 'Guest'}</p>
+                                                                <p className="mb-0 text-muted small">{review?.reviewType}</p>
                                                             </div>
 
                                                             {/* Review Content */}
                                                             <div className="flex-grow-1">
-
                                                                 {/* Stars */}
                                                                 {/* <div className="mb-1">
                                                                     {[...Array(5)].map((_, i) => (
@@ -699,14 +763,10 @@ export default function HotelDetails({ initialData }) {
                                                                 </div> */}
 
                                                                 {/* Review Title */}
-                                                                <h6 className="fw-bold mb-1">
-                                                                    {review?.reviewTitle}
-                                                                </h6>
+                                                                <h6 className="fw-bold mb-1">{review?.reviewTitle}</h6>
 
                                                                 {/* Review Text */}
-                                                                <p className="text-muted mb-0">
-                                                                    {review.positive || review.negative}
-                                                                </p>
+                                                                <p className="text-muted mb-0">{review.positive || review.negative}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -731,7 +791,10 @@ export default function HotelDetails({ initialData }) {
                                                 <div key={idx} className="col-12 mb-3">
                                                     <h6 className="fw-bold mb-2">{facilityGroup.facilityType}</h6>
                                                     <p className="text-muted mb-0">
-                                                        {facilityGroup.facilities.split('|').map((f, i) => f.trim()).join(', ')}
+                                                        {facilityGroup.facilities
+                                                            .split('|')
+                                                            .map((f, i) => f.trim())
+                                                            .join(', ')}
                                                     </p>
                                                 </div>
                                             ))}
@@ -744,7 +807,6 @@ export default function HotelDetails({ initialData }) {
                                         </div>
                                     )}
                                 </div>
-
                             </div>
                         )}
 
@@ -753,27 +815,37 @@ export default function HotelDetails({ initialData }) {
                                 <div className="mb-4">
                                     <div className="row g-2">
                                         <div className="row mb-4">
-                                            <span className="fw-bold" style={{ fontSize: '18px' }}>Check-in</span>
+                                            <span className="fw-bold" style={{ fontSize: '18px' }}>
+                                                Check-in
+                                            </span>
                                             <span className="text-muted">
                                                 From {hotelInfo.checkIn ? hotelInfo.checkIn.slice(0, 5) : '00:00'} to 23:59
                                             </span>
                                         </div>
                                         <div className="row mb-4">
-                                            <span className="fw-bold" style={{ fontSize: '18px' }}>Check-out</span>
+                                            <span className="fw-bold" style={{ fontSize: '18px' }}>
+                                                Check-out
+                                            </span>
                                             <span className="text-muted">
                                                 Until {hotelInfo.checkOut ? hotelInfo.checkOut.slice(0, 5) : '11:00'}
                                             </span>
                                         </div>
                                         <div className="row mb-4">
-                                            <span className="fw-bold" style={{ fontSize: '18px' }}>Cancellation & prepayment</span>
+                                            <span className="fw-bold" style={{ fontSize: '18px' }}>
+                                                Cancellation & prepayment
+                                            </span>
                                             <span className="text-muted">
-                                                {hotelInfo.cancellationPolicy || 'Cancellation and prepayment policies vary by room type. Please check your booking details before finalizing.'}
+                                                {hotelInfo.cancellationPolicy ||
+                                                    'Cancellation and prepayment policies vary by room type. Please check your booking details before finalizing.'}
                                             </span>
                                         </div>
                                         <div className="row mb-4">
-                                            <span className="fw-bold" style={{ fontSize: '18px' }}>Accepted credit cards</span>
+                                            <span className="fw-bold" style={{ fontSize: '18px' }}>
+                                                Accepted credit cards
+                                            </span>
                                             <span className="text-muted">
-                                                {hotelInfo.acceptedCreditCards || 'The hotel reserves the right to pre-authorise credit cards prior to arrival.'}
+                                                {hotelInfo.acceptedCreditCards ||
+                                                    'The hotel reserves the right to pre-authorise credit cards prior to arrival.'}
                                             </span>
                                             {/* <div className="d-flex align-items-center flex-wrap gap-3 mt-3">
                                                 <SiAmericanexpress size={36} color="#2e77bc" />
@@ -785,19 +857,21 @@ export default function HotelDetails({ initialData }) {
                                             </div> */}
                                         </div>
                                         <div className="row mb-4">
-                                            <span className="fw-bold" style={{ fontSize: '18px' }}>The fine print</span>
-                                            <span className="text-muted">
-                                                {hotelInfo.hotelPolicy || 'No special policies listed.'}
+                                            <span className="fw-bold" style={{ fontSize: '18px' }}>
+                                                The fine print
                                             </span>
+                                            <span className="text-muted">{hotelInfo.hotelPolicy || 'No special policies listed.'}</span>
                                         </div>
                                         <div className="d-flex justify-content-start align-items-center mb-2 gap-4">
-                                            <span className="text-muted small">Last updated: {formatLastUpdated(hotelInfo.lastUpdated)}</span>
+                                            <span className="text-muted small">
+                                                Last updated: {formatLastUpdated(hotelInfo.lastUpdated)}
+                                            </span>
                                             <button
                                                 type="button"
                                                 className="btn btn-link p-0 text-decoration-none"
                                                 style={{ color: '#0077c0' }}
-                                                onMouseOver={(e) => e.currentTarget.style.color = '#d97706'}
-                                                onMouseOut={(e) => e.currentTarget.style.color = '#0077c0'}
+                                                onMouseOver={(e) => (e.currentTarget.style.color = '#d97706')}
+                                                onMouseOut={(e) => (e.currentTarget.style.color = '#0077c0')}
                                                 onClick={handlePolicyReload}
                                             >
                                                 Reload
@@ -815,9 +889,15 @@ export default function HotelDetails({ initialData }) {
                                     Each day we&apos;ll check prices and send you an email for your selected dates at {hotelInfo.hotelName}.
                                 </p>
                                 <p className="text-muted mb-4">
-                                    If you don&apos;t have specific dates but would like to check prices for say next weekend or say next month we can check the price too.
+                                    If you don&apos;t have specific dates but would like to check prices for say next weekend or say next
+                                    month we can check the price too.
                                 </p>
-                                <form onSubmit={(e) => { e.preventDefault(); alert('Price watch setup!'); }}>
+                                <form
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        alert('Price watch setup!');
+                                    }}
+                                >
                                     <div className="row g-3 align-items-end">
                                         <div className="col-md-4">
                                             <span className="mb-2">Enter your name</span>
@@ -845,9 +925,25 @@ export default function HotelDetails({ initialData }) {
                                     </div>
                                 </form>
                                 <div className="mt-4">
-                                    <a href="#" className="small me-2" style={{ color: '#f0831e' }} onMouseOver={(e) => e.target.style.color = '#0077c0'} onMouseOut={(e) => e.target.style.color = '#f0831e'}>Privacy</a>
+                                    <a
+                                        href="#"
+                                        className="small me-2"
+                                        style={{ color: '#f0831e' }}
+                                        onMouseOver={(e) => (e.target.style.color = '#0077c0')}
+                                        onMouseOut={(e) => (e.target.style.color = '#f0831e')}
+                                    >
+                                        Privacy
+                                    </a>
                                     <span className="text-muted small">/</span>
-                                    <a href="#" className="small ms-2" style={{ color: '#f0831e' }} onMouseOver={(e) => e.target.style.color = '#0077c0'} onMouseOut={(e) => e.target.style.color = '#f0831e'}>Terms</a>
+                                    <a
+                                        href="#"
+                                        className="small ms-2"
+                                        style={{ color: '#f0831e' }}
+                                        onMouseOver={(e) => (e.target.style.color = '#0077c0')}
+                                        onMouseOut={(e) => (e.target.style.color = '#f0831e')}
+                                    >
+                                        Terms
+                                    </a>
                                 </div>
                             </div>
                         )}
@@ -863,7 +959,9 @@ export default function HotelDetails({ initialData }) {
                                                 {renderReviewStars(overallReviewRating, setOverallReviewRating, 'overall')}
                                             </div>
                                             <div className="write-review-field-row">
-                                                <label htmlFor="reviewFirstName" className="write-review-label">First Name</label>
+                                                <label htmlFor="reviewFirstName" className="write-review-label">
+                                                    First Name
+                                                </label>
                                                 <div className="write-review-field-input">
                                                     <input
                                                         id="reviewFirstName"
@@ -872,11 +970,15 @@ export default function HotelDetails({ initialData }) {
                                                         value={reviewForm.firstName}
                                                         onChange={(e) => handleReviewFieldChange('firstName', e.target.value)}
                                                     />
-                                                    {reviewErrors.firstName && <div className="invalid-feedback">{reviewErrors.firstName}</div>}
+                                                    {reviewErrors.firstName && (
+                                                        <div className="invalid-feedback">{reviewErrors.firstName}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="write-review-field-row">
-                                                <label htmlFor="reviewLastName" className="write-review-label">Last Name</label>
+                                                <label htmlFor="reviewLastName" className="write-review-label">
+                                                    Last Name
+                                                </label>
                                                 <div className="write-review-field-input">
                                                     <input
                                                         id="reviewLastName"
@@ -885,11 +987,15 @@ export default function HotelDetails({ initialData }) {
                                                         value={reviewForm.lastName}
                                                         onChange={(e) => handleReviewFieldChange('lastName', e.target.value)}
                                                     />
-                                                    {reviewErrors.lastName && <div className="invalid-feedback">{reviewErrors.lastName}</div>}
+                                                    {reviewErrors.lastName && (
+                                                        <div className="invalid-feedback">{reviewErrors.lastName}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="write-review-field-row">
-                                                <label htmlFor="reviewEmail" className="write-review-label">Email</label>
+                                                <label htmlFor="reviewEmail" className="write-review-label">
+                                                    Email
+                                                </label>
                                                 <div className="write-review-field-input">
                                                     <input
                                                         id="reviewEmail"
@@ -902,7 +1008,9 @@ export default function HotelDetails({ initialData }) {
                                                 </div>
                                             </div>
                                             <div className="write-review-field-row">
-                                                <label htmlFor="reviewTitle" className="write-review-label">Title of your review</label>
+                                                <label htmlFor="reviewTitle" className="write-review-label">
+                                                    Title of your review
+                                                </label>
                                                 <div className="write-review-field-input">
                                                     <input
                                                         id="reviewTitle"
@@ -911,11 +1019,15 @@ export default function HotelDetails({ initialData }) {
                                                         value={reviewForm.reviewTitle}
                                                         onChange={(e) => handleReviewFieldChange('reviewTitle', e.target.value)}
                                                     />
-                                                    {reviewErrors.reviewTitle && <div className="invalid-feedback">{reviewErrors.reviewTitle}</div>}
+                                                    {reviewErrors.reviewTitle && (
+                                                        <div className="invalid-feedback">{reviewErrors.reviewTitle}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="write-review-field-row write-review-field-row-textarea">
-                                                <label htmlFor="reviewText" className="write-review-label">Your review</label>
+                                                <label htmlFor="reviewText" className="write-review-label">
+                                                    Your review
+                                                </label>
                                                 <div className="write-review-field-input">
                                                     <textarea
                                                         id="reviewText"
@@ -924,11 +1036,15 @@ export default function HotelDetails({ initialData }) {
                                                         value={reviewForm.reviewText}
                                                         onChange={(e) => handleReviewFieldChange('reviewText', e.target.value)}
                                                     ></textarea>
-                                                    {reviewErrors.reviewText && <div className="invalid-feedback">{reviewErrors.reviewText}</div>}
+                                                    {reviewErrors.reviewText && (
+                                                        <div className="invalid-feedback">{reviewErrors.reviewText}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="write-review-field-row">
-                                                <label htmlFor="reviewTripType" className="write-review-label">What sort of trip was this?</label>
+                                                <label htmlFor="reviewTripType" className="write-review-label">
+                                                    What sort of trip was this?
+                                                </label>
                                                 <div className="write-review-field-input">
                                                     <select
                                                         id="reviewTripType"
@@ -943,11 +1059,17 @@ export default function HotelDetails({ initialData }) {
                                                         <option value="business">Business</option>
                                                         <option value="friends">Friends</option>
                                                     </select>
-                                                    {reviewErrors.tripType && <div className="invalid-feedback">{reviewErrors.tripType}</div>}
+                                                    {reviewErrors.tripType && (
+                                                        <div className="invalid-feedback">{reviewErrors.tripType}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="write-review-submit-wrap">
-                                                <button type="submit" className="theme-button-orange write-review-submit" disabled={isSubmitting}>
+                                                <button
+                                                    type="submit"
+                                                    className="theme-button-orange write-review-submit"
+                                                    disabled={isSubmitting}
+                                                >
                                                     {isSubmitting ? 'Submitting...' : 'Submit Review'}
                                                 </button>
                                             </div>
@@ -994,38 +1116,44 @@ export default function HotelDetails({ initialData }) {
             {showPhotoModal && (
                 <div className="photo-modal-overlay" onClick={closePhotoModal}>
                     <div className="photo-modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="photo-modal-header">
-                            <h3 className="photo-modal-title">{hotelInfo.hotelName}</h3>
-                            <span className="photo-modal-counter">{currentPhotoIndex + 1} of {allPhotos.length}</span>
-                            <button className="photo-modal-close" onClick={closePhotoModal}>
-                                <FaTimes />
-                            </button>
-                        </div>
+                     
                         <div className="photo-modal-body">
-                            <button className="photo-modal-nav photo-modal-prev" onClick={prevPhoto}>
-                                <FaChevronLeft />
-                            </button>
-                            <img
-                                src={allPhotos[currentPhotoIndex]}
-                                alt={`Photo ${currentPhotoIndex + 1}`}
-                                className="photo-modal-image"
-                                onError={handleImageError}
-                            />
-                            <button className="photo-modal-nav photo-modal-next" onClick={nextPhoto}>
-                                <FaChevronRight />
-                            </button>
-                        </div>
-                        <div className="photo-modal-footer">
-                            {allPhotos.map((photo, idx) => (
+                            <div className="photo-modal-image-stage">
                                 <img
-                                    key={idx}
-                                    src={photo}
-                                    alt={`Thumbnail ${idx + 1}`}
-                                    className={`photo-thumbnail ${currentPhotoIndex === idx ? 'active' : ''}`}
-                                    onClick={() => setCurrentPhotoIndex(idx)}
+                                    src={getImageUrl(allPhotos[currentPhotoIndex])}
+                                    alt={`Photo ${currentPhotoIndex + 1}`}
+                                    className="photo-modal-image"
                                     onError={handleImageError}
                                 />
-                            ))}
+                                <button className="photo-modal-nav photo-modal-prev" onClick={prevPhoto}>
+                                    <FaChevronLeft />
+                                </button>
+                                <button className="photo-modal-nav photo-modal-next" onClick={nextPhoto}>
+                                    <FaChevronRight />
+                                </button>
+                                <div className="photo-modal-indicators" aria-hidden="true">
+                                    {allPhotos.map((_, idx) => (
+                                        <span
+                                            key={idx}
+                                            className={`photo-modal-indicator ${currentPhotoIndex === idx ? 'active' : ''}`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="photo-modal-footer">
+                            <div className="photo-thumbnail-strip">
+                                {allPhotos.map((photo, idx) => (
+                                    <img
+                                        key={idx}
+                                        src={getImageUrl(photo)}
+                                        alt={`Thumbnail ${idx + 1}`}
+                                        className={`photo-thumbnail ${currentPhotoIndex === idx ? 'active' : ''}`}
+                                        onClick={() => setCurrentPhotoIndex(idx)}
+                                        onError={handleImageError}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

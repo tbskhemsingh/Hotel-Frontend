@@ -1,57 +1,135 @@
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { resolveSlug } from '@/lib/api/public/countryapi';
+import { resolveCategoryFromRegionSlug, resolveCategoryFromSlug } from '@/lib/api/public/cityCategoryapi';
 import CountryDetails from '@/components/common/country/CountryDetails';
 import RegionDetails from '@/components/common/region/RegionDetails';
 import CollectionDetailsWrapper from '@/components/common/collections/CollectionDetailsWrapper';
 import CountryBrandDetails from '@/components/common/brand/CountryBrandDetails';
 import CityDetails from '@/components/common/city/CityDetails';
+import CityCategoryRouteApp from '@/components/common/city/CityCategoryRouteApp';
 import HotelDetailsWrapper from '@/components/common/hotel/HotelDetailsWrapper';
 import CityBrandDetails from '@/components/common/brand/CityBrandDetails';
 
-export default async function DynamicPage({ params }) {
+function normalizeEntityType(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z]/g, '');
+}
+
+export default async function DynamicPage({ params, searchParams }) {
     const { slug } = await params;
     const slugArray = slug || [];
     const fullSlug = '/' + slugArray.join('/');
-
+    const resolvedSearchParams = await searchParams;
     const result = await resolveSlug(fullSlug);
 
-    if (!result || result.status !== 'success') {
-        return notFound();
+    if (result?.status === 'success') {
+        const data = result.data;
+        const entityType = normalizeEntityType(data?.entityType ?? data?.EntityType);
+
+        // COUNTRY PAGE
+        if (slugArray.length === 1 && entityType === 'country') {
+            return <CountryDetails country={slugArray[0]} />;
+        }
+
+        // REGION PAGE
+        if (slugArray.length === 2 && entityType === 'region') {
+            return <RegionDetails country={slugArray[0]} region={slugArray[1]} regionId={data.entityId} params={params} />;
+        }
+
+        // COUNTRY BRAND PAGE
+        if (slugArray.length === 2 && entityType === 'countrybrand') {
+            return <CountryBrandDetails country={slugArray[0]} params={params} />;
+        }
+
+        // COLLECTION PAGE
+        if ((slugArray.length === 1 || slugArray.length === 2) && entityType === 'collection') {
+            return <CollectionDetailsWrapper slug={slugArray.join('/')} entityId={data.entityId} />;
+        }
+
+        // HOTEL PAGE
+        if (slugArray.length === 2 && entityType === 'hotel') {
+            return <HotelDetailsWrapper city={slugArray[0]} hotel={slugArray[1]} />;
+        }
+
+        if (slugArray.length === 1 && entityType === 'city') {
+            return <CityDetails city={slugArray[0]} params={params} />;
+        }
+
+        if (slugArray.length === 2 && entityType === 'citybrand') {
+            return <CityBrandDetails city={slugArray[0]} params={params} />;
+        }
     }
 
-    const data = result.data;
+    if (slugArray.length === 2) {
+        const queryCategoryId = Number(resolvedSearchParams?.categoryId);
+        const queryRegionId = Number(resolvedSearchParams?.regionId);
+        if (Number.isInteger(queryCategoryId) && queryCategoryId > 0) {
+            return (
+                <CityCategoryRouteApp
+                    citySlug={slugArray[0]}
+                    categorySlug={slugArray[1]}
+                    resolvedCategoryId={queryCategoryId}
+                    resolvedRegionId={Number.isInteger(queryRegionId) ? queryRegionId : null}
+                />
+            );
+        }
 
-    // COUNTRY PAGE
-    if (slugArray.length === 1 && data.entityType === 'Country') {
-        return <CountryDetails country={slugArray[0]} />;
-    }
+        const resolvedCategory = await resolveCategoryFromSlug(slugArray[1], slugArray[0]);
 
-    // REGION PAGE
-    if (slugArray.length === 2 && data.entityType === 'Region') {
-        return <RegionDetails country={slugArray[0]} region={slugArray[1]} regionId={data.entityID} params={params} />;
-    }
+        if (resolvedCategory?.categoryId) {
+            return (
+                <CityCategoryRouteApp
+                    citySlug={slugArray[0]}
+                    categorySlug={slugArray[1]}
+                    resolvedCategoryId={resolvedCategory.categoryId}
+                    resolvedCityId={resolvedCategory.cityId}
+                    resolvedCityName={resolvedCategory.cityName}
+                />
+            );
+        }
 
-    //COUNTRYBRAND Page
-    if (slugArray.length === 2 && data.entityType === 'CountryBrand') {
-        return <CountryBrandDetails country={slugArray[0]} params={params} />;
-    }
+        const resolvedRegionCategory = await resolveCategoryFromRegionSlug(slugArray[1], slugArray[0]);
 
-    // COLLECTION PAGE
-    if ((slugArray.length === 1 || slugArray.length === 2) && data.entityType === 'Collection') {
-        return <CollectionDetailsWrapper slug={slugArray.join('/')} entityId={data.entityID} />;
-    }
+        if (resolvedRegionCategory?.categoryId) {
+            return (
+                <CityCategoryRouteApp
+                    citySlug={slugArray[0]}
+                    categorySlug={slugArray[1]}
+                    resolvedCategoryId={resolvedRegionCategory.categoryId}
+                    resolvedRegionId={resolvedRegionCategory.regionId}
+                    resolvedRegionName={resolvedRegionCategory.regionName}
+                />
+            );
+        }
 
-    // HOTEL PAGE (CityHotel)
-    if (slugArray.length === 2 && data.entityType === 'Hotel') {
-        return <HotelDetailsWrapper city={slugArray[0]} hotel={slugArray[1]} />;
-    }
+        const cookieStore = await cookies();
+        const contextCookie = cookieStore.get('listingCategoryContext')?.value || '';
+        if (contextCookie) {
+            try {
+                const parsed = JSON.parse(decodeURIComponent(contextCookie));
+                const storedHref = String(parsed?.href || '')
+                    .split('?')[0]
+                    .replace(/\/+$/, '');
+                const currentPath = `/${slugArray[0]}/${slugArray[1]}`;
+                if (storedHref === currentPath) {
+                    return (
+                        <CityCategoryRouteApp
+                            citySlug={slugArray[0]}
+                            categorySlug={slugArray[1]}
+                            resolvedCategoryId={Number(parsed?.categoryId || 0)}
+                            resolvedRegionId={Number(parsed?.regionId || 0)}
+                        />
+                    );
+                }
+            } catch (error) {
+                console.error('Unable to parse listingCategoryContext cookie:', error);
+            }
+        }
 
-    if (slugArray.length === 1 && data.entityType === 'City') {
-        return <CityDetails city={slugArray[0]} params={params} />;
-    }
-
-    if (slugArray.length === 2 && data.entityType === 'CityBrand') {
-        return <CityBrandDetails city={slugArray[0]} params={params} />;
+        return <CityCategoryRouteApp citySlug={slugArray[0]} categorySlug={slugArray[1]} />;
     }
 
     return notFound();

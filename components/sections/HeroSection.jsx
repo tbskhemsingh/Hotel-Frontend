@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import { addMonths, format } from 'date-fns';
 import 'react-datepicker/dist/react-datepicker.css';
-import { LuCalendarRange } from 'react-icons/lu';
 import '../../public/assets/css/DatePicker.css';
 import { globalSearchapi } from '@/lib/api/public/globalsearchapi';
 import { useRouter } from 'next/navigation';
@@ -25,6 +24,7 @@ export default function HeroSection() {
     const [results, setResults] = useState([]);
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showRoomsDropdown, setShowRoomsDropdown] = useState(false);
     const datePickerRef = useRef(null);
     const debounceRef = useRef(null);
     const router = useRouter();
@@ -88,6 +88,7 @@ export default function HeroSection() {
         max: 600
     });
     const searchRef = useRef(null);
+    const roomsDropdownRef = useRef(null);
 
     const MIN_PRICE = 0;
     const MAX_PRICE = 1000;
@@ -118,10 +119,31 @@ export default function HeroSection() {
         setShowDatePicker(true);
     };
 
-    const handleChildrenChange = (e) => {
-        const count = Number(e.target.value);
+    const updateChildrenCount = (nextCount) => {
+        const count = Math.max(0, Math.min(10, nextCount));
         setChildrenCount(count);
-        setChildrenAges(Array(count).fill(7));
+        setChildrenAges((prev) => {
+            if (count === 0) return [];
+            if (prev.length === count) return prev;
+            if (prev.length < count) {
+                return prev.concat(Array(count - prev.length).fill(7));
+            }
+            return prev.slice(0, count);
+        });
+    };
+
+    const handleChildrenChange = (e) => {
+        updateChildrenCount(Number(e.target.value));
+    };
+
+    const updateTempRooms = (nextCount) => {
+        const count = Math.max(1, Math.min(10, nextCount));
+        setTempRooms(count);
+    };
+
+    const updateTempGuests = (nextCount) => {
+        const count = Math.max(1, Math.min(10, nextCount));
+        setTempGuests(count);
     };
 
     const handleAgeChange = (index, value) => {
@@ -204,6 +226,17 @@ export default function HeroSection() {
 
         document.addEventListener('mousedown', handleFilterOutsideClick);
         return () => document.removeEventListener('mousedown', handleFilterOutsideClick);
+    }, []);
+
+    useEffect(() => {
+        function handleRoomsDropdownOutsideClick(event) {
+            if (roomsDropdownRef.current && !roomsDropdownRef.current.contains(event.target)) {
+                setShowRoomsDropdown(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleRoomsDropdownOutsideClick);
+        return () => document.removeEventListener('mousedown', handleRoomsDropdownOutsideClick);
     }, []);
 
     useEffect(() => {
@@ -296,15 +329,15 @@ export default function HeroSection() {
                 </div>
                 <div className="space-100px"></div>
 
-                <div className="container p-4 hero-form">
+                <div className="container p-4 hero-form hero-search-shell main-hero-search-shell">
                     <form action="#" onSubmit={handleSearchSubmit}>
-                        <div className="row">
-                            <div className="col-10 col-md-4 col-lg-2 mb-3 mb-lg-0 position-relative" ref={searchRef}>
+                        <div className="row hero-search-row main-hero-search-row">
+                            <div className="col-12 col-md-4 col-lg-3 mb-3 mb-lg-0 position-relative hero-search-col hotel-search-col" ref={searchRef}>
                                 <label className="form-label custom-form-label text-white">Hotel Name</label>
 
                                 <div className="input-group custom-input-group-textbox">
                                     <span className="input-group-text bg-white">
-                                        <i className="fa-solid fa-magnifying-glass"></i>
+                                        {/* <i className="fa-solid fa-magnifying-glass"></i> */}
                                     </span>
 
                                     <input
@@ -343,7 +376,7 @@ export default function HeroSection() {
                                 )}
                             </div>
 
-                            <div className="col-12 col-md-6 col-lg-3 mb-3 mb-lg-0" ref={datePickerRef}>
+                            <div className="col-12 col-md-6 col-lg-3 mb-3 mb-lg-0 hero-search-col date-search-col" ref={datePickerRef}>
                                 <label htmlFor="daterange" className="form-label custom-form-label text-white">
                                     Check-In and Check-Out
                                 </label>
@@ -366,7 +399,6 @@ export default function HeroSection() {
                                                     }}
                                                     style={{ cursor: 'pointer' }}
                                                 >
-                                                    <LuCalendarRange />
                                                 </span>
                                             </div>
                                         </div>
@@ -462,7 +494,10 @@ export default function HeroSection() {
                                     )}
                                 </div>
                             </div>
-                            <div className="col-12 col-md-6 col-lg-2 mb-3 mb-lg-0">
+                            <div
+                                className="col-12 col-md-6 col-lg-2 mb-3 mb-lg-0 hero-search-col rooms-search-col"
+                                ref={roomsDropdownRef}
+                            >
                                 <label htmlFor="daterange" className="form-label custom-form-label text-white">
                                     Rooms & Guests
                                 </label>
@@ -470,12 +505,16 @@ export default function HeroSection() {
                                     className="dropdown-toggle rooms-guest-dd"
                                     type="button"
                                     id="languageSwitcher"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
+                                    aria-expanded={showRoomsDropdown}
+                                    onClick={() => setShowRoomsDropdown((prev) => !prev)}
                                 >
                                     <span className="me-2">{getRoomsGuestsLabel()}</span>
                                 </button>
-                                <div className="dropdown-menu language-switcher-menu-item" aria-labelledby="dropdownMenuButton">
+                                <div
+                                    className={`dropdown-menu language-switcher-menu-item${showRoomsDropdown ? ' show' : ''}`}
+                                    aria-labelledby="dropdownMenuButton"
+                                    style={{ display: showRoomsDropdown ? 'block' : 'none' }}
+                                >
                                     <div className="py-3 px-4 d-none d-md-block">
                                         <div className="mb-3">
                                             <label htmlFor="guest" className="form-label custom-form-label">
@@ -511,12 +550,49 @@ export default function HeroSection() {
                                                 <option value="5">5+</option>
                                             </select>
                                         </div>
+                                        <div className="mb-3">
+                                            <label className="form-label custom-form-label">Children</label>
+                                            <select
+                                                className="form-select custom-input-select-rooms-guest-dd"
+                                                value={childrenCount}
+                                                onChange={(e) => updateChildrenCount(Number(e.target.value))}
+                                            >
+                                                {[...Array(11)].map((_, i) => (
+                                                    <option key={i} value={i}>
+                                                        {i}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {childrenCount > 0 && (
+                                            <div className="mb-3">
+                                                <label className="form-label custom-form-label">Children Age</label>
+                                                <div className="row g-2">
+                                                    {childrenAges.map((age, index) => (
+                                                        <div key={index} className="col-4">
+                                                            <select
+                                                                className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
+                                                                value={age}
+                                                                onChange={(e) => handleAgeChange(index, e.target.value)}
+                                                            >
+                                                                {[...Array(18)].map((_, i) => (
+                                                                    <option key={i} value={i}>
+                                                                        {i}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         <button
                                             type="button"
                                             className="theme-button-orange rounded rounded rounded rounded w-100"
                                             onClick={() => {
                                                 setGuests(tempGuests);
                                                 setRooms(tempRooms);
+                                                setShowRoomsDropdown(false);
                                             }}
                                         >
                                             Apply
@@ -526,48 +602,74 @@ export default function HeroSection() {
                                     <div className="py-3 px-4 d-flex d-md-none flex-column ">
                                         <div className="number number-in-dec mx-auto mb-4">
                                             <p className="custom-form-label mb-2">Rooms</p>
-                                            <span className="minus" id="minusroom">
+                                            <button type="button" className="minus" onClick={() => updateTempRooms(tempRooms - 1)}>
                                                 -
-                                            </span>
-                                            <input type="text" className="para" defaultValue="1" />
-                                            <span className="plus" id="plusroom">
+                                            </button>
+                                            <input type="text" className="para" value={tempRooms} readOnly />
+                                            <button type="button" className="plus" onClick={() => updateTempRooms(tempRooms + 1)}>
                                                 +
-                                            </span>
+                                            </button>
                                         </div>
                                         <div className="number number-in-dec mx-auto mb-4">
                                             <p className="custom-form-label mb-2">Guests</p>
-                                            <span className="minus" id="minusguest">
+                                            <button type="button" className="minus" onClick={() => updateTempGuests(tempGuests - 1)}>
                                                 -
-                                            </span>
-                                            <input type="text" className="para" defaultValue="1" />
-                                            <span className="plus" id="plusguest">
+                                            </button>
+                                            <input type="text" className="para" value={tempGuests} readOnly />
+                                            <button type="button" className="plus" onClick={() => updateTempGuests(tempGuests + 1)}>
                                                 +
-                                            </span>
+                                            </button>
                                         </div>
+                                        <div className="number number-in-dec mx-auto mb-4">
+                                            <p className="custom-form-label mb-2">Children</p>
+                                            <button
+                                                type="button"
+                                                className="minus"
+                                                onClick={() => updateChildrenCount(childrenCount - 1)}
+                                            >
+                                                -
+                                            </button>
+                                            <input type="text" className="para" value={childrenCount} readOnly />
+                                            <button
+                                                type="button"
+                                                className="plus"
+                                                onClick={() => updateChildrenCount(childrenCount + 1)}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                        {childrenCount > 0 && (
+                                            <div className="mb-4">
+                                                <p className="custom-form-label mb-2 text-center">Children Age</p>
+                                                <div className="row g-2">
+                                                    {childrenAges.map((age, index) => (
+                                                        <div key={index} className="col-4">
+                                                            <select
+                                                                className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
+                                                                value={age}
+                                                                onChange={(e) => handleAgeChange(index, e.target.value)}
+                                                            >
+                                                                {[...Array(18)].map((_, i) => (
+                                                                    <option key={i} value={i}>
+                                                                        {i}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         <button type="button" className="theme-button-orange rounded rounded rounded rounded w-100">
                                             Apply
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-4 col-md-2 col-lg-1 mb-3 mb-lg-0">
-                                <label className="form-label custom-form-label text-white">Children</label>
-                                <select
-                                    className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
-                                    value={childrenCount}
-                                    onChange={handleChildrenChange}
-                                >
-                                    {[...Array(11)].map((_, i) => (
-                                        <option key={i} value={i}>
-                                            {i}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="col-3 col-md-1 col-lg-1 mb-0 mb-lg-0">
+                            <div className="col-3 col-md-1 col-lg-1 mb-0 mb-lg-0 hero-search-col filter-search-col">
                                 <label className="custom-form-label text-white form-label-maring-bottom">Filter</label>
                                 <div
-                                    className="filter-button d-flex"
+                                    className={`filter-button d-flex${showFilters ? ' active' : ''}`}
                                     id="filterButton"
                                     onClick={() => setShowFilters((prev) => !prev)}
                                     style={{ cursor: 'pointer' }}
@@ -575,34 +677,11 @@ export default function HeroSection() {
                                     <img src="image/filter.webp" className="m-auto" alt="" />
                                 </div>
                             </div>
-                            <div className="col-9 col-md-5 col-lg-3 mb-0 mb-lg-0 d-flex">
+                            <div className="col-9 col-md-5 col-lg-3 mb-0 mb-lg-0 d-flex hero-search-col submit-search-col">
                                 <button type="submit" className="theme-button-orange rounded font-weight-bold-submit-search">
                                     See Deals Now
                                 </button>
                             </div>
-                            {childrenCount > 0 && (
-                                <div className="col-12 mb-3 mb-lg-0">
-                                    <label className="form-label custom-form-label text-white">Age</label>
-
-                                    <div className="row g-2">
-                                        {childrenAges.map((age, index) => (
-                                            <div key={index} className="col-4 col-md-2 col-lg-1">
-                                                <select
-                                                    className="dropdown-toggle rooms-guest-dd form-select custom-input-select-children-dd"
-                                                    value={age}
-                                                    onChange={(e) => handleAgeChange(index, e.target.value)}
-                                                >
-                                                    {[...Array(18)].map((_, i) => (
-                                                        <option key={i} value={i}>
-                                                            {i}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                         {showFilters && (
                             <div className="advaance-form-field-wrap mt-4 p-3 p-md-5" id="filterSection" ref={filterRef}>

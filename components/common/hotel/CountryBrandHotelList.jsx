@@ -1,19 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { FaMapMarkerAlt } from 'react-icons/fa';
-import { getHotelRates } from '@/lib/api/public/hotelapi';
+import { getHotelList, getHotelRates } from '@/lib/api/public/hotelapi';
 import { getUserCurrency } from '@/lib/getUserCurrency';
 
-export default function CountryBrandHotelList({ hotels = [], brand, hotelRates = [], currentPage = 1, hasMore = false, pageCookieName = '', pageIntentCookieName = '' }) {
+export default function CountryBrandHotelList({
+    hotels = [],
+    brand,
+    hotelRates = [],
+    currentPage = 1,
+    hasMore = false,
+    pageCookieName = '',
+    pageIntentCookieName = ''
+}) {
     const defaultImage = '/image/property-img.webp';
     const [loadingMore, setLoadingMore] = useState(false);
     const [timestamp, setTimestamp] = useState('');
     const [currency, setCurrency] = useState(null);
     const [allRates, setAllRates] = useState(hotelRates || []);
+    const [allHotels, setAllHotels] = useState(hotels || []);
+    const [page, setPage] = useState(currentPage || 1);
+    const [localHasMore, setLocalHasMore] = useState(hasMore);
+    const loadMoreTriggerRef = useRef(null);
     const normalizedBrand = String(brand || '').replace(/^\/+|\/+$/g, '');
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setAllHotels(hotels || []);
+            setPage(currentPage || 1);
+            setLocalHasMore(hasMore);
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [hotels, currentPage, hasMore]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -32,7 +54,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         initCurrency();
     }, []);
 
-    const getBookingId = (hotel) => hotel?.bookingId ?? hotel?.bookingID ?? hotel?.BookingId ?? null;
+    const getBookingId = (hotel) => hotel?.bookingId ?? null;
 
     const fetchRatesForHotels = async (hotelsToRate, selectedCurrency) => {
         const bookingIds = hotelsToRate.map(getBookingId).filter(Boolean);
@@ -57,13 +79,13 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
     };
 
     useEffect(() => {
-        if (!currency || !hotels.length) return;
+        if (!currency || !allHotels.length) return;
 
         let cancelled = false;
 
         async function syncRates() {
             try {
-                const refreshedRates = await fetchRatesForHotels(hotels, currency);
+                const refreshedRates = await fetchRatesForHotels(allHotels, currency);
 
                 if (!cancelled) {
                     setAllRates(refreshedRates);
@@ -78,7 +100,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         return () => {
             cancelled = true;
         };
-    }, [currency, hotels]);
+    }, [currency, allHotels]);
 
     const handleImageError = (e) => {
         if (!e.target.src.includes(defaultImage)) {
@@ -105,7 +127,103 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         return 'Pleasant';
     };
 
-    if (!hotels.length) {
+    const getHotelKey = (hotel, index) => {
+        const bookingId = hotel?.bookingId;
+        const rawKey = bookingId ?? hotel?.hotelId ?? hotel?.hotelID ?? hotel?.id ?? hotel?.urlName ?? hotel?.url;
+        return rawKey ? `${rawKey}-${index}` : `hotel-${index}`;
+    };
+
+    const dedupeHotels = (list) => {
+        const seen = new Set();
+        const result = [];
+        list.forEach((hotel) => {
+            const id = hotel?.bookingId ?? hotel?.hotelId ?? hotel?.hotelID ?? hotel?.id;
+            const key = id !== undefined && id !== null && id !== '' ? String(id) : null;
+            if (key && seen.has(key)) return;
+            if (key) seen.add(key);
+            result.push(hotel);
+        });
+        return result;
+    };
+
+    const loadMoreHotels = () => {
+        if (!localHasMore || loadingMore || !pageCookieName || !pageIntentCookieName) return;
+
+        setLoadingMore(true);
+        const nextPage = page + 1;
+
+        document.cookie = `${pageCookieName}=${nextPage}; path=/; SameSite=Lax`;
+        document.cookie = `${pageIntentCookieName}=1; path=/; SameSite=Lax; Max-Age=20`;
+        window.location.reload();
+    };
+
+    const getCountryBrandSlug = () => {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        if (pathParts.length >= 2) {
+            return `${pathParts[0]}/${pathParts[1]}`;
+        }
+        return null;
+    };
+
+    const fetchMoreHotels = () => {
+        if (!localHasMore || loadingMore) return;
+
+        const brandSlug = getCountryBrandSlug();
+        if (!brandSlug) {
+            setLocalHasMore(false);
+            return;
+        }
+
+        setLoadingMore(true);
+        const nextPage = page + 1;
+        const pageSize = 10;
+
+        getHotelList(brandSlug, nextPage, pageSize)
+            .then((response) => {
+                const nextHotels = response?.hotels || [];
+                if (!nextHotels.length) {
+                    setLocalHasMore(false);
+                    return;
+                }
+
+                setAllHotels((prev) => dedupeHotels([...prev, ...nextHotels]));
+                setPage(nextPage);
+                setLocalHasMore(nextHotels.length === pageSize);
+
+                if (pageCookieName) {
+                    document.cookie = `${pageCookieName}=${nextPage}; path=/; SameSite=Lax`;
+                }
+            })
+            .catch((error) => {
+                console.error('Error loading more hotels:', error);
+            })
+            .finally(() => {
+                setLoadingMore(false);
+            });
+    };
+
+    useEffect(() => {
+        if (!localHasMore || loadingMore || !loadMoreTriggerRef.current) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    if (pageIntentCookieName) {
+                        loadMoreHotels();
+                    } else {
+                        fetchMoreHotels();
+                    }
+                }
+            },
+            { rootMargin: '300px 0px' }
+        );
+
+        observer.observe(loadMoreTriggerRef.current);
+
+        return () => observer.disconnect();
+    }, [localHasMore, loadingMore, page, pageCookieName, pageIntentCookieName]);
+
+    if (!allHotels.length) {
         return (
             <div className="text-center py-5">
                 <p className="text-muted">No hotels available.</p>
@@ -114,7 +232,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
     }
 
     const groupedHotels = Object.values(
-        hotels.reduce((acc, hotel) => {
+        allHotels.reduce((acc, hotel) => {
             const key = hotel.cityName;
 
             if (!acc[key]) {
@@ -132,7 +250,7 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
 
     const getCityBrandPath = (cityUrlName) => {
         const normalizedCity = String(cityUrlName || '').replace(/^\/+|\/+$/g, '');
-        return `/${normalizedCity}/${normalizedBrand}`;
+        return `/${encodeURIComponent(normalizedCity)}/${encodeURIComponent(normalizedBrand)}`;
     };
 
     const formattedBrand = brand.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
@@ -154,25 +272,21 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
         })}`;
     };
 
-    const loadMoreHotels = () => {
-        if (!hasMore || !pageCookieName || !pageIntentCookieName) return;
-
-        setLoadingMore(true);
-        document.cookie = `${pageCookieName}=${currentPage + 1}; path=/; SameSite=Lax`;
-        document.cookie = `${pageIntentCookieName}=1; path=/; SameSite=Lax; Max-Age=20`;
-        window.location.reload();
-    };
-
     const openMap = (lat, lng) => {
         if (!lat || !lng) return;
-        window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, "_blank");
+        window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
+    };
+
+    const navigateToHotel = (url) => {
+        if (!url) return;
+        window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     return (
         <div className="container">
-            <div className="d-flex flex-column gap-4">
+            <div className="d-flex flex-column gap-3">
                 {groupedHotels.map((city) => (
-                    <div key={city.cityName}>
+                    <div key={city.cityName} className="d-flex flex-column gap-3">
                         <Link href={getCityBrandPath(city.cityUrlName)} className="text-decoration-none">
                             <h5 className="text-warning city-hover">
                                 {formattedBrand} {city.cityName}
@@ -183,77 +297,80 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                             const rate = getHotelRate(getBookingId(hotel));
                             const badges = rate?.badges || [];
                             const imageBadges = badges.filter(
-                                (badge) =>
-                                    !badge.toLowerCase().includes('free cancellation') &&
-                                    !badge.toLowerCase().includes('pay at')
+                                (badge) => !badge.toLowerCase().includes('free cancellation') && !badge.toLowerCase().includes('pay at')
                             );
                             const infoBadges = badges.filter(
-                                (badge) =>
-                                    badge.toLowerCase().includes('free cancellation') ||
-                                    badge.toLowerCase().includes('pay at')
+                                (badge) => badge.toLowerCase().includes('free cancellation') || badge.toLowerCase().includes('pay at')
                             );
                             const facilities = hotel.hotelFacilities
                                 ? hotel.hotelFacilities
-                                    .split('|')
-                                    .map((facility) => facility.trim())
-                                    .filter(Boolean)
+                                      .split('|')
+                                      .map((facility) => facility.trim())
+                                      .filter(Boolean)
                                 : [];
 
                             return (
                                 <div
                                     key={hotel.hotelId}
-                                    className="card border-0 rounded-4 mb-4 p-3 p-md-4"
+                                    className="card border-0 rounded-4 p-3 p-md-4 hotel-list-card collection-hotel-card"
                                     style={{
                                         boxShadow: '0 4px 18px rgba(0,0,0,0.08)'
                                     }}
+                                    onClick={() => navigateToHotel(hotel.url)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            navigateToHotel(hotel.url);
+                                        }
+                                    }}
+                                    role="link"
+                                    tabIndex={0}
                                 >
-                                    <div className="row g-3">
-                                        <div className="col-12 col-md-4">
-                                            <Link href={`${hotel.url}`} target="_blank" className="text-decoration-none">
-                                                <div className="position-relative">
-                                                    {imageBadges.length > 0 && (
-                                                        <>
-                                                            {imageBadges.map((badge, idx) => (
-                                                                <span
-                                                                    key={idx}
-                                                                    className="position-absolute text-white px-3 py-1"
-                                                                    style={{
-                                                                        top: idx === 0 ? '12px' : `${12 + (idx * 30)}px`,
-                                                                        left: '12px',
-                                                                        background: '#28a745',
-                                                                        borderRadius: '20px',
-                                                                        fontSize: '12px',
-                                                                        zIndex: 2
-                                                                    }}
-                                                                >
-                                                                    {badge}
-                                                                </span>
-                                                            ))}
-                                                        </>
-                                                    )}
-                                                    <img
-                                                        src={getImageUrl(hotel?.photo)}
-                                                        className="d-block w-100 rounded-4"
-                                                        style={{ height: '270px', objectFit: 'cover' }}
-                                                        alt={hotel.hotelName}
-                                                        onError={handleImageError}
-                                                    />
-                                                </div>
-                                            </Link>
+                                    <div className="row g-3 collection-hotel-card-row">
+                                        <div className="col-12 col-md-4 collection-hotel-image-col">
+                                            <div className="position-relative collection-hotel-image-wrap">
+                                                {imageBadges.length > 0 && (
+                                                    <>
+                                                        {imageBadges.map((badge, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="position-absolute text-white px-3 py-1"
+                                                                style={{
+                                                                    top: idx === 0 ? '12px' : `${12 + idx * 30}px`,
+                                                                    left: '12px',
+                                                                    background: '#28a745',
+                                                                    borderRadius: '20px',
+                                                                    fontSize: '12px',
+                                                                    zIndex: 2
+                                                                }}
+                                                            >
+                                                                {badge}
+                                                            </span>
+                                                        ))}
+                                                    </>
+                                                )}
+                                                <img
+                                                    src={getImageUrl(hotel?.photo)}
+                                                    className="d-block w-100 rounded-4 collection-hotel-image"
+                                                    style={{ height: '270px', objectFit: 'cover' }}
+                                                    alt={hotel.hotelName}
+                                                    onError={handleImageError}
+                                                />
+                                            </div>
                                         </div>
 
-                                        <div
-                                            className="col-12 col-md-8"
-                                            onClick={() => (window.location.href = hotel.urlName)}
-                                            style={{ cursor: 'pointer' }}
-                                        >
-                                            <div
-                                                className="text-decoration-none"
-                                            >
-                                                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-2">
-                                                    <div className="d-flex flex-wrap align-items-center mb-2 mb-md-0">
-                                                        <h4 className="property-grid-title font-size-16 font-size-md-18 my-auto me-2 me-md-3">{hotel.hotelName}</h4>
-                                                        <div className="text-warning">
+                                        <div className="col-12 col-md-8 collection-hotel-content-col">
+                                            <div className="text-decoration-none">
+                                                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-2 collection-hotel-header">
+                                                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2 mb-md-0 collection-hotel-title-row">
+                                                        <Link
+                                                            href={`${hotel.urlName}`}
+                                                            className="property-grid-title font-size-16 font-size-md-18 my-auto me-2 me-md-3 hotel-name-link"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            {hotel.hotelName}
+                                                        </Link>
+                                                        <div className="text-warning mt-1 mt-md-0 collection-hotel-stars">
                                                             {[...Array(5)].map((_, i) => (
                                                                 <MdOutlineStarPurple500
                                                                     key={i}
@@ -264,19 +381,19 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                         </div>
                                                     </div>
 
-                                                    <div className="d-flex align-items-center">
-                                                        <div className="rating-box d-flex me-2">
+                                                    <div className="d-flex align-items-center collection-hotel-review-row">
+                                                        <div className="rating-box d-flex me-2 collection-hotel-rating-box">
                                                             <span className="m-auto">
                                                                 {hotel.reviewScore === 0 ? 'N/A' : hotel.reviewScore}
                                                             </span>
                                                         </div>
 
-                                                        <div className="my-auto">
-                                                            <p className="small-para-14-px font-weight-bold mb-1">
+                                                        <div className="my-auto collection-hotel-review-copy">
+                                                            <p className="small-para-14-px font-weight-bold mb-1 collection-hotel-rating-text">
                                                                 {hotel.ratingText || getRatingText(hotel.reviewScore)}
                                                             </p>
 
-                                                            <p className="para-12px mb-0">
+                                                            <p className="para-12px mb-0 collection-hotel-review-count">
                                                                 {hotel.reviewCount
                                                                     ? `${hotel.reviewCount.toLocaleString('en-US')} verified reviews`
                                                                     : '0 verified reviews'}
@@ -285,7 +402,10 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                     </div>
                                                 </div>
 
-                                                <div className="d-flex align-items-center flex-nowrap mb-2" style={{ overflow: 'hidden', columnGap: '4px', whiteSpace: 'nowrap' }}>
+                                                <div
+                                                    className="d-flex align-items-center flex-nowrap mb-2 collection-hotel-facilities"
+                                                    style={{ overflow: 'hidden', columnGap: '4px', whiteSpace: 'nowrap' }}
+                                                >
                                                     {hotel.hotelFacilities && (
                                                         <>
                                                             {hotel.hotelFacilities
@@ -311,16 +431,16 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                                     </span>
                                                                 ))}
                                                             {hotel.hotelFacilities.split('|').length > 5 && (
-                                                                <Link href={`${hotel.urlName}`} className="rating" style={{ fontSize: '11px', lineHeight: '1.2' }}>
+                                                                <span className="rating" style={{ fontSize: '11px', lineHeight: '1.2' }}>
                                                                     +{hotel.hotelFacilities.split('|').length - 5} more
-                                                                </Link>
+                                                                </span>
                                                             )}
                                                         </>
                                                     )}
                                                 </div>
 
                                                 <p
-                                                    className="small-para-14-px mb-2 hotel-address-link"
+                                                    className="small-para-14-px mb-2 hotel-address-link collection-hotel-address"
                                                     style={{ cursor: 'pointer' }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -331,7 +451,6 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                     {hotel.hotelAddress || hotel.address || 'Address not available'}
                                                 </p>
 
-
                                                 {hotel.distanceFromAirport && (
                                                     <p className="small-para-14-px text-black mb-3">
                                                         <i className="fa-solid fa-plane-up me-1"></i>
@@ -339,15 +458,15 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                     </p>
                                                 )}
 
-                                                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-2">
-                                                    <div className="mb-2 mb-md-0">
-                                                        <p className="para text-primary mb-0">
+                                                <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-2 collection-hotel-meta-row">
+                                                    <div className="mb-2 mb-md-0 collection-hotel-meta-copy">
+                                                        <p className="para text-primary mb-0 collection-hotel-pay-later">
                                                             <i className="fa-solid fa-circle-info me-2"></i>
                                                             Book Now Pay Later!
                                                         </p>
 
                                                         {infoBadges.length > 0 ? (
-                                                            <div className="mb-2">
+                                                            <div className="mb-2 collection-hotel-badges">
                                                                 {infoBadges.map((badge, idx) => (
                                                                     <p key={idx} className="para-12px mb-1 text-theme-green">
                                                                         <span
@@ -371,8 +490,10 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                             const discountPercentage = dealInfo?.discount_percentage;
                                                             const formattedOriginal = formatOriginalPrice(rate.price.book, originalPrice);
                                                             return (
-                                                                <div className="price-block p-1 rounded mb-3">
-                                                                    <p className="para-12px text-muted mb-1 text-end">1 night, 2 adults</p>
+                                                                <div className="price-block p-1 rounded mb-3 collection-hotel-price-block">
+                                                                    <p className="para-12px text-muted mb-1 text-end collection-hotel-price-caption">
+                                                                        1 night, 2 adults
+                                                                    </p>
                                                                     {/* {discountPercentage > 0 && (
                                                                         <div className="text-end mb-1">
                                                                             <span className="badge bg-danger" style={{ fontSize: '11px' }}>
@@ -382,15 +503,15 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                                     )} */}
                                                                     {formattedOriginal && originalPrice > rate.price.total && (
                                                                         <p
-                                                                            className="para-12px mb-0 text-end"
+                                                                            className="para-12px mb-0 text-end collection-hotel-original-price"
                                                                             style={{ color: 'red', textDecoration: 'line-through' }}
                                                                         >
                                                                             {formattedOriginal}
                                                                         </p>
                                                                     )}
-                                                                    <div className="d-flex align-items-baseline justify-content-end">
+                                                                    <div className="d-flex align-items-baseline justify-content-end collection-hotel-current-price-row">
                                                                         <span
-                                                                            className="text-theme-orange fw-bold"
+                                                                            className="text-theme-orange fw-bold collection-hotel-current-price"
                                                                             style={{ fontSize: '24px' }}
                                                                         >
                                                                             {rate.price.book}
@@ -403,19 +524,17 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                                                     })()}
                                                 </div>
 
-                                                <div className="row">
-                                                    <div className="col-12 col-md-4 col-lg-3 ms-auto">
-                                                        <Link
-                                                            className="theme-button-blue rounded-4 w-100 d-block text-center p-2"
-                                                            href={`${hotel.url}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
-                                                            See Availability
-                                                            <i className="fa-solid fa-arrow-right ms-2"></i>
-                                                        </Link>
-                                                    </div>
+                                                <div className="d-flex justify-content-end mt-3 collection-hotel-cta-row collection-hotel-cta-col">
+                                                    <Link
+                                                        className="theme-button-blue rounded-4 d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 hotel-availability-button"
+                                                        href={`${hotel.url}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <span>See Availability</span>
+                                                        <i className="fa-solid fa-arrow-right ms-2"></i>
+                                                    </Link>
                                                 </div>
                                             </div>
                                         </div>
@@ -426,11 +545,9 @@ export default function CountryBrandHotelList({ hotels = [], brand, hotelRates =
                     </div>
                 ))}
             </div>
-            {hasMore && (
-                <div className="text-center py-4">
-                    <button onClick={loadMoreHotels} disabled={loadingMore} className="theme-button-blue rounded-1 px-5 py-2">
-                        {loadingMore ? 'Loading...' : 'Click to Load More'}
-                    </button>
+            {localHasMore && (
+                <div ref={loadMoreTriggerRef} className="text-center py-4">
+                    <p className="text-muted mb-0">{loadingMore ? 'Loading more...' : 'Loading more...'}</p>
                 </div>
             )}
         </div>
