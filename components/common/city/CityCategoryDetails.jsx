@@ -169,8 +169,8 @@ export default function CityCategoryDetails({
             Number.isInteger(queryCategoryId) && queryCategoryId > 0
                 ? queryCategoryId
                 : Number.isInteger(Number(resolvedCategoryId)) && Number(resolvedCategoryId) > 0
-                  ? Number(resolvedCategoryId)
-                  : null;
+                    ? Number(resolvedCategoryId)
+                    : null;
         const requestedRegionId = Number(regionId) > 0 ? Number(regionId) : Number(initialResolvedRegionId) > 0 ? Number(initialResolvedRegionId) : null;
 
         if (hydratedFromServerRef.current) {
