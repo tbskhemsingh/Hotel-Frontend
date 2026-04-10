@@ -28,11 +28,11 @@ export default function CityHotelList({
     const [hasMore, setHasMore] = useState((hotels?.length || 0) < (totalCount || 0) || (hotels?.length || 0) === pageSize);
     const [currency, setCurrency] = useState(null);
     const [timestamp, setTimestamp] = useState('');
+    const [failedImageKeys, setFailedImageKeys] = useState(() => new Set());
     const loadMoreTriggerRef = useRef(null);
     const loadRequestInFlightRef = useRef(false);
 
     const defaultImage = '/image/property-img.webp';
-    const passthroughImageLoader = ({ src }) => src;
     const computeHasMore = ({ loadedCount = 0, knownTotalCount = 0, currentPageNumber = 1, currentPageSize = 10, lastBatchSize = 0 }) => {
         const normalizedTotal = Number(knownTotalCount || 0);
 
@@ -161,16 +161,32 @@ export default function CityHotelList({
         };
     }, [currency, allHotels]);
 
-    const handleImageError = (e) => {
-        if (!e.target.src.includes(defaultImage)) {
-            e.target.src = defaultImage;
-        }
+    const handleImageError = (imageKey) => {
+        setFailedImageKeys((prev) => {
+            if (prev.has(imageKey)) return prev;
+            const next = new Set(prev);
+            next.add(imageKey);
+            return next;
+        });
+    };
+
+    const normalizeImageUrl = (photo) => {
+        if (typeof photo !== 'string') return defaultImage;
+
+        const trimmed = photo.trim();
+        const normalized = trimmed.toLowerCase();
+        if (!trimmed || normalized === 'null' || normalized === 'undefined') return defaultImage;
+        if (trimmed.startsWith('//')) return `https:${trimmed}`;
+        if (trimmed.startsWith('/')) return trimmed;
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        return defaultImage;
     };
 
     const getImageUrl = (photo) => {
-        if (!photo) return defaultImage;
-        const sep = photo.includes('?') ? '&' : '?';
-        return timestamp ? `${photo}${sep}t=${timestamp}` : photo;
+        const normalizedUrl = normalizeImageUrl(photo);
+        if (normalizedUrl === defaultImage) return defaultImage;
+        const sep = normalizedUrl.includes('?') ? '&' : '?';
+        return timestamp ? `${normalizedUrl}${sep}t=${timestamp}` : normalizedUrl;
     };
 
     const getHotelRate = (bookingId) => allRates.find((rate) => String(rate?.id) === String(bookingId));
@@ -363,6 +379,7 @@ export default function CityHotelList({
 
             <div className="d-flex flex-column gap-3">
                 {allHotels.map((hotel, index) => {
+                    const hotelKey = getHotelKey(hotel, index);
                     const rate = getHotelRate(getBookingId(hotel));
                     const reviewScore = getReviewScore(hotel);
                     const reviewScoreValue =
@@ -381,7 +398,7 @@ export default function CityHotelList({
 
                     return (
                         <div
-                            key={hotel.hotelId}
+                            key={hotelKey}
                             className="card border-0 rounded-4 p-3 p-md-4 hotel-list-card collection-hotel-card"
                             style={{ boxShadow: '0 4px 18px rgba(0,0,0,0.08)' }}
                             onClick={() => navigateToHotel(hotel.url)}
@@ -419,12 +436,13 @@ export default function CityHotelList({
                                         )}
 
                                         <Image
-                                            src={getImageUrl(hotel?.photo)}
+                                            src={failedImageKeys.has(hotelKey) ? defaultImage : getImageUrl(hotel?.photo)}
+                                            unoptimized
                                             width={400}
                                             height={270}
                                             className="d-block w-100 rounded-4 collection-hotel-image"
                                             alt={hotel.hotelName}
-                                            onError={handleImageError}
+                                            onError={() => handleImageError(hotelKey)}
                                         />
                                         {/* <img
                                             src={getImageUrl(hotel?.photo)}

@@ -42,6 +42,7 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
     const [page, setPage] = useState(currentPage || 1);
     const [hasMore, setHasMore] = useState((hotels?.length || 0) < (totalCount || 0));
     const [currency, setCurrency] = useState(null);
+    const [failedImageKeys, setFailedImageKeys] = useState(() => new Set());
     const loadMoreTriggerRef = useRef(null);
     const loadRequestInFlightRef = useRef(false);
     const pageRef = useRef(currentPage || 1);
@@ -143,6 +144,11 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
     const defaultImage = '/image/property-img.webp';
     const [timestamp, setTimestamp] = useState('');
 
+    const getHotelKey = (hotel, index) => {
+        const identity = getHotelIdentity(hotel);
+        return identity ? `${identity}-${index}` : `hotel-${index}`;
+    };
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setTimestamp(Date.now().toString());
@@ -150,17 +156,33 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
         return () => clearTimeout(timer);
     }, []);
 
-    const handleImageError = (e) => {
-        if (!e.target.src.includes(defaultImage)) {
-            e.target.src = defaultImage;
-        }
+    const handleImageError = (imageKey) => {
+        setFailedImageKeys((prev) => {
+            if (prev.has(imageKey)) return prev;
+            const next = new Set(prev);
+            next.add(imageKey);
+            return next;
+        });
+    };
+
+    const normalizeImageUrl = (photo) => {
+        if (typeof photo !== 'string') return defaultImage;
+
+        const trimmed = photo.trim();
+        const normalized = trimmed.toLowerCase();
+        if (!trimmed || normalized === 'null' || normalized === 'undefined') return defaultImage;
+        if (trimmed.startsWith('//')) return `https:${trimmed}`;
+        if (trimmed.startsWith('/')) return trimmed;
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        return defaultImage;
     };
 
     // Generate cache-busted URL
     const getImageUrl = (photo) => {
-        if (!photo) return defaultImage;
-        const sep = photo.includes('?') ? '&' : '?';
-        return timestamp ? `${photo}${sep}t=${timestamp}` : photo;
+        const normalizedUrl = normalizeImageUrl(photo);
+        if (normalizedUrl === defaultImage) return defaultImage;
+        const sep = normalizedUrl.includes('?') ? '&' : '?';
+        return timestamp ? `${normalizedUrl}${sep}t=${timestamp}` : normalizedUrl;
     };
 
     function decodeHtml(html) {
@@ -329,9 +351,11 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                     <div className="container">
                         {allHotels.length > 0 ? (
                             <div className="d-flex flex-column gap-3">
-                                {allHotels.map((hotel, index) => (
+                                {allHotels.map((hotel, index) => {
+                                    const hotelKey = getHotelKey(hotel, index);
+                                    return (
                                     <div
-                                        key={`${getHotelIdentity(hotel)}-${index}`}
+                                        key={hotelKey}
                                         className="card border-0 rounded-4 p-3 p-md-4 hotel-list-card collection-hotel-card"
                                         style={{
                                             boxShadow: '0 4px 18px rgba(0,0,0,0.08)'
@@ -382,12 +406,12 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                                         return null;
                                                     })()}
                                                     <Image
-                                                        src={getImageUrl(hotel?.photo)}
+                                                        src={failedImageKeys.has(hotelKey) ? defaultImage : getImageUrl(hotel?.photo)}
                                                         width={400}
                                                         height={270}
                                                         className="d-block w-100 rounded-4 collection-hotel-image"
                                                         alt={hotel.hotelName}
-                                                        onError={handleImageError}
+                                                        onError={() => handleImageError(hotelKey)}
                                                     />
                                                 </div>
                                             </div>
@@ -624,7 +648,8 @@ export default function CollectionDetails({ collection, hotels, hotelRates, tota
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
 
                                 {hasMore && (
                                     <div ref={loadMoreTriggerRef} className="text-center py-4">
