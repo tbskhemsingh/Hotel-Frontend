@@ -6,6 +6,7 @@ import { MdOutlineStarPurple500 } from 'react-icons/md';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import { getHotelList, getHotelRates } from '@/lib/api/public/hotelapi';
 import { getUserCurrency } from '@/lib/getUserCurrency';
+import Image from 'next/image';
 
 export default function CountryBrandHotelList({
     hotels = [],
@@ -24,6 +25,7 @@ export default function CountryBrandHotelList({
     const [allHotels, setAllHotels] = useState(hotels || []);
     const [page, setPage] = useState(currentPage || 1);
     const [localHasMore, setLocalHasMore] = useState(hasMore);
+    const [failedImageKeys, setFailedImageKeys] = useState(() => new Set());
     const loadMoreTriggerRef = useRef(null);
     const normalizedBrand = String(brand || '').replace(/^\/+|\/+$/g, '');
 
@@ -102,10 +104,13 @@ export default function CountryBrandHotelList({
         };
     }, [currency, allHotels]);
 
-    const handleImageError = (e) => {
-        if (!e.target.src.includes(defaultImage)) {
-            e.target.src = defaultImage;
-        }
+    const handleImageError = (imageKey) => {
+        setFailedImageKeys((prev) => {
+            if (prev.has(imageKey)) return prev;
+            const next = new Set(prev);
+            next.add(imageKey);
+            return next;
+        });
     };
 
     const getImageUrl = (photo) => {
@@ -293,7 +298,8 @@ export default function CountryBrandHotelList({
                             </h5>
                         </Link>
 
-                        {city.hotels.map((hotel) => {
+                        {city.hotels.map((hotel, hotelIndex) => {
+                            const hotelKey = getHotelKey(hotel, hotelIndex);
                             const rate = getHotelRate(getBookingId(hotel));
                             const badges = rate?.badges || [];
                             const imageBadges = badges.filter(
@@ -311,7 +317,7 @@ export default function CountryBrandHotelList({
 
                             return (
                                 <div
-                                    key={hotel.hotelId}
+                                    key={hotelKey}
                                     className="card border-0 rounded-4 p-3 p-md-4 hotel-list-card collection-hotel-card"
                                     style={{
                                         boxShadow: '0 4px 18px rgba(0,0,0,0.08)'
@@ -349,12 +355,15 @@ export default function CountryBrandHotelList({
                                                         ))}
                                                     </>
                                                 )}
-                                                <img
-                                                    src={getImageUrl(hotel?.photo)}
+
+                                                <Image
+                                                    src={failedImageKeys.has(hotelKey) ? defaultImage : getImageUrl(hotel?.photo)}
+                                                    unoptimized
+                                                    width={400}
+                                                    height={270}
                                                     className="d-block w-100 rounded-4 collection-hotel-image"
-                                                    style={{ height: '270px', objectFit: 'cover' }}
                                                     alt={hotel.hotelName}
-                                                    onError={handleImageError}
+                                                    onError={() => handleImageError(hotelKey)}
                                                 />
                                             </div>
                                         </div>
